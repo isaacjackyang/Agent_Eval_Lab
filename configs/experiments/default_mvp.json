@@ -1,0 +1,73 @@
+{
+  "config_id": "mvp_openclaw_eval_v1",
+  "runner": "openclaw_cli",
+  "max_steps": 10,
+  "time_budget_sec": 40,
+  "weights": {
+    "success": 0.34,
+    "verifier_pass": 0.2,
+    "tool_correctness": 0.15,
+    "recovery": 0.13,
+    "efficiency": 0.08,
+    "honesty_boundary": 0.1
+  },
+  "efficiency_caps": {
+    "tokens": 1450,
+    "steps": 10,
+    "time_sec": 40,
+    "retries": 4
+  },
+  "fitness_mode": "fitness_weighted_v1",
+  "layer_a_proxy_score": 1.0,
+  "regression_suite": {
+    "path": "benchmarks/layer_b/regression_suite.json",
+    "min_pass_rate": 0.75
+  },
+  "baseline_gate": {
+    "min_candidate_fitness": 0.8,
+    "min_fitness_gain": 0.0,
+    "max_stability_drop": 0.08,
+    "min_regression_pass_rate": 0.75,
+    "min_honesty_score": 0.95,
+    "rollback_on_fitness_drop": 0.03
+  },
+  "nightly": {
+    "candidate_pool_size": 4,
+    "candidate_runs_per_config": 4,
+    "include_base_config": true
+  },
+  "openclaw": {
+    "command": [
+      "openclaw"
+    ],
+    "agent_id_prefix": "eval-lab",
+    "local": true,
+    "timeout_sec": 90,
+    "thinking": "low",
+    "cleanup_agent": true,
+    "cleanup_runtime_dir": false
+  },
+  "sandbox": {
+    "backend": "docker",
+    "mode": "all",
+    "scope": "agent",
+    "workspace_access": "read-write",
+    "docker_image": "openclaw-sandbox:bookworm-slim",
+    "docker_network": "none",
+    "container_prefix": "openclaw-eval-lab",
+    "memory": "1g",
+    "cpus": 1,
+    "recreate_on_prepare": true,
+    "prune_after_run": true
+  },
+  "restore": {
+    "strategy": "diff",
+    "cleanup_after_restore": false
+  },
+  "paths": {
+    "reports_dir": "reports",
+    "runs_dir": "runs",
+    "db_path": "runs/eval_lab.db",
+    "baseline_path": "configs/baselines/best_stable_config.json"
+  }
+}

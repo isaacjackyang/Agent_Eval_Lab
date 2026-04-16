@@ -1,0 +1,22 @@
+{
+  "id": "km_dynamic_retrieval_01",
+  "category": "file_retrieval",
+  "generator": "generators/km_file_tree_gen.py",
+  "prompt_template": "找出專案 {project_name} 的 {doc_type}，並只顯示檔案位置。",
+  "allowed_tools": [
+    "search_file",
+    "open_file_location"
+  ],
+  "verifier": {
+    "type": "python",
+    "entry": "verifiers/km_dynamic_verifier.py"
+  },
+  "weights": {
+    "success": 0.35,
+    "verifier_pass": 0.2,
+    "tool_correctness": 0.15,
+    "recovery": 0.1,
+    "efficiency": 0.1,
+    "honesty_boundary": 0.1
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-eval-lab.local/schemas/raw_trace_event.schema.json",
+  "title": "Agent Eval Lab Raw Trace Event",
+  "type": "object",
+  "required": [
+    "trace_schema_version",
+    "run_id",
+    "event_id",
+    "correlation_id",
+    "stage",
+    "event_type",
+    "summary",
+    "ts_start",
+    "ts_end"
+  ],
+  "properties": {
+    "trace_schema_version": {
+      "type": "string",
+      "const": "raw_trace_v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "parent_event_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "correlation_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "ts_start": {
+      "type": "string"
+    },
+    "ts_end": {
+      "type": "string"
+    },
+    "latency_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tool_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tool_args_raw": {},
+    "tool_result_raw": {},
+    "model_request_raw": {},
+    "model_response_raw": {},
+    "sandbox_state": {},
+    "intermediate_state": {},
+    "metrics": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

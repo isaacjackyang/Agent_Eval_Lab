@@ -1,0 +1,26 @@
+{
+  "id": "regression_suite_local_v1",
+  "description": "Fixed-seed regression tasks over the local dynamic retrieval generator.",
+  "cases": [
+    {
+      "case_id": "regression_seed_101",
+      "seed": 101,
+      "label": "deployment-stability"
+    },
+    {
+      "case_id": "regression_seed_202",
+      "seed": 202,
+      "label": "handoff-stability"
+    },
+    {
+      "case_id": "regression_seed_303",
+      "seed": 303,
+      "label": "operations-stability"
+    },
+    {
+      "case_id": "regression_seed_404",
+      "seed": 404,
+      "label": "mixed-retrieval"
+    }
+  ]
+}

@@ -3,116 +3,410 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>OpenClaw Eval Lab Dashboard</title>
+<title>OpenClaw 本地評測實驗室 | OpenClaw Local Eval Lab</title>
 <style>
   :root{
-    --bg:#0b1020; --panel:#131a2b; --panel2:#0f1524; --text:#e8edf7; --muted:#9aa7bd;
-    --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --accent:#60a5fa; --line:#23304b;
+    --bg:#07111f;
+    --bg2:#0c1c31;
+    --panel:#0d1728cc;
+    --panel-strong:#12203aee;
+    --text:#eef4ff;
+    --muted:#96a8c8;
+    --line:#23385d;
+    --accent:#78dcca;
+    --accent-2:#63a6ff;
+    --gold:#f7c873;
+    --ok:#69e28b;
+    --warn:#ffcf66;
+    --bad:#ff8585;
+    --shadow:0 18px 40px rgba(0,0,0,.28);
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC,sans-serif;background:var(--bg);color:var(--text)}
-  header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#0d1322;position:sticky;top:0;z-index:10}
-  header h1{font-size:18px;margin:0}
-  header .meta{font-size:12px;color:var(--muted)}
-  .grid{display:grid;grid-template-columns:1.1fr 1.1fr 1fr;gap:12px;padding:12px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:120px}
-  .panel h2{margin:0 0 10px 0;font-size:14px}
-  .span-2{grid-column:span 2}
+  body{
+    margin:0;
+    min-height:100vh;
+    color:var(--text);
+    font-family:Bahnschrift, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(120,220,202,.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(99,166,255,.14), transparent 30%),
+      linear-gradient(180deg, var(--bg2), var(--bg));
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size:32px 32px;
+    mask-image:linear-gradient(180deg, rgba(255,255,255,.45), transparent 92%);
+  }
+  header{
+    position:sticky;
+    top:0;
+    z-index:10;
+    backdrop-filter:blur(14px);
+    background:rgba(7,17,31,.8);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:18px 22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+  }
+  h1,h2,h3,p{margin:0}
+  header h1{
+    font-size:24px;
+    letter-spacing:.04em;
+  }
+  .bi-stack{
+    display:inline-flex;
+    flex-direction:column;
+    gap:3px;
+    line-height:1.18;
+  }
+  .bi-line{
+    display:block;
+    font-size:inherit;
+    font-weight:inherit;
+    letter-spacing:inherit;
+    text-transform:none;
+  }
+  .subtitle{
+    margin-top:6px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .top-meta{
+    text-align:right;
+    color:var(--muted);
+    font-size:12px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .shell{
+    padding:18px;
+    display:grid;
+    gap:14px;
+    grid-template-columns:repeat(12, minmax(0, 1fr));
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .panel h2{
+    font-size:14px;
+    letter-spacing:.04em;
+    color:#d9e7ff;
+    margin-bottom:12px;
+  }
+  .panel.hero{
+    background:
+      linear-gradient(135deg, rgba(120,220,202,.12), rgba(99,166,255,.08)),
+      var(--panel-strong);
+  }
+  .span-12{grid-column:span 12}
+  .span-8{grid-column:span 8}
+  .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
   .span-3{grid-column:span 3}
-  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-  .card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
-  .label{font-size:12px;color:var(--muted)}
-  .value{font-size:18px;font-weight:700;margin-top:6px}
-  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
-  ul{margin:0;padding-left:18px}
-  li{margin:4px 0;color:#d6deed}
-  .status-line{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .progress{height:10px;background:#0c1220;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-  .progress>div{height:100%;background:linear-gradient(90deg,var(--accent),#93c5fd);width:0%}
-  canvas{width:100%;height:260px;background:#0c1220;border:1px solid var(--line);border-radius:10px}
-  .stream{height:320px;overflow:auto;background:#0c1220;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:Consolas,Menlo,monospace;font-size:12px;line-height:1.5;white-space:pre-wrap}
-  .row{margin-bottom:8px}
-  .t-assistant{color:#dbeafe}
-  .t-tool_call{color:#93c5fd}
-  .t-tool_result{color:#86efac}
-  .t-verifier{color:#fcd34d}
-  .t-system{color:#c4b5fd}
-  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
-  input,button,select{background:#0c1220;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
-  button{cursor:pointer}
-  small{color:var(--muted)}
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(7, minmax(0, 1fr));
+    gap:10px;
+  }
+  .card{
+    padding:12px;
+    border-radius:16px;
+    background:rgba(8,15,28,.58);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .label{
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:.04em;
+  }
+  .value{
+    margin-top:8px;
+    font-size:20px;
+    font-weight:700;
+    word-break:break-word;
+  }
+  .small{
+    font-size:12px;
+    color:var(--muted);
+  }
+  .ok{color:var(--ok)}
+  .warn{color:var(--warn)}
+  .bad{color:var(--bad)}
+  .accent{color:var(--accent)}
+  .accent-2{color:var(--accent-2)}
+  .status-line{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:12px;
+    color:#d8e7ff;
+    font-size:13px;
+  }
+  .progress{
+    height:12px;
+    border-radius:999px;
+    overflow:hidden;
+    background:#08101d;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .progress > div{
+    width:0;
+    height:100%;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition:width .25s ease;
+  }
+  .grid-2{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+  ul{
+    margin:0;
+    padding-left:18px;
+  }
+  li{
+    margin:6px 0;
+    color:#dde8fb;
+  }
+  canvas{
+    width:100%;
+    height:clamp(240px, 28vw, 340px);
+    background:#08101d;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+  }
+  .toolbar{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .toolbar-field,
+  .toolbar-check{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .toolbar-check input{
+    margin:0;
+  }
+  input, button, select{
+    background:#08101d;
+    color:var(--text);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;
+    padding:8px 10px;
+    font:inherit;
+  }
+  button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease;
+  }
+  button:hover{
+    transform:translateY(-1px);
+    border-color:rgba(120,220,202,.5);
+  }
+  .stream{
+    min-height:360px;
+    max-height:520px;
+    overflow:auto;
+    padding:12px;
+    border-radius:16px;
+    background:#08101d;
+    border:1px solid rgba(255,255,255,.08);
+    font:12px/1.55 Consolas, "Cascadia Code", monospace;
+    white-space:pre-wrap;
+  }
+  .row{
+    padding:7px 0;
+    border-bottom:1px dashed rgba(255,255,255,.06);
+  }
+  .row:last-child{border-bottom:none}
+  .t-assistant{color:#d8ecff}
+  .t-tool_call{color:#8acbff}
+  .t-tool_result{color:#9ef0b0}
+  .t-verifier{color:#ffd987}
+  .t-system{color:#c8b6ff}
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px;
+  }
+  .mini{
+    background:#08101d;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:12px;
+  }
+  .mini strong{
+    display:block;
+    margin-top:6px;
+    font-size:16px;
+  }
+  @media (max-width: 1100px){
+    .cards{grid-template-columns:repeat(3, minmax(0, 1fr))}
+    .span-8,.span-6,.span-4,.span-3{grid-column:span 12}
+  }
+  @media (max-width: 700px){
+    header{flex-direction:column}
+    .cards,.grid-2,.stat-grid{grid-template-columns:1fr}
+    .shell{padding:12px}
+    .toolbar-field,
+    .toolbar-check{width:100%}
+  }
 </style>
 </head>
 <body>
 <header>
   <div>
-    <h1>OpenClaw Eval Lab Dashboard</h1>
-    <div class="meta">單檔 HTML / 本地監控台 / 無建置流程</div>
+    <h1><span class="bi-stack"><span class="bi-line">OpenClaw 本地評測實驗室</span><span class="bi-line">OpenClaw Local Eval Lab</span></span></h1>
+    <p class="subtitle"><span class="bi-stack"><span class="bi-line">Layer C 動態任務、驗證器軌跡、baseline 追蹤與 rollback 觀測的 MVP 儀表板。</span><span class="bi-line">MVP dashboard for Layer C dynamic tasks, verifier traces, baseline tracking, and rollback observation.</span></span></p>
   </div>
-  <div class="meta" id="lastUpdated">Last update: -</div>
+  <div class="top-meta">
+    <div id="lastUpdated"><span class="bi-stack"><span class="bi-line">最後更新：-</span><span class="bi-line">Last update: -</span></span></div>
+    <div id="dataState"><span class="bi-stack"><span class="bi-line">資料來源：runs/* + reports/*</span><span class="bi-line">Data source: runs/* + reports/*</span></span></div>
+  </div>
 </header>
 
-<div class="grid">
-  <section class="panel span-3">
-    <h2>總覽</h2>
+<main class="shell">
+  <section class="panel hero span-12">
+    <h2><span class="bi-stack"><span class="bi-line">執行總覽</span><span class="bi-line">Run Overview</span></span></h2>
     <div class="cards">
-      <div class="card"><div class="label">狀態</div><div class="value" id="statusText">-</div></div>
-      <div class="card"><div class="label">目前 Task</div><div class="value" id="taskText">-</div></div>
-      <div class="card"><div class="label">目前 Config</div><div class="value" id="configText">-</div></div>
-      <div class="card"><div class="label">步數</div><div class="value" id="stepText">-</div></div>
-      <div class="card"><div class="label">經過秒數</div><div class="value" id="elapsedText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">狀態</span><span class="bi-line">Status</span></span></div><div class="value" id="statusText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">任務</span><span class="bi-line">Task</span></span></div><div class="value" id="taskText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">設定</span><span class="bi-line">Config</span></span></div><div class="value" id="configText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">分數</span><span class="bi-line">Score</span></span></div><div class="value" id="scoreText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">適應度</span><span class="bi-line">Fitness</span></span></div><div class="value" id="fitnessText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">適應度模式</span><span class="bi-line">Fitness Mode</span></span></div><div class="value" id="fitnessModeText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">耗時</span><span class="bi-line">Elapsed</span></span></div><div class="value" id="elapsedText">-</div></div>
     </div>
   </section>
 
-  <section class="panel">
-    <h2>架構變化</h2>
-    <ul id="archList"><li>尚無資料</li></ul>
-  </section>
-
-  <section class="panel">
-    <h2>測試方式變化</h2>
-    <ul id="testList"><li>尚無資料</li></ul>
-  </section>
-
-  <section class="panel">
-    <h2>目前 Agent 運行情況</h2>
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">代理狀態</span><span class="bi-line">Agent Status</span></span></h2>
     <div class="status-line">
-      <div><span class="label">Runner：</span><span id="runnerText">-</span></div>
-      <div><span class="label">Current tool：</span><span id="toolText">-</span></div>
-      <div><span class="label">Last error：</span><span id="errorText">-</span></div>
+      <div><span class="small"><span class="bi-stack"><span class="bi-line">執行器</span><span class="bi-line">Runner</span></span></span><br><strong id="runnerText">-</strong></div>
+      <div><span class="small"><span class="bi-stack"><span class="bi-line">目前工具</span><span class="bi-line">Current tool</span></span></span><br><strong id="toolText">-</strong></div>
+      <div><span class="small"><span class="bi-stack"><span class="bi-line">最近錯誤</span><span class="bi-line">Last error</span></span></span><br><strong id="errorText">-</strong></div>
     </div>
-    <div style="margin-top:10px" class="progress"><div id="progressBar"></div></div>
-    <small>此進度條預設以 max_steps 估算，可改為真實階段進度。</small>
+    <div class="progress"><div id="progressBar"></div></div>
+    <p class="small" style="margin-top:10px"><span class="bi-stack"><span class="bi-line">目前先以 `step_count / max_steps` 做即時進度估算。</span><span class="bi-line">The current live progress estimate uses `step_count / max_steps`.</span></span></p>
   </section>
 
-  <section class="panel span-2">
-    <h2>分數變化歷史長條圖</h2>
-    <canvas id="scoreCanvas" width="900" height="260"></canvas>
-    <small>顯示 recent runs 的 overall fitness。</small>
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">Rollback 快照</span><span class="bi-line">Rollback Snapshot</span></span></h2>
+    <div class="stat-grid">
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">最近 rollback</span><span class="bi-line">Last rollback</span></span></div><strong id="rollbackTimeText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">原因</span><span class="bi-line">Reason</span></span></div><strong id="rollbackReasonText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">回退前設定</span><span class="bi-line">Before config</span></span></div><strong id="rollbackBeforeText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">回退後設定</span><span class="bi-line">After config</span></span></div><strong id="rollbackAfterText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">回歸結果</span><span class="bi-line">Regression</span></span></div><strong id="regressionText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">已還原 baseline</span><span class="bi-line">Baseline restored</span></span></div><strong id="baselineRestoreText">-</strong></div>
+    </div>
   </section>
 
-  <section class="panel span-3">
-    <h2>LLM 即時輸出監看</h2>
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">Baseline 狀態</span><span class="bi-line">Baseline State</span></span></h2>
+    <div class="stat-grid">
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">目前設定</span><span class="bi-line">Current config</span></span></div><strong id="baselineConfigText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">最新適應度</span><span class="bi-line">Latest fitness</span></span></div><strong id="baselineFitnessText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">最新狀態</span><span class="bi-line">Latest status</span></span></div><strong id="baselineStatusText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">提升時間</span><span class="bi-line">Promoted at</span></span></div><strong id="baselineTimeText">-</strong></div>
+    </div>
+  </section>
+
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">架構歷史</span><span class="bi-line">Architecture History</span></span></h2>
+    <ul id="archList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">測試方法歷史</span><span class="bi-line">Test Method History</span></span></h2>
+    <ul id="testList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">Baseline 歷史</span><span class="bi-line">Baseline History</span></span></h2>
+    <ul id="baselineList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">設定歷史</span><span class="bi-line">Config History</span></span></h2>
+    <ul id="configList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-8">
+    <h2><span class="bi-stack"><span class="bi-line">分數歷史</span><span class="bi-line">Score History</span></span></h2>
+    <canvas id="scoreCanvas"></canvas>
+    <p class="small" style="margin-top:10px"><span class="bi-stack"><span class="bi-line">圖表顯示本輪所有實驗的 `fitness / overall score` 折線圖，並會依容器寬度自動縮放。</span><span class="bi-line">The chart shows line trends for all `fitness / overall score` entries in the current round and auto-scales to the container width.</span></span></p>
+  </section>
+
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">Rollback 事件</span><span class="bi-line">Rollback Events</span></span></h2>
+    <ul id="rollbackList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-12">
+    <h2><span class="bi-stack"><span class="bi-line">Nightly 歷史</span><span class="bi-line">Nightly History</span></span></h2>
+    <div class="grid-2">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">最新 nightly 狀態</span><span class="bi-line">Latest nightly status</span></span></div>
+        <strong id="nightlyStatusText">-</strong>
+        <div class="small" id="nightlyFitnessText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">適應度：-</span><span class="bi-line">Fitness: -</span></span></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">最新 nightly 測試組</span><span class="bi-line">Latest nightly suite</span></span></div>
+        <strong id="nightlySuiteText">-</strong>
+        <div class="small" id="nightlyRegressionText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">回歸：-</span><span class="bi-line">Regression: -</span></span></div>
+      </div>
+    </div>
+    <ul id="nightlyList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-12">
+    <h2><span class="bi-stack"><span class="bi-line">即時串流</span><span class="bi-line">Live Stream</span></span></h2>
     <div class="toolbar">
-      <button id="toggleScroll">暫停自動捲動</button>
-      <label><input type="checkbox" id="onlyTools"> 只看工具事件</label>
-      <input id="keyword" placeholder="關鍵字過濾" />
-      <button id="refreshNow">立即刷新</button>
+      <button id="toggleScroll"><span class="bi-stack"><span class="bi-line">暫停自動捲動</span><span class="bi-line">Pause auto-scroll</span></span></button>
+      <label class="toolbar-check"><input type="checkbox" id="onlyTools" /><span class="small"><span class="bi-stack"><span class="bi-line">只看工具事件</span><span class="bi-line">Tool events only</span></span></span></label>
+      <label class="toolbar-field" for="keyword"><span class="small"><span class="bi-stack"><span class="bi-line">關鍵字過濾</span><span class="bi-line">Keyword filter</span></span></span><input id="keyword" placeholder="tool_call / error / config" /></label>
+      <button id="refreshNow"><span class="bi-stack"><span class="bi-line">立即刷新</span><span class="bi-line">Refresh now</span></span></button>
     </div>
-    <div class="stream" id="streamBox">尚無資料</div>
+    <div class="stream" id="streamBox"><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></div>
   </section>
-</div>
+</main>
 
 <script>
 const DATA = {
-  liveStatus: '../runs/live_status.json',
-  liveStream: '../runs/live_stream.jsonl',
-  scoreHistory: '../reports/score_history.json',
-  archHistory: '../reports/architecture_history.json',
-  testHistory: '../reports/test_method_history.json'
+  liveStatus: './runs/live_status.json',
+  liveStream: './runs/live_stream.jsonl',
+  scoreHistory: './reports/score_history.json',
+  archHistory: './reports/architecture_history.json',
+  testHistory: './reports/test_method_history.json',
+  baselineHistory: './reports/baseline_history.json',
+  rollbackEvents: './reports/rollback_events.json',
+  nightlyHistory: './reports/nightly_history.json',
+  configHistory: './reports/config_history.json'
 };
 
 let autoScroll = true;
+let scoreChartState = [];
 
 async function fetchJSON(url){
   const res = await fetch(url + '?t=' + Date.now());
@@ -126,51 +420,123 @@ async function fetchText(url){
   return await res.text();
 }
 
-function setText(id, value){
-  document.getElementById(id).textContent = value ?? '-';
+function setText(id, value, cls=''){
+  const el = document.getElementById(id);
+  el.textContent = value ?? '-';
+  el.className = cls;
+}
+
+function biHTML(zh, en){
+  return `<span class="bi-stack"><span class="bi-line">${escapeHtml(zh ?? '-')}</span><span class="bi-line">${escapeHtml(en ?? '-')}</span></span>`;
+}
+
+function setBiHTML(id, zh, en, cls=null){
+  const el = document.getElementById(id);
+  el.innerHTML = biHTML(zh, en);
+  if(cls !== null){
+    el.className = cls;
+  }
+}
+
+function tone(value){
+  const text = String(value || '').toLowerCase();
+  if(['passed','completed','ok','true'].some(x => text.includes(x))) return 'ok';
+  if(['fail','error','false'].some(x => text.includes(x))) return 'bad';
+  if(['pending','running','candidate'].some(x => text.includes(x))) return 'warn';
+  return '';
 }
 
 function renderStatus(data){
-  setText('statusText', data.status || '-');
+  setText('statusText', data.status || '-', tone(data.status));
   setText('taskText', data.task_id || '-');
   setText('configText', data.config_id || '-');
-  setText('stepText', String(data.step_count ?? '-'));
-  setText('elapsedText', String(data.elapsed_sec ?? '-'));
+  setText('scoreText', data.score ?? '-', 'accent');
+  setText('fitnessText', data.fitness ?? '-', 'accent-2');
+  setText('fitnessModeText', data.fitness_mode || '-');
+  setText('elapsedText', data.elapsed_sec ?? '-');
   setText('runnerText', data.runner || '-');
   setText('toolText', data.current_tool || '-');
   setText('errorText', data.last_error || '-');
-  const steps = Math.max(1, data.max_steps || 12);
-  const pct = Math.min(100, ((data.step_count || 0) / steps) * 100);
+  setText('rollbackTimeText', data.rollback_time || '-');
+  setText('rollbackReasonText', data.rollback_reason || '-');
+  setText('rollbackBeforeText', data.rollback_before_config_id || '-');
+  setText('rollbackAfterText', data.rollback_after_config_id || '-');
+  setText('regressionText', data.regression_status || '-');
+  setText('baselineRestoreText', stringifyBool(data.baseline_restored), tone(String(data.baseline_restored)));
+
+  const steps = Math.max(1, Number(data.max_steps || 1));
+  const pct = Math.min(100, (Number(data.step_count || 0) / steps) * 100);
   document.getElementById('progressBar').style.width = pct + '%';
-  document.getElementById('lastUpdated').textContent = 'Last update: ' + (data.updated_at || new Date().toLocaleString());
+  setBiHTML(
+    'lastUpdated',
+    '最後更新：' + (data.updated_at || new Date().toLocaleString()),
+    'Last update: ' + (data.updated_at || new Date().toLocaleString())
+  );
 }
 
-function renderList(id, items, formatter){
-  const ul = document.getElementById(id);
-  ul.innerHTML = '';
+function renderList(id, items, formatter, emptyLabel={ zh:'尚無資料', en:'No data yet' }){
+  const el = document.getElementById(id);
+  el.innerHTML = '';
   if(!items || !items.length){
-    ul.innerHTML = '<li>尚無資料</li>';
+    const zh = typeof emptyLabel === 'string' ? emptyLabel : emptyLabel.zh;
+    const en = typeof emptyLabel === 'string' ? emptyLabel : emptyLabel.en;
+    el.innerHTML = `<li>${biHTML(zh, en)}</li>`;
     return;
   }
-  items.slice(0, 12).forEach(item => {
+  items.forEach(item => {
     const li = document.createElement('li');
     li.textContent = formatter(item);
-    ul.appendChild(li);
+    el.appendChild(li);
   });
 }
 
-function drawBarChart(canvas, values, labels){
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle = '#0c1220';
-  ctx.fillRect(0,0,w,h);
+function getCurrentRoundScoreItems(scoreHistory, status){
+  const items = scoreHistory?.history || [];
+  if(!items.length) return [];
 
-  const padL = 40, padR = 10, padT = 15, padB = 35;
+  const activeSuiteId = status?.suite_id;
+  if(activeSuiteId){
+    const suiteItems = items.filter(item => item.suite_id === activeSuiteId && item.run_kind !== 'nightly_summary');
+    if(suiteItems.length) return suiteItems;
+  }
+
+  if(status?.run_id){
+    const singleRunItems = items.filter(item => item.run_id === status.run_id);
+    if(singleRunItems.length) return singleRunItems;
+  }
+
+  const latestItem = items[items.length - 1];
+  if(latestItem?.suite_id){
+    const latestSuiteItems = items.filter(item => item.suite_id === latestItem.suite_id && item.run_kind !== 'nightly_summary');
+    if(latestSuiteItems.length) return latestSuiteItems;
+  }
+
+  return [latestItem];
+}
+
+function resizeScoreCanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.max(320, Math.floor(canvas.clientWidth || canvas.parentElement?.clientWidth || 980));
+  const height = Math.max(240, Math.floor(canvas.clientHeight || 280));
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { width, height };
+}
+
+function drawLineChart(canvas, items){
+  const ctx = canvas.getContext('2d');
+  const { width: w, height: h } = resizeScoreCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#08101d';
+  ctx.fillRect(0, 0, w, h);
+
+  const padL = 54, padR = 20, padT = 24, padB = 58;
   const chartW = w - padL - padR;
   const chartH = h - padT - padB;
 
-  ctx.strokeStyle = '#23304b';
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(padL, padT);
@@ -178,30 +544,157 @@ function drawBarChart(canvas, values, labels){
   ctx.lineTo(padL + chartW, padT + chartH);
   ctx.stroke();
 
-  if(!values.length) return;
-  const max = Math.max(1, ...values);
-  const barGap = 10;
-  const barW = Math.max(8, (chartW - barGap * (values.length + 1)) / values.length);
+  for(let tick = 0; tick <= 4; tick += 1){
+    const y = padT + (chartH / 4) * tick;
+    ctx.strokeStyle = 'rgba(255,255,255,.05)';
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + chartW, y);
+    ctx.stroke();
+  }
 
-  values.forEach((v, i) => {
-    const x = padL + barGap + i * (barW + barGap);
-    const bh = (v / max) * (chartH - 10);
-    const y = padT + chartH - bh;
-    ctx.fillStyle = '#60a5fa';
-    ctx.fillRect(x, y, barW, bh);
+  if(!items.length){
+    ctx.fillStyle = '#8da5ca';
+    ctx.font = '13px Bahnschrift';
+    ctx.fillText('本輪尚無分數資料 / No score data in current round', padL, padT + 22);
+    return;
+  }
 
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '11px sans-serif';
-    ctx.fillText(String(Math.round(v * 100) / 100), x, y - 4);
+  const values = items.flatMap(item => [Number(item.fitness ?? 0), Number(item.overall ?? item.fitness ?? 0)]);
+  const maxValue = Math.max(1, ...values);
+  const minValue = Math.min(0, ...values, maxValue > 0.2 ? 0 : maxValue);
 
-    const label = labels[i] || String(i + 1);
+  const toPoint = (value, index, total) => {
+    const x = total === 1
+      ? padL + chartW / 2
+      : padL + (chartW * index) / Math.max(1, total - 1);
+    const ratio = (Number(value) - minValue) / Math.max(0.0001, maxValue - minValue);
+    const y = padT + chartH - ratio * chartH;
+    return { x, y };
+  };
+
+  const drawSeries = (series, color, fillColor) => {
+    ctx.beginPath();
+    series.forEach((point, index) => {
+      if(index === 0){
+        ctx.moveTo(point.x, point.y);
+      }else{
+        ctx.lineTo(point.x, point.y);
+      }
+    });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    series.forEach(point => {
+      ctx.beginPath();
+      ctx.fillStyle = fillColor;
+      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  };
+
+  const fitnessSeries = items.map((item, index) => toPoint(Number(item.fitness ?? item.overall ?? 0), index, items.length));
+  const overallSeries = items.map((item, index) => toPoint(Number(item.overall ?? item.fitness ?? 0), index, items.length));
+
+  drawSeries(overallSeries, '#69e28b', '#0f2d22');
+  drawSeries(fitnessSeries, '#63a6ff', '#102848');
+
+  ctx.fillStyle = '#8da5ca';
+  ctx.font = '12px Bahnschrift';
+  for(let tick = 0; tick <= 4; tick += 1){
+    const y = padT + chartH - (chartH / 4) * tick;
+    const value = minValue + ((maxValue - minValue) / 4) * tick;
+    ctx.fillText(Number(value).toFixed(2), 8, y + 4);
+  }
+
+  const maxLabels = Math.max(2, Math.floor(chartW / 90));
+  const labelStep = Math.max(1, Math.ceil(items.length / maxLabels));
+  items.forEach((item, index) => {
+    if(index % labelStep !== 0 && index !== items.length - 1) return;
+    const point = fitnessSeries[index];
+    const label = item.case_id || item.label || item.run_id || item.ts || `${index + 1}`;
     ctx.save();
-    ctx.translate(x + barW/2, padT + chartH + 12);
-    ctx.rotate(-0.5);
-    ctx.fillStyle = '#94a3b8';
+    ctx.translate(point.x, padT + chartH + 16);
+    ctx.rotate(-0.45);
+    ctx.fillStyle = '#8da5ca';
     ctx.fillText(label, 0, 0);
     ctx.restore();
   });
+
+  const latestFitness = items[items.length - 1]?.fitness ?? '-';
+  const latestOverall = items[items.length - 1]?.overall ?? latestFitness;
+  const fitnessText = Number.isFinite(Number(latestFitness)) ? Number(latestFitness).toFixed(3) : String(latestFitness);
+  const overallText = Number.isFinite(Number(latestOverall)) ? Number(latestOverall).toFixed(3) : String(latestOverall);
+  ctx.fillStyle = '#dce9ff';
+  ctx.font = '12px Bahnschrift';
+  ctx.fillText(`Fitness ${fitnessText}`, padL, 16);
+  ctx.fillText(`Overall ${overallText}`, padL + 128, 16);
+  ctx.fillStyle = '#63a6ff';
+  ctx.fillRect(padL - 18, 8, 12, 3);
+  ctx.fillStyle = '#69e28b';
+  ctx.fillRect(padL + 110, 8, 12, 3);
+}
+
+function renderBaseline(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    setText('baselineConfigText', latest.config_id || '-');
+    setText('baselineFitnessText', latest.fitness ?? '-', 'accent');
+    setText('baselineStatusText', latest.status || '-', tone(latest.status));
+    setText('baselineTimeText', latest.ts || '-');
+  }
+  renderList(
+    'baselineList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.config_id || '-'} | ${item.status || '-'} | fitness=${item.fitness ?? '-'}`,
+    { zh:'尚未有 baseline 紀錄', en:'No baseline history yet' }
+  );
+}
+
+function renderRollback(hist){
+  const items = hist?.history || [];
+  renderList(
+    'rollbackList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.reason || '-'} | ${stringifyBool(item.success)} | baseline=${stringifyBool(item.baseline_restored)}`,
+    { zh:'尚未有 rollback 事件', en:'No rollback events yet' }
+  );
+}
+
+function renderNightly(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    setText('nightlyStatusText', latest.status || '-', tone(latest.status));
+    setBiHTML('nightlyFitnessText', `適應度：${latest.fitness ?? '-'}`, `Fitness: ${latest.fitness ?? '-'}`);
+    setText('nightlySuiteText', latest.suite_id || '-');
+    setBiHTML(
+      'nightlyRegressionText',
+      `回歸：${latest.regression_pass_rate ?? '-'} | 穩定性：${latest.stability_score ?? '-'}`,
+      `Regression: ${latest.regression_pass_rate ?? '-'} | Stability: ${latest.stability_score ?? '-'}`
+    );
+  }
+  renderList(
+    'nightlyList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.status || '-'} | fitness=${item.fitness ?? '-'} | C=${item.suite_score_c ?? '-'} | B=${item.suite_score_b ?? '-'} | reasons=${(item.gate_reasons || []).join(',') || 'none'}`,
+    { zh:'尚未有 nightly 紀錄', en:'No nightly history yet' }
+  );
+}
+
+function renderConfigHistory(hist){
+  const items = hist?.history || [];
+  renderList(
+    'configList',
+    items.slice(-8).reverse(),
+    item => `${item.ts || '-'} | ${item.event || '-'} | ${item.config_id || '-'} | ${item.mutation_profile || '-'} | ${item.fitness ?? '-'}`,
+    { zh:'尚未有 config 生命周期紀錄', en:'No config lifecycle history yet' }
+  );
 }
 
 function renderStream(lines){
@@ -209,23 +702,22 @@ function renderStream(lines){
   const keyword = document.getElementById('keyword').value.trim().toLowerCase();
   const onlyTools = document.getElementById('onlyTools').checked;
 
-  const parsed = lines
+  const rows = lines
     .map(line => {
       try { return JSON.parse(line); } catch { return null; }
     })
     .filter(Boolean)
-    .filter(row => !onlyTools || ['tool_call','tool_result'].includes(row.type))
-    .filter(row => !keyword || JSON.stringify(row).toLowerCase().includes(keyword));
+    .filter(item => !onlyTools || ['tool_call','tool_result'].includes(item.type))
+    .filter(item => !keyword || JSON.stringify(item).toLowerCase().includes(keyword));
 
-  if(!parsed.length){
-    box.textContent = '尚無符合條件的資料';
+  if(!rows.length){
+    box.innerHTML = biHTML('尚無符合條件的資料', 'No matching events');
     return;
   }
 
-  box.innerHTML = parsed.slice(-200).map(row => {
+  box.innerHTML = rows.slice(-220).map(row => {
     const cls = 't-' + (row.type || 'system');
-    const text = row.text || row.name || JSON.stringify(row);
-    return `<div class="row ${cls}">[${row.ts || '-'}] <b>${row.type || 'event'}</b> ${escapeHtml(text)}</div>`;
+    return `<div class="row ${cls}">[${escapeHtml(row.ts || '-')}] <b>${escapeHtml(row.type || 'event')}</b> ${escapeHtml(row.text || row.name || JSON.stringify(row))}</div>`;
   }).join('');
 
   if(autoScroll){
@@ -233,52 +725,80 @@ function renderStream(lines){
   }
 }
 
-function escapeHtml(str){
-  return String(str)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;');
+function stringifyBool(value){
+  if(value === true) return 'true';
+  if(value === false) return 'false';
+  if(value === null || value === undefined || value === '') return '-';
+  return String(value);
+}
+
+function escapeHtml(value){
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }
 
 async function refreshAll(){
   try{
-    const [status, score, arch, test, streamText] = await Promise.all([
+    const [status, score, arch, test, baseline, rollback, nightly, configHistory, streamText] = await Promise.all([
       fetchJSON(DATA.liveStatus).catch(() => null),
       fetchJSON(DATA.scoreHistory).catch(() => null),
       fetchJSON(DATA.archHistory).catch(() => null),
       fetchJSON(DATA.testHistory).catch(() => null),
+      fetchJSON(DATA.baselineHistory).catch(() => null),
+      fetchJSON(DATA.rollbackEvents).catch(() => null),
+      fetchJSON(DATA.nightlyHistory).catch(() => null),
+      fetchJSON(DATA.configHistory).catch(() => null),
       fetchText(DATA.liveStream).catch(() => '')
     ]);
 
     if(status) renderStatus(status);
 
-    renderList('archList', arch?.history || arch?.items || [], item =>
-      `${item.ts || item.date || '-'} | ${item.summary || item.change || JSON.stringify(item)}`
+    renderList(
+      'archList',
+      (arch?.history || []).slice(-6).reverse(),
+      item => `${item.ts || '-'} | ${item.summary || item.change || JSON.stringify(item)}`
     );
-
-    renderList('testList', test?.history || test?.items || [], item =>
-      `${item.ts || item.date || '-'} | ${item.summary || item.change || JSON.stringify(item)}`
+    renderList(
+      'testList',
+      (test?.history || []).slice(-6).reverse(),
+      item => `${item.ts || '-'} | ${item.summary || item.change || JSON.stringify(item)}`
     );
+    renderBaseline(baseline);
+    renderRollback(rollback);
+    renderNightly(nightly);
+    renderConfigHistory(configHistory);
 
-    const scoreItems = score?.history || score?.items || [];
-    const labels = scoreItems.slice(-12).map(x => x.run_id || x.date || x.label || '-');
-    const values = scoreItems.slice(-12).map(x => Number(x.fitness ?? x.overall ?? 0));
-    drawBarChart(document.getElementById('scoreCanvas'), values, labels);
+    scoreChartState = getCurrentRoundScoreItems(score, status);
+    drawLineChart(document.getElementById('scoreCanvas'), scoreChartState);
 
     renderStream(streamText.split(/\r?\n/).filter(Boolean));
-  }catch(err){
-    console.error(err);
+    setBiHTML('dataState', '資料來源已就緒', 'Data source ready');
+  }catch(error){
+    console.error(error);
+    setBiHTML('dataState', '資料來源尚未就緒', 'Data source not ready');
   }
+}
+
+function syncScrollButton(){
+  setBiHTML(
+    'toggleScroll',
+    autoScroll ? '暫停自動捲動' : '恢復自動捲動',
+    autoScroll ? 'Pause auto-scroll' : 'Resume auto-scroll'
+  );
 }
 
 document.getElementById('toggleScroll').addEventListener('click', () => {
   autoScroll = !autoScroll;
-  document.getElementById('toggleScroll').textContent = autoScroll ? '暫停自動捲動' : '恢復自動捲動';
+  syncScrollButton();
 });
 document.getElementById('refreshNow').addEventListener('click', refreshAll);
 document.getElementById('keyword').addEventListener('input', refreshAll);
 document.getElementById('onlyTools').addEventListener('change', refreshAll);
+window.addEventListener('resize', () => drawLineChart(document.getElementById('scoreCanvas'), scoreChartState));
 
+syncScrollButton();
 refreshAll();
 setInterval(refreshAll, 3000);
 </script>

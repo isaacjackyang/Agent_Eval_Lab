@@ -1,0 +1,16 @@
+{
+  "config_id": "mvp_openclaw_eval_v1",
+  "selected_at": null,
+  "fitness": 0.0,
+  "suite_score_c": 0.0,
+  "suite_score_b": 0.0,
+  "suite_score_a": 1.0,
+  "stability_score": 1.0,
+  "rollback_safety_score": 1.0,
+  "regression_pass_rate": 0.0,
+  "honesty_score": 1.0,
+  "notes": "Initial placeholder baseline for the real OpenClaw adapter. Requires a machine with OpenClaw CLI and Docker available.",
+  "run_id": null,
+  "source_config_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\configs\\experiments\\default_mvp.json",
+  "config_archive_path": null
+}

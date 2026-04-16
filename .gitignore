@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.log
+*.dtmp
+*.bkp
+
+runs/
+reports/
+configs/candidates/
+configs/baselines/archive/
+configs/experiments/*_restored.json
+sandbox/workspaces/
+sandbox/snapshots/

@@ -1,0 +1,94 @@
+<mxfile host="app.diagrams.net" modified="2026-04-16T15:10:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="dataflow-1" name="Data Flow">
+    <mxGraphModel dx="1620" dy="920" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Trigger&#xa;觸發入口&#xa;&#xa;run_single.py&#xa;run_suite.py&#xa;run_nightly.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="180" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Configs + Benchmarks&#xa;設定與任務定義&#xa;&#xa;configs/experiments&#xa;benchmarks/*&#xa;generators/*" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="280" y="40" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Task Generator&#xa;任務生成器&#xa;&#xa;generate_task()&#xa;workspace_root + expected_output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="280" y="210" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Snapshot + Workspace&#xa;工作區與快照&#xa;&#xa;sandbox/workspaces/&lt;run_id&gt;&#xa;sandbox/snapshots/&lt;run_id&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="560" y="210" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Runner Factory&#xa;執行器工廠&#xa;&#xa;session_mock&#xa;openclaw_cli" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="560" y="40" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="OpenClaw Runtime&#xa;OpenClaw 執行期&#xa;&#xa;agents add/delete&#xa;sandbox recreate/explain&#xa;agent --json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="870" y="40" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Docker Sandbox Config&#xa;Docker 沙盒設定&#xa;&#xa;backend / image / network&#xa;workspace access / prune policy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="40" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="9" value="Runner Result + Live Stream&#xa;執行結果與即時流&#xa;&#xa;tool trace&#xa;stdout/stderr&#xa;live_status.json&#xa;live_stream.jsonl" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="870" y="230" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="Verifier + Scoring&#xa;驗證與評分&#xa;&#xa;task / verify / tool&#xa;recovery / efficiency / honesty&#xa;Stotal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="230" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="Diff Restore + Baseline Gate&#xa;差異還原與基線判斷&#xa;&#xa;restore modified files&#xa;remove new files&#xa;baseline promotion / rollback events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="560" y="410" width="310" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Storage Layer&#xa;資料儲存層&#xa;&#xa;runs/artifacts/*.json&#xa;reports/*.json&#xa;SQLite run_summaries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="930" y="430" width="250" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Dashboard&#xa;監控面板&#xa;&#xa;dashboard.html&#xa;run / baseline / rollback / nightly / config history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="430" width="260" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Nightly Candidate Pool&#xa;夜間候選池&#xa;&#xa;evolution/mutator.py&#xa;candidate configs&#xa;regression suite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="Config / Baseline History&#xa;配置與基線血緣&#xa;&#xa;config_history.json&#xa;baseline_history.json&#xa;best_stable_config.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="320" y="430" width="190" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="100" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="101" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="102" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="103" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="3" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="104" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="105" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="7" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="106" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#666666;" edge="1" parent="1" source="7" target="9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="107" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d6b656;" edge="1" parent="1" source="9" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="108" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="10" target="11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="109" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="11" target="12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="110" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="12" target="13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="111" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="2" target="14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="112" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d6b656;" edge="1" parent="1" source="14" target="15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="113" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="15" target="12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

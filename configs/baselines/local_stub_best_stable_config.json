@@ -1,0 +1,16 @@
+{
+  "config_id": "local_stub_openclaw_v1__deep_search",
+  "selected_at": "2026-04-16T14:53:27",
+  "fitness": 0.9933,
+  "suite_score_c": 0.9911,
+  "suite_score_b": 0.9911,
+  "suite_score_a": 1.0,
+  "stability_score": 0.9998,
+  "rollback_safety_score": 1.0,
+  "regression_pass_rate": 1.0,
+  "honesty_score": 1.0,
+  "notes": "Candidate local_stub_openclaw_v1__deep_search evaluated by nightly pool.",
+  "run_id": "nightly_20260416_145319",
+  "source_config_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\configs\\candidates\\nightly_20260416_145319\\03_local_stub_openclaw_v1__deep_search.json",
+  "config_archive_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\configs\\baselines\\archive\\20260416T145327_local_stub_openclaw_v1__deep_search.json"
+}

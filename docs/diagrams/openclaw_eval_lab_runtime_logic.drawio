@@ -1,0 +1,135 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.5.2 Chrome/142.0.7444.265 Electron/39.6.1 Safari/537.36" version="29.5.2">
+  <diagram id="logic-1" name="Runtime Logic">
+    <mxGraphModel dx="1426" dy="1043" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="Start&#xa;開始" vertex="1">
+          <mxGeometry height="70" width="120" x="60" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="Load config + benchmarks&#xa;載入設定與任務模板" vertex="1">
+          <mxGeometry height="90" width="220" x="40" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" value="Generate task workspace&#xa;建立動態工作區" vertex="1">
+          <mxGeometry height="90" width="220" x="40" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" value="Create snapshot backup&#xa;建立快照備份" vertex="1">
+          <mxGeometry height="90" width="220" x="40" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" value="Build runner&#xa;建立 runner&#xa;&#xa;session_mock or openclaw_cli" vertex="1">
+          <mxGeometry height="100" width="230" x="320" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="Prepare OpenClaw runtime&#xa;準備 agent / sandbox config" vertex="1">
+          <mxGeometry height="100" width="230" x="320" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="nepzeN7-iHjgN6pZ-wF_-119" edge="1" parent="1" source="8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="Run agent / tool workflow&#xa;執行 agent 與工具流程" vertex="1">
+          <mxGeometry height="100" width="230" x="320" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=15;" value="Capture live events&#xa;記錄 live status / stream" vertex="1">
+          <mxGeometry height="100" width="230" x="620" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="Verifier + Stotal&#xa;驗證與單題計分" vertex="1">
+          <mxGeometry height="100" width="230" x="620" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" value="Diff restore&#xa;差異還原&#xa;&#xa;restore modified&#xa;restore missing&#xa;remove new files" vertex="1">
+          <mxGeometry height="120" width="230" x="620" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" value="Write artifacts + DB + reports&#xa;寫入 artifact / DB / reports" vertex="1">
+          <mxGeometry height="100" width="250" x="920" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" value="Nightly mode?&#xa;是否為 nightly？" vertex="1">
+          <mxGeometry height="120" width="220" x="930" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="nepzeN7-iHjgN6pZ-wF_-122" edge="1" parent="1" source="14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="Single-run baseline gate&#xa;單次 run 基線判斷" vertex="1">
+          <mxGeometry height="90" width="240" x="1220" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" value="Generate candidate pool&#xa;產生候選 config 池" vertex="1">
+          <mxGeometry height="90" width="240" x="1220" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="Loop candidate configs&#xa;逐一評估候選 config" vertex="1">
+          <mxGeometry height="90" width="240" x="1520" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="nepzeN7-iHjgN6pZ-wF_-123" edge="1" parent="1" source="17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="Run candidate tasks + regression suite&#xa;跑 candidate tasks 與 regression suite" vertex="1">
+          <mxGeometry height="100" width="240" x="1520" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="Aggregate weighted fitness&#xa;聚合 weighted fitness" vertex="1">
+          <mxGeometry height="90" width="240" x="1220" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="nepzeN7-iHjgN6pZ-wF_-121" edge="1" parent="1" source="19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1820" y="855" />
+              <mxPoint x="1820" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" value="Promote / reject baseline&#xa;提升或拒絕 baseline" vertex="1">
+          <mxGeometry height="90" width="240" x="1220" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" value="Dashboard + reports refresh&#xa;更新 dashboard 與報表" vertex="1">
+          <mxGeometry height="90" width="250" x="1900" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="End&#xa;結束" vertex="1">
+          <mxGeometry height="70" width="120" x="1965" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="100" edge="1" parent="1" source="2" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;" target="3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="101" edge="1" parent="1" source="3" style="endArrow=block;endFill=1;html=1;strokeColor=#b85450;" target="4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="102" edge="1" parent="1" source="4" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;" target="5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="103" edge="1" parent="1" source="3" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" target="6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="104" edge="1" parent="1" source="6" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;" target="7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="105" edge="1" parent="1" source="7" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;" target="8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="107" edge="1" parent="1" source="9" style="endArrow=block;endFill=1;html=1;strokeColor=#d6b656;" target="10" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="108" edge="1" parent="1" source="10" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;" target="11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="109" edge="1" parent="1" source="10" style="endArrow=block;endFill=1;html=1;strokeColor=#9673a6;" target="12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="110" edge="1" parent="1" source="11" style="endArrow=block;endFill=1;html=1;strokeColor=#b85450;" target="13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="111" edge="1" parent="1" source="13" style="endArrow=block;endFill=1;html=1;strokeColor=#d6b656;" target="14" value="No&#xa;否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="112" edge="1" parent="1" source="13" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;" target="15" value="Yes&#xa;是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="113" edge="1" parent="1" source="15" style="endArrow=block;endFill=1;html=1;strokeColor=#82b366;" target="16" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="114" edge="1" parent="1" source="16" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;" target="17" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="116" edge="1" parent="1" source="18" style="endArrow=block;endFill=1;html=1;strokeColor=#b85450;" target="19" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="119" edge="1" parent="1" source="20" style="endArrow=block;endFill=1;html=1;strokeColor=#6c8ebf;" target="21" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
