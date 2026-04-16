@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_163005_289607",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-32/docs/field-notes/v2/summary.md",
+      "sha256": "8225d845686ae57aaa9d9866ca1e54d2748df5396a4d2f0e99b4844090bf8002",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\projects\\Cinder-32\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Cinder-32/knowledge/release/verified/operations_runbook.md",
+      "sha256": "65db1b6e90d0ef0c59f1f8b521e46f7a5dff553b3832074d1e8983353128f74b",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\projects\\Cinder-32\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Falcon-39/docs/archives/v1/operations_old.md",
+      "sha256": "265db5aef2c2d41423efcf67b78282da723d7672f60ac459352fdadd1d0115d6",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\projects\\Falcon-39\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Falcon-39/knowledge/release/v2/ops_manual.md",
+      "sha256": "4d80c211b3b21a4eb2cb8113eb0fffee0c8df6c4a0699809ec386b323ce4f22f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\projects\\Falcon-39\\knowledge\\release\\v2\\ops_manual.md"
+    },
+    {
+      "path": "projects/Falcon-39/ops/handover/current/ops_draft.md",
+      "sha256": "499a8e53890078a07ad07106674003427b36aaf3c6a12533dfac0b1916959d31",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\projects\\Falcon-39\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "scratch/Falcon-39/notes.txt",
+      "sha256": "670a996b4f1082c471920547ac5e2313f12c3aa5498f5522bd602df2aa59dde5",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\scratch\\Falcon-39\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "437ce1b3fb11277ff8a59964b53782a6ba8d45f667f4ee122495b2bcdb90d510",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163005_289607\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}

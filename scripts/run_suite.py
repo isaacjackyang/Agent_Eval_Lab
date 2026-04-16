@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from run_single import ROOT, execute_single_run
+from run_single import ROOT, TASK_TYPE_CHOICES, execute_single_run
 from scoring.aggregation import compute_stability_score, compute_suite_score
 from storage.history_writer import write_json
 
@@ -15,6 +15,7 @@ def main() -> None:
     parser.add_argument("--config", default=str(ROOT / "configs" / "experiments" / "default_mvp.json"))
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--seed-start", type=int, default=None)
+    parser.add_argument("--task-type", choices=list(TASK_TYPE_CHOICES), default="auto")
     args = parser.parse_args()
 
     suite_id = datetime.now().strftime("suite_%Y%m%d_%H%M%S")
@@ -25,6 +26,7 @@ def main() -> None:
             execute_single_run(
                 config_path=Path(args.config),
                 seed=seed,
+                task_type=args.task_type,
                 append_score_history=True,
                 append_baseline_history=False,
                 append_rollback_history=False,
@@ -33,6 +35,10 @@ def main() -> None:
                 run_kind="suite_candidate",
                 suite_id=suite_id,
                 case_id=f"suite_{index + 1:02d}",
+                suite_index=index + 1,
+                suite_runs=args.runs,
+                progress_current=index + 1,
+                progress_target=args.runs,
             )
         )
 
@@ -46,6 +52,7 @@ def main() -> None:
         "stability_score": compute_stability_score(scores),
         "pass_rate": round(sum(1 for item in results if item["status"] == "passed") / max(1, len(results)), 4),
         "run_ids": [item["run_id"] for item in results],
+        "task_type": args.task_type,
     }
 
     artifact_path = ROOT / "runs" / "artifacts" / f"{summary['suite_id']}.json"

@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_162949_569627",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-80/delivery/archives/verified/handoff_packet.md",
+      "sha256": "e17f395624c61a0397a1200594bf7a42209b18a1edf9bb9f16f3d88b7c67eadf",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\projects\\Atlas-80\\delivery\\archives\\verified\\handoff_packet.md"
+    },
+    {
+      "path": "projects/Atlas-80/docs/archives/v1/handoff_notes.md",
+      "sha256": "e8e36a1cea1dd412f347df80e37821cff8ef53557a97fdbc76e726e2ba84344a",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\projects\\Atlas-80\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Atlas-80/ops/handover/current/handoff_archive.md",
+      "sha256": "a4408480a7754911c15cc27878690c475151bbaafde98d299204e7798cad2a7f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\projects\\Atlas-80\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "projects/Nova-46/docs/field-notes/v2/summary.md",
+      "sha256": "e318a313c031669a66aca2f2c275342f1e62d43ae9b5ad141154817e12a252b0",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\projects\\Nova-46\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Nova-46/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "e03ea2f9e713180699b28aef576cefc668d868722b4a424f7731e06b39f5644b",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\projects\\Nova-46\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "scratch/Atlas-80/notes.txt",
+      "sha256": "e7e293239bbd79ba4e41b1801cd77f99c4b3bb83a16357f16d5d3550315644de",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\scratch\\Atlas-80\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "91368628ec6567fd44c08a219abc09c5c95e0ba3c18463bba4e17d09ccd4b554",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162949_569627\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_172413_483163",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-97/docs/field-notes/v2/summary.md",
+      "sha256": "486352e35a7bd2df73a983a1ab5cc4cf9d35857aafe5e13c3ff7a0dc23d1e1c4",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\projects\\Cinder-97\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Cinder-97/knowledge/release/verified/operations_runbook.md",
+      "sha256": "e876c2967095659c54983cc4e8900f1735d96c356229209e1af391692c91b69e",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\projects\\Cinder-97\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Harbor-61/docs/archives/v1/operations_old.md",
+      "sha256": "64d88a8b62a801cafac824beae73d50a142be4517772875a9dd44f9c9ad32dcd",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\projects\\Harbor-61\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Harbor-61/docs/archives/v2/ops_manual.md",
+      "sha256": "6246cd9beff2f80e5af962490700658418334c5fea720b0045af8fa76be82b1b",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\projects\\Harbor-61\\docs\\archives\\v2\\ops_manual.md"
+    },
+    {
+      "path": "projects/Harbor-61/ops/handover/current/ops_draft.md",
+      "sha256": "77e846ecda25ac7b7ff9a67b9c492bce09b80ca542cfad4a05b5a023415b1c8f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\projects\\Harbor-61\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "scratch/Harbor-61/notes.txt",
+      "sha256": "821ac9f0ae29906fd6311765fb84702be88a49e52ca1f7a7f48638614dd098f8",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\scratch\\Harbor-61\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "8589b49af94fc752f82464dbf73fec416ccefe25d346a11ee016095d30864217",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172413_483163\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}

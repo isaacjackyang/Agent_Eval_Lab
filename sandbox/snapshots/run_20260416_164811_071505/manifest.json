@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_164811_071505",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-53/docs/field-notes/v2/summary.md",
+      "sha256": "7314690b61950c5ed655e81bc4ce74859601fe69ad8b9ba17b504cadd069485c",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\projects\\Atlas-53\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Atlas-53/knowledge/release/verified/deployment_note.md",
+      "sha256": "02653f7180456b154f1ca6e3014ae94f0696eec670d1ad99fb3bb3c0e10f6cae",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\projects\\Atlas-53\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "projects/Harbor-77/delivery/field-notes/verified/deployment_note.md",
+      "sha256": "ded5857fdb79e8e90fb4f6cc926cd6d9f63fbceaa2f743a3158c82c5e124a968",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\projects\\Harbor-77\\delivery\\field-notes\\verified\\deployment_note.md"
+    },
+    {
+      "path": "projects/Harbor-77/docs/archives/v1/deployment_draft.md",
+      "sha256": "29368637a863b30800a7d5b9edf755783aff0a9e4c187a355c3581e446666f8b",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\projects\\Harbor-77\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Harbor-77/ops/handover/current/deployment_archive.md",
+      "sha256": "468511a1712702e50d3a6ab9da383a1a9bfc1284033184c69f3c21eaf2a20cc2",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\projects\\Harbor-77\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "scratch/Harbor-77/notes.txt",
+      "sha256": "73ea8f6ce3ee9a3be612f309d332f61fa01230dfedd9e8c8ffdee205015b5009",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\scratch\\Harbor-77\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "445aace4417cadba52b0812ffffed65c6aeed4812e50c2adb2fd99fca8704915",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_164811_071505\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

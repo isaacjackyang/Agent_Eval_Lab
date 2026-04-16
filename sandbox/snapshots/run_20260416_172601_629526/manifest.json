@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_172601_629526",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-46/docs/field-notes/v2/summary.md",
+      "sha256": "e63644f6b559cbb4baa2bb274d3c237dba2355badbacbe25237cca91c52a24cd",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\projects\\Falcon-46\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Falcon-46/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "eaebffcd15fc28ee748ea011b5f309479b4f626329a638bb0d0d2e27092bdcc2",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\projects\\Falcon-46\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Falcon-62/delivery/field-notes/v1/handoff_checklist.md",
+      "sha256": "2c14b2090f77663e412bcc7e7e7a886384ab2660f58538c482206a8a38425096",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\projects\\Falcon-62\\delivery\\field-notes\\v1\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Falcon-62/docs/archives/v1/handoff_notes.md",
+      "sha256": "0dbf7d140cd0928c34c0259b6e099ed0e1ee08133ad634b2ec804dd9a1ea9c20",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\projects\\Falcon-62\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Falcon-62/ops/handover/current/handoff_archive.md",
+      "sha256": "1e11b5463f16faadd447d110770ada797bb10b1465ee33b50b16273a78c5e03f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\projects\\Falcon-62\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "scratch/Falcon-62/notes.txt",
+      "sha256": "0de56a99791c4adbd746ec3e83535badc5b4bf14168e7fac9e71c02c53c57072",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\scratch\\Falcon-62\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "1e8fc5317e0b7ad8d561adc93ea5ec0b3a7b57571dcccad79331edf46d8021b9",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172601_629526\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

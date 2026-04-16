@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_163247_635827",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Nova-38/docs/field-notes/v2/summary.md",
+      "sha256": "dfccfa29140d032c7d587212d372397d1a485e940b02b9a035cd9bc876abcee1",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\projects\\Nova-38\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Nova-38/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "e1b0a2a9d6eca3bbe404f63b533dd97ab9a50dfcbd78169b76933fd760d15ca9",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\projects\\Nova-38\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Quartz-34/docs/archives/v1/handoff_notes.md",
+      "sha256": "6e410f6bcf8b989e1c9e2ba161413d38fadbcf03e6629cb082c408b391fe52e0",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\projects\\Quartz-34\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Quartz-34/knowledge/archives/current/handoff_checklist.md",
+      "sha256": "23d28342b04f02dbf65fe363f78849e77c471073a7b3af382c9f769397dceb12",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\projects\\Quartz-34\\knowledge\\archives\\current\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Quartz-34/ops/handover/current/handoff_archive.md",
+      "sha256": "a037a3e484998ace88104d49bb6bc8c5a12a4393bc86548b656ebe18e2df7ed0",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\projects\\Quartz-34\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "scratch/Quartz-34/notes.txt",
+      "sha256": "a75d0db44c4fa564743a56d14a1264bc318f8dff65b8a45e7b3d742f53e5df0d",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\scratch\\Quartz-34\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "311683a035361dde75f23bf09eda351e59d4ccccb9ba3ccba39689a3dca07882",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163247_635827\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

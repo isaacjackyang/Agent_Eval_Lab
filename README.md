@@ -1,116 +1,156 @@
-# OpenClaw Local Eval Lab
+# Agent Eval Lab
 
-這個專案把 `OpenClaw_Local_Eval_Lab_Execution_Report_v3.md` 落成一個可本地執行、可追蹤、可進化的評測骨架，現在已經包含：
+本專案是一個本機 agent evaluation harness，現在的主線用途是：
 
-- 真實 `OpenClaw CLI` adapter
-- Layer C 動態任務生成
-- 決定性 verifier
-- `Stotal` 與 nightly weighted fitness
-- mutation candidate pool / baseline gate
-- Docker sandbox 設定注入
-- workspace snapshot + diff restore
-- JSON / JSONL / SQLite / HTML dashboard
+- 產生 Layer C 檔案檢索任務
+- 用本機 runner 執行 agent
+- 以 verifier 計分並寫出 artifact / history
+- 透過 dashboard 啟動單次、suite、nightly evolution
+- 在 nightly 中做逐步、單參數的 hill-climb 調參
 
-## 目前完成
+目前已對齊實作的核心精神是比較接近 `karpathy/autoresearch`：
+
+- 先量 baseline
+- 每一輪只改一個參數
+- 如果分數變好，就把該輪 config 當成新的 baseline
+- 下一輪從新的 baseline 繼續改
+- 每輪都留下實驗紀錄，而不是只看最後贏家
+
+## 目前行為
+
+### 1. 單次與 suite
 
 - `scripts/run_single.py`
-  執行一次完整本地 run，包含 sandbox workspace、OpenClaw runner、verifier、artifact、history 與 diff restore。
+  建立 sandbox workspace、生成任務、執行 runner、跑 verifier、輸出 artifact、做 workspace restore。
 - `scripts/run_suite.py`
-  批次跑多次 Layer C 任務。
+  重複執行多輪 Layer C task。
+- `--task-type`
+  支援 `auto`、`deployment`、`handoff`、`operations`。
+
+### 2. Nightly evolution
+
 - `scripts/run_nightly.py`
-  產生 mutation candidate pool，對每個候選 config 跑 candidate / regression，最後做 weighted fitness selection 與 baseline gate。
-- `scripts/rollback_last_good.py`
-  將最新穩定 baseline 的 archived config 回寫到指定 experiment config。
-- `scripts/summarize.py`
-  快速輸出 baseline / nightly / latest score 摘要。
+  不是舊的 multi-parameter pool search；現在是 sequential single-parameter tuning。
+- 每輪只改一個參數，候選來自 `evolution/mutator.py`。
+- 若 `suite_score_c` 提升，且 regression pass rate 沒低於 gate，該輪會成為新的 baseline。
+- 每輪結果會寫入：
+  - `reports/parameter_history.json`
+  - `reports/config_history.json`
+  - `reports/nightly_history.json`
+
+### 3. Verifier
+
+- `verifiers/km_dynamic_verifier.py`
+  現在是連續 partial-credit verifier，不再幾乎完全由 `exact_match` 決定總分。
+- `passed`
+  仍然只有 exact match 才算 pass。
+- 但分數會吃以下訊號：
+  - same project
+  - same doc slug
+  - canonical marker
+  - filename similarity
+  - path similarity
+  - search rank
+- verifier details 會保留 `retrieval_features` 方便追查。
+
+### 4. Dashboard
+
 - `dashboard.html`
-  讀取 `runs/` 與 `reports/` 的真實輸出，顯示 run、baseline、rollback、nightly、config lifecycle。
+  現在有可操作控制台，不只是監看頁。
+- 按鈕：
+  - `Start Single Run`
+  - `Start Suite`
+  - `Start Nightly Evolution`
+  - `Stop Current Run`
+- 進度顯示用通用 `progress_current / progress_target / progress_text`，所以 suite 和 nightly 都會顯示 `目前/設定數`。
+- task type 可選：
+  - `Auto (Random)`
+  - `Deployment`
+  - `Handoff`
+  - `Operations`
 
-## Runner 與 Sandbox
+## Runner 狀態
 
-預設 experiment config `configs/experiments/default_mvp.json` 已經切到真實 `openclaw_cli` runner：
+### 已驗證主線
 
-- 會透過 `openclaw agents add`
-- 對單次 run 建立暫時的 OpenClaw runtime config
-- 將 per-agent Docker sandbox 設定寫進 agent config
-- 呼叫 `openclaw sandbox recreate` / `openclaw sandbox explain`
-- 再用 `openclaw agent --json` 執行 prompt
+- `llama_cpp_agent`
+  透過 [configs/experiments/local_llama_cpp_agent.json](/F:/Documents/GitHub/Agent_Eval_Lab/configs/experiments/local_llama_cpp_agent.json) 連本機 `llama.cpp` 相容 API。
 
-本機如果沒有安裝 `OpenClaw CLI` 或 `Docker`，真實 config 不能直接跑。
+### 次要 / 實驗中
 
-為了讓這個 repo 在沒有 OpenClaw binary 的機器上仍能驗證整條 adapter 流程，我另外提供：
+- `openclaw_cli`
+  adapter 與 code path 已存在，但是否能在某台機器上完整打通，仍取決於本機 `openclaw` CLI、runtime 狀態與 sandbox 設定。
 
-- `configs/experiments/local_stub_openclaw.json`
-- `scripts/fixtures/openclaw_cli_stub.py`
+## 常用指令
 
-stub 不是新的 mock runner，而是模擬 `OpenClaw CLI` 命令列介面，讓 real adapter code path 可以在本地完整測。
-
-## 快速開始
-
-真實 OpenClaw / Docker 環境：
+### 單次
 
 ```powershell
-python scripts/run_single.py
-python scripts/run_suite.py --runs 5
-python scripts/run_nightly.py
-python scripts/rollback_last_good.py
-python scripts/summarize.py
+python scripts/run_single.py --config configs/experiments/local_llama_cpp_agent.json --task-type deployment --seed 21
+```
+
+### Suite
+
+```powershell
+python scripts/run_suite.py --config configs/experiments/local_llama_cpp_agent.json --runs 5 --task-type handoff --seed-start 31
+```
+
+### Nightly evolution
+
+```powershell
+python scripts/run_nightly.py --config configs/experiments/local_llama_cpp_agent.json --seed-start 500
+```
+
+### Dashboard
+
+```powershell
 python scripts/serve_dashboard.py --port 8765
 ```
 
-本地 stub 驗證：
-
-```powershell
-python scripts/run_single.py --config configs/experiments/local_stub_openclaw.json --seed 21
-python scripts/run_suite.py --config configs/experiments/local_stub_openclaw.json --runs 2 --seed-start 31
-python scripts/run_nightly.py --config configs/experiments/local_stub_openclaw.json --seed-start 900
-python scripts/rollback_last_good.py --baseline configs/baselines/local_stub_best_stable_config.json --target configs/experiments/local_stub_restored.json
-```
-
-然後在瀏覽器打開：
+開啟：
 
 ```text
 http://127.0.0.1:8765/dashboard.html
 ```
 
-Windows 如果想快速把目前 repo 同步到 GitHub，也可以用：
+## 主要輸出
 
-```powershell
-.\commit_github.cmd "Update project files"
-```
+### Artifact / live 狀態
 
-這個腳本現在預設會 `git add -A`、commit、再做一般 `git push`。
-如果你真的要覆蓋遠端分支，才額外加 `--force`：
+- `runs/artifacts/*.json`
+- `runs/live_status.json`
+- `runs/live_stream.jsonl`
+- `runs/control/*.log`
 
-```powershell
-.\commit_github.cmd --force "Force sync project files"
-```
+### Reports
 
-## Snapshot / Restore
+- `reports/score_history.json`
+- `reports/baseline_history.json`
+- `reports/rollback_events.json`
+- `reports/nightly_history.json`
+- `reports/config_history.json`
+- `reports/parameter_history.json`
 
-workspace restore 現在不是直接刪目錄，而是：
+## 目前 nightly 會動到的參數
 
-1. 建立 snapshot manifest 與檔案備份
-2. run 後比較目前工作區與 snapshot
-3. 還原被修改的檔案
-4. 補回被刪掉的檔案
-5. 移除 run 新增的檔案
+`evolution/mutator.py` 目前提供單參數候選，例如：
 
-stub 驗證路徑會真的修改 canonical 檔案並新增 scratch 檔，所以 `restore_result` 可以實際看到：
+- `max_steps`
+- `time_budget_sec`
+- `efficiency_caps.steps`
+- `efficiency_caps.tokens`
+- `efficiency_caps.retries`
+- `llama_cpp.temperature`
+- `llama_cpp.max_output_tokens`
+- `llama_cpp.timeout_sec`
+- `openclaw.thinking`
 
-- `restored_modified_files`
-- `removed_new_files`
-- `restored_missing_files`
+## 限制與現況
 
-## 目前仍未完成
-
-- 真實 OpenClaw CLI 在這台機器上的 live end-to-end 驗證
-  因為目前環境查不到 `openclaw` 命令
-- 真正由 Docker 提供的 live sandbox container 驗證
-  因為目前環境查不到 `docker` 命令
-- 多代 evolution / Pareto selection
-- workspace snapshot 的 binary / large-file 最佳化
-- 更細的 OpenClaw trace schema 對齊
+- `passed` 還是 exact-match gate；現在改善的是連續分數，不是把 pass 標準放寬。
+- nightly 已改成單參數 hill-climb，但還不是完整 proposer-executor research loop。
+- dashboard 目前能控制 run / suite / nightly，但還沒有更深的 trace diagnostics 視圖。
+- OpenClaw CLI 真實端到端路徑仍受本機環境影響，`llama_cpp_agent` 是目前最穩定的可跑配置。
 
 ## 目錄
 
@@ -118,6 +158,7 @@ stub 驗證路徑會真的修改 canonical 檔案並新增 scratch 檔，所以 
 Agent_Eval_Lab/
 ├─ benchmarks/
 ├─ configs/
+├─ docs/
 ├─ evolution/
 ├─ generators/
 ├─ rollback/

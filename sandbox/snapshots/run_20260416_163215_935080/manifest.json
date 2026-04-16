@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_163215_935080",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Harbor-91/docs/archives/v1/deployment_draft.md",
+      "sha256": "be79185cab7ea1ef6b2f3fed28cda4a62f42acf47f1d8489a23078c84c2617d9",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\projects\\Harbor-91\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Harbor-91/ops/handover/current/deployment_archive.md",
+      "sha256": "5cdee9717ff33ca4d5d164cf4de94b464decb7ad9c6654e3236b549cf8fc5af5",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\projects\\Harbor-91\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "projects/Harbor-91/ops/handover/v2/deployment_note.md",
+      "sha256": "faa6c28fbf426552092b8c0ca8c72749ac071170b74f4ae27b0b7e54cb80124f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\projects\\Harbor-91\\ops\\handover\\v2\\deployment_note.md"
+    },
+    {
+      "path": "projects/Quartz-18/docs/field-notes/v2/summary.md",
+      "sha256": "2a413d3137f0799f3cde1076c757b994a8799646f58ba0d035441afca83e70c4",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\projects\\Quartz-18\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Quartz-18/knowledge/release/verified/deployment_note.md",
+      "sha256": "f4e636313d4d85baaa69acb4fc7a8830c84976e7a6d3c4a27aaad704eefda8e8",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\projects\\Quartz-18\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "scratch/Harbor-91/notes.txt",
+      "sha256": "2d2d7be882f58b5ea162d608219dc4b33b974773152df5a473f921b633ac1685",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\scratch\\Harbor-91\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "388720e235f8a087307b9001d230e07ecc38f07af7ce8b224d1e3166ba147879",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163215_935080\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

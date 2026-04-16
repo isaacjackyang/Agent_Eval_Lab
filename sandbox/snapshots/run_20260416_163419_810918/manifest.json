@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_163419_810918",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-53/docs/archives/v1/deployment_draft.md",
+      "sha256": "9f5667ef151e8b72a65b8c76e8421d912ecd8d68785d10cee3f6e0b1578fd5ff",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\projects\\Atlas-53\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Atlas-53/knowledge/release/v2/deployment_note.md",
+      "sha256": "7c5afa35e00f24bbcf3778f125dbbb23e483ce74f77527a79e2492957a38c177",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\projects\\Atlas-53\\knowledge\\release\\v2\\deployment_note.md"
+    },
+    {
+      "path": "projects/Atlas-53/ops/handover/current/deployment_archive.md",
+      "sha256": "dc0e8517d11a927adf23c3c9880fb3f9fa0c5747fc9f6925c02342ecbf9f3883",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\projects\\Atlas-53\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "projects/Cinder-39/docs/field-notes/v2/summary.md",
+      "sha256": "107efc01c15b4a10c35d51d52d69ff8c77f3644edd48dfff04ba85a783b641a0",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\projects\\Cinder-39\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Cinder-39/knowledge/release/verified/deployment_note.md",
+      "sha256": "898c48a563c4a00dd8e5edf2bcd5f92873c8d8acd626ac3c59a0ad55f86b22d3",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\projects\\Cinder-39\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "scratch/Atlas-53/notes.txt",
+      "sha256": "1b3f7c8be57600edaba79edfd14499d7af6087f5196dbad73890ae99cbef16cf",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\scratch\\Atlas-53\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "048f628b0eb240ba9f7bdfa3a42ada120811a42c0a124e5926942407739af94c",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163419_810918\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

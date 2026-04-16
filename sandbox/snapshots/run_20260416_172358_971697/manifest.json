@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_172358_971697",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Harbor-47/docs/field-notes/v2/summary.md",
+      "sha256": "a91de729f55f35928aa134411ef5e1eb830250cca148a99cf4dbb167bc136d39",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\projects\\Harbor-47\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Harbor-47/knowledge/release/verified/operations_runbook.md",
+      "sha256": "0bbb64604313911ff5ee7366e8d6b84033e96b08fd1f3fcd901ab99ec9f2b68f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\projects\\Harbor-47\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Nova-45/docs/archives/v1/operations_old.md",
+      "sha256": "62aa798fe81fb17f17799070f2bf014d666c3487fc50ef420d58b5b36b550ff3",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\projects\\Nova-45\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Nova-45/ops/handover/current/ops_draft.md",
+      "sha256": "67d67ed2460aa61f5713136378d4d9941ff8e1bea8b256cb597c57e4d5b48d9d",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\projects\\Nova-45\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "projects/Nova-45/ops/handover/current/ops_manual.md",
+      "sha256": "9c6e8727d4e41cdcd0d46a1577844006ce9c6fd85a4a2fa151e4af42ef611331",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\projects\\Nova-45\\ops\\handover\\current\\ops_manual.md"
+    },
+    {
+      "path": "scratch/Nova-45/notes.txt",
+      "sha256": "568dc97a6b0c99b158d998651b3e8ef3355a5d3b48ff3dac66ce7cc326131db5",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\scratch\\Nova-45\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "e04677967c65b377b59f2c7eeafdfdda2dff81b01a957e593c3a5c1d4ce19705",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172358_971697\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}

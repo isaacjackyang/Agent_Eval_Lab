@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_172256_456663",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Harbor-54/docs/field-notes/v2/summary.md",
+      "sha256": "0d118bb848310d262ea90a217ec201f39b3babe24f4268b45934050e91fcdbff",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\projects\\Harbor-54\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Harbor-54/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "23f88885988fc6b69b51752ff164a2b7172c95159c76443e4fb0ce9a0a0b6c65",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\projects\\Harbor-54\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Nova-85/docs/archives/v1/handoff_notes.md",
+      "sha256": "d46f146c55248e0cec4517a892e9ee2a94593060340194cb9d4e024dce8220bd",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\projects\\Nova-85\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Nova-85/ops/field-notes/verified/handoff_packet.md",
+      "sha256": "921ec31dfaa150143c650ccc4fd30ac9de29c94420eb9073dde6d9510c74c010",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\projects\\Nova-85\\ops\\field-notes\\verified\\handoff_packet.md"
+    },
+    {
+      "path": "projects/Nova-85/ops/handover/current/handoff_archive.md",
+      "sha256": "f9a909a73fb1b958e57e8ae59b8686f3a0c73e97287c90a5bb51d7dead27a2df",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\projects\\Nova-85\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "scratch/Nova-85/notes.txt",
+      "sha256": "217b1944e21e90df045d4ac44fb7264a0aa0182b8e3c44c21cfed28d8f89ba3f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\scratch\\Nova-85\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "72217ebe23989f124e36e40a5097ac043185af761f6069a388667dd63d162456",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172256_456663\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

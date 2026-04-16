@@ -12,6 +12,7 @@ REPORT_FILES = [
     "rollback_events.json",
     "nightly_history.json",
     "config_history.json",
+    "parameter_history.json",
 ]
 
 

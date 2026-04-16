@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from generators.km_file_tree_gen import generate_task
+from generators.km_file_tree_gen import TASK_TYPE_CHOICES, generate_task
 from rollback.baseline_manager import load_baseline, maybe_promote_baseline
 from rollback.workspace_restore import restore_workspace
 from runners.factory import build_runner
@@ -25,6 +25,51 @@ from verifiers.km_dynamic_verifier import verify_task
 
 def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _build_status_payload(
+    *,
+    run_id: str,
+    config_id: str,
+    runner: str,
+    timestamp: str,
+    fitness_mode: str,
+    run_kind: str,
+    task_type: str | None,
+    suite_id: str | None,
+    case_id: str | None,
+    suite_index: int | None,
+    suite_runs: int | None,
+    progress_current: int | None = None,
+    progress_target: int | None = None,
+    **extra,
+) -> dict:
+    payload = {
+        "run_id": run_id,
+        "config_id": config_id,
+        "runner": runner,
+        "updated_at": timestamp,
+        "fitness_mode": fitness_mode,
+        "run_kind": run_kind,
+        "suite_id": suite_id,
+        "case_id": case_id,
+    }
+    if task_type:
+        payload["task_type"] = task_type
+    if suite_index is not None:
+        payload["suite_progress_current"] = suite_index
+    if suite_runs is not None:
+        payload["suite_progress_target"] = suite_runs
+    if suite_index is not None and suite_runs is not None:
+        payload["suite_progress_text"] = f"{suite_index}/{suite_runs}"
+    if progress_current is not None:
+        payload["progress_current"] = progress_current
+    if progress_target is not None:
+        payload["progress_target"] = progress_target
+    if progress_current is not None and progress_target is not None:
+        payload["progress_text"] = f"{progress_current}/{progress_target}"
+    payload.update(extra)
+    return payload
 
 
 def _build_candidate_payload(config: dict, run_id: str, timestamp: str, score: float, verifier_result: dict, rollback_safety: float) -> dict:
@@ -50,6 +95,7 @@ def _build_candidate_payload(config: dict, run_id: str, timestamp: str, score: f
 def execute_single_run(
     config_path: Path | None = None,
     seed: int | None = None,
+    task_type: str | None = None,
     append_score_history: bool = True,
     append_baseline_history: bool = True,
     append_rollback_history: bool = True,
@@ -58,6 +104,10 @@ def execute_single_run(
     run_kind: str = "single",
     suite_id: str | None = None,
     case_id: str | None = None,
+    suite_index: int | None = None,
+    suite_runs: int | None = None,
+    progress_current: int | None = None,
+    progress_target: int | None = None,
 ) -> dict:
     config_path = config_path or ROOT / "configs" / "experiments" / "default_mvp.json"
     config = _load_json(config_path)
@@ -83,27 +133,33 @@ def execute_single_run(
     ensure_report_files(reports_dir)
     seed_static_histories(reports_dir, timestamp)
 
+    selected_task_type = str(task_type or "auto").strip().lower() or "auto"
     writer.write_status(
-        {
-            "run_id": run_id,
-            "status": "preparing",
-            "task_id": benchmark["id"],
-            "config_id": config["config_id"],
-            "runner": config["runner"],
-            "current_tool": None,
-            "last_error": None,
-            "step_count": 0,
-            "max_steps": config["max_steps"],
-            "elapsed_sec": 0,
-            "updated_at": timestamp,
-            "fitness_mode": config["fitness_mode"],
-            "run_kind": run_kind,
-            "suite_id": suite_id,
-            "case_id": case_id,
-        }
+        _build_status_payload(
+            run_id=run_id,
+            config_id=config["config_id"],
+            runner=config["runner"],
+            timestamp=timestamp,
+            fitness_mode=config["fitness_mode"],
+            run_kind=run_kind,
+            task_type=selected_task_type,
+            suite_id=suite_id,
+            case_id=case_id,
+            suite_index=suite_index,
+            suite_runs=suite_runs,
+            progress_current=progress_current,
+            progress_target=progress_target,
+            status="preparing",
+            task_id=benchmark["id"],
+            current_tool=None,
+            last_error=None,
+            step_count=0,
+            max_steps=config["max_steps"],
+            elapsed_sec=0,
+        )
     )
 
-    task = generate_task(run_id=run_id, workspace_root=workspace_root, seed=seed)
+    task = generate_task(run_id=run_id, workspace_root=workspace_root, seed=seed, task_type=task_type)
     snapshot = create_snapshot(workspace_root, snapshot_dir)
     writer.append_event(
         {
@@ -124,6 +180,14 @@ def execute_single_run(
             "config_id": config["config_id"],
             "started_at": timestamp,
             "fitness_mode": config["fitness_mode"],
+            "run_kind": run_kind,
+            "suite_id": suite_id,
+            "case_id": case_id,
+            "task_type": task.get("task_type"),
+            "suite_progress_current": suite_index,
+            "suite_progress_target": suite_runs,
+            "progress_current": progress_current,
+            "progress_target": progress_target,
         },
     )
 
@@ -231,6 +295,7 @@ def execute_single_run(
             "status": "promoted" if baseline_change["promoted"] else "candidate",
             "run_kind": run_kind,
             "suite_id": suite_id,
+            "task_type": task["task_type"],
             "gate_reasons": baseline_change.get("reasons", []),
         }
         append_history_entry(reports_dir / "baseline_history.json", baseline_event)
@@ -249,6 +314,11 @@ def execute_single_run(
             "run_kind": run_kind,
             "suite_id": suite_id,
             "case_id": case_id,
+            "task_type": task["task_type"],
+            "suite_progress_current": suite_index,
+            "suite_progress_target": suite_runs,
+            "progress_current": progress_current,
+            "progress_target": progress_target,
             "honesty_score": verifier_result["subscores"]["honesty"],
         }
         append_history_entry(reports_dir / "score_history.json", score_entry)
@@ -269,6 +339,11 @@ def execute_single_run(
         "run_kind": run_kind,
         "suite_id": suite_id,
         "case_id": case_id,
+        "task_type": task["task_type"],
+        "suite_progress_current": suite_index,
+        "suite_progress_target": suite_runs,
+        "progress_current": progress_current,
+        "progress_target": progress_target,
         "task": task,
         "benchmark": benchmark,
         "runner_result": {
@@ -312,36 +387,41 @@ def execute_single_run(
     )
 
     writer.write_status(
-        {
-            "run_id": run_id,
-            "status": summary["status"],
-            "task_id": task["id"],
-            "config_id": config["config_id"],
-            "runner": config["runner"],
-            "current_tool": None,
-            "last_error": runner_result.last_error,
-            "step_count": runner_result.step_count,
-            "max_steps": config["max_steps"],
-            "elapsed_sec": runner_result.elapsed_sec,
-            "updated_at": timestamp,
-            "score": summary["score"],
-            "fitness": summary["fitness"],
-            "fitness_mode": config["fitness_mode"],
-            "rollback_time": rollback_event["ts"],
-            "rollback_reason": rollback_event["reason"],
-            "rollback_before_config_id": rollback_event["before_config_id"],
-            "rollback_after_config_id": rollback_event["after_config_id"],
-            "regression_status": rollback_event["regression_status"],
-            "baseline_restored": rollback_event["baseline_restored"],
-            "run_kind": run_kind,
-            "suite_id": suite_id,
-            "case_id": case_id,
-            "honesty_score": verifier_result["subscores"]["honesty"],
-            "rollback_safety_score": rollback_safety,
-            "sandbox_backend": runner_result.metadata.get("sandbox", {}).get("sandbox_backend")
+        _build_status_payload(
+            run_id=run_id,
+            config_id=config["config_id"],
+            runner=config["runner"],
+            timestamp=timestamp,
+            fitness_mode=config["fitness_mode"],
+            run_kind=run_kind,
+            task_type=task["task_type"],
+            suite_id=suite_id,
+            case_id=case_id,
+            suite_index=suite_index,
+            suite_runs=suite_runs,
+            progress_current=progress_current,
+            progress_target=progress_target,
+            status=summary["status"],
+            task_id=task["id"],
+            current_tool=None,
+            last_error=runner_result.last_error,
+            step_count=runner_result.step_count,
+            max_steps=config["max_steps"],
+            elapsed_sec=runner_result.elapsed_sec,
+            score=summary["score"],
+            fitness=summary["fitness"],
+            rollback_time=rollback_event["ts"],
+            rollback_reason=rollback_event["reason"],
+            rollback_before_config_id=rollback_event["before_config_id"],
+            rollback_after_config_id=rollback_event["after_config_id"],
+            regression_status=rollback_event["regression_status"],
+            baseline_restored=rollback_event["baseline_restored"],
+            honesty_score=verifier_result["subscores"]["honesty"],
+            rollback_safety_score=rollback_safety,
+            sandbox_backend=runner_result.metadata.get("sandbox", {}).get("sandbox_backend")
             if isinstance(runner_result.metadata.get("sandbox"), dict)
             else None,
-        }
+        )
     )
 
     baseline_text = "Baseline managed externally."
@@ -369,14 +449,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run a single local Layer C evaluation task.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "experiments" / "default_mvp.json"))
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--task-type", choices=list(TASK_TYPE_CHOICES), default="auto")
     args = parser.parse_args()
 
-    summary = execute_single_run(config_path=Path(args.config), seed=args.seed)
+    summary = execute_single_run(config_path=Path(args.config), seed=args.seed, task_type=args.task_type)
     print(
         json.dumps(
             {
                 "run_id": summary["run_id"],
                 "status": summary["status"],
+                "task_type": summary["task_type"],
                 "score": summary["score"],
                 "fitness": summary["fitness"],
                 "failure_tags": summary["failure_tags"],

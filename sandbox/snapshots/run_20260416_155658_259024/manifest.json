@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_155658_259024",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Harbor-75/docs/field-notes/v2/summary.md",
+      "sha256": "b4d3854686a8ffb40281b24ec5390fdec3967e952e9987403f24d2004749bb87",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\projects\\Harbor-75\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Harbor-75/knowledge/release/verified/deployment_note.md",
+      "sha256": "204d43c0fe5724bd40b07217ae6b2416b90a5e5ed2df894b533a0960ffdb40f5",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\projects\\Harbor-75\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "projects/Harbor-98/delivery/field-notes/verified/deployment_note.md",
+      "sha256": "00fd17df1d5af177450224f4e619861854c7fd5c6fac57ccf01279324025644f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\projects\\Harbor-98\\delivery\\field-notes\\verified\\deployment_note.md"
+    },
+    {
+      "path": "projects/Harbor-98/docs/archives/v1/deployment_draft.md",
+      "sha256": "951bdbf4b1d5a64fe7767c72723cfc6af20b97e9d83b5f405498d2ba26dabfc5",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\projects\\Harbor-98\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Harbor-98/ops/handover/current/deployment_archive.md",
+      "sha256": "8479f2cbe7d7d9823c529d1f96efb393a284a15be7d45b7702573d2def03d4a9",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\projects\\Harbor-98\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "scratch/Harbor-98/notes.txt",
+      "sha256": "4f05ed67d480f71bbb47af5d74821b306e369f7c3f8ed105270f85ff29688991",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\scratch\\Harbor-98\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "248dae5275d9abfa3f3a1771fc1b1eae5a1120095a9de17d800d52ff64557e18",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_155658_259024\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

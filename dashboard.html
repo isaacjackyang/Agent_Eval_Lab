@@ -195,6 +195,20 @@
     align-items:center;
     margin-bottom:10px;
   }
+  .control-grid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .control-grid label{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .control-actions{
+    margin-bottom:12px;
+  }
   .toolbar-field,
   .toolbar-check{
     display:flex;
@@ -218,6 +232,23 @@
     justify-content:center;
     cursor:pointer;
     transition:transform .12s ease, border-color .12s ease;
+  }
+  button.primary{
+    background:linear-gradient(135deg, rgba(120,220,202,.24), rgba(99,166,255,.2));
+    border-color:rgba(120,220,202,.4);
+  }
+  button.secondary{
+    background:linear-gradient(135deg, rgba(99,166,255,.2), rgba(247,200,115,.18));
+    border-color:rgba(99,166,255,.35);
+  }
+  button.danger{
+    background:linear-gradient(135deg, rgba(255,133,133,.18), rgba(255,207,102,.14));
+    border-color:rgba(255,133,133,.35);
+  }
+  button:disabled{
+    opacity:.56;
+    cursor:not-allowed;
+    transform:none;
   }
   button:hover{
     transform:translateY(-1px);
@@ -260,13 +291,23 @@
     margin-top:6px;
     font-size:16px;
   }
+  #controlCommandText,
+  #controlLogText{
+    word-break:break-all;
+    font-size:13px;
+  }
+  .control-note{
+    margin-top:12px;
+    min-height:34px;
+  }
   @media (max-width: 1100px){
     .cards{grid-template-columns:repeat(3, minmax(0, 1fr))}
+    .control-grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
     .span-8,.span-6,.span-4,.span-3{grid-column:span 12}
   }
   @media (max-width: 700px){
     header{flex-direction:column}
-    .cards,.grid-2,.stat-grid{grid-template-columns:1fr}
+    .cards,.grid-2,.stat-grid,.control-grid{grid-template-columns:1fr}
     .shell{padding:12px}
     .toolbar-field,
     .toolbar-check{width:100%}
@@ -390,6 +431,55 @@
     </div>
     <div class="stream" id="streamBox"><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></div>
   </section>
+  <section class="panel span-12">
+    <h2><span class="bi-stack"><span class="bi-line">實驗控制台</span><span class="bi-line">Experiment Control</span></span></h2>
+    <div class="control-grid">
+      <label for="controlConfig">
+        <span class="small"><span class="bi-stack"><span class="bi-line">設定檔</span><span class="bi-line">Config</span></span></span>
+        <select id="controlConfig"></select>
+      </label>
+      <label for="taskType">
+        <span class="small"><span class="bi-stack"><span class="bi-line">任務類型</span><span class="bi-line">Task type</span></span></span>
+        <select id="taskType"></select>
+      </label>
+      <label for="singleSeed">
+        <span class="small"><span class="bi-stack"><span class="bi-line">單次 seed</span><span class="bi-line">Single seed</span></span></span>
+        <input id="singleSeed" type="number" placeholder="auto" />
+      </label>
+      <label for="suiteRuns">
+        <span class="small"><span class="bi-stack"><span class="bi-line">Suite 次數</span><span class="bi-line">Suite runs</span></span></span>
+        <input id="suiteRuns" type="number" min="1" value="3" />
+      </label>
+      <label for="suiteSeedStart">
+        <span class="small"><span class="bi-stack"><span class="bi-line">批次起始 seed</span><span class="bi-line">Batch seed start</span></span></span>
+        <input id="suiteSeedStart" type="number" placeholder="auto" />
+      </label>
+    </div>
+    <div class="toolbar control-actions">
+      <button id="startSingleBtn" class="primary"><span class="bi-stack"><span class="bi-line">開始單次 Run</span><span class="bi-line">Start Single Run</span></span></button>
+      <button id="startSuiteBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Suite</span><span class="bi-line">Start Suite</span></span></button>
+      <button id="startNightlyBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Nightly Evolution</span><span class="bi-line">Start Nightly Evolution</span></span></button>
+      <button id="stopRunBtn" class="danger"><span class="bi-stack"><span class="bi-line">停止目前執行</span><span class="bi-line">Stop Current Run</span></span></button>
+    </div>
+    <div class="stat-grid">
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">控制狀態</span><span class="bi-line">Control state</span></span></div><strong id="controlStateText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">PID</span><span class="bi-line">PID</span></span></div><strong id="controlPidText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">目前設定</span><span class="bi-line">Active config</span></span></div><strong id="controlConfigActiveText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">最近結果</span><span class="bi-line">Last result</span></span></div><strong id="controlLastText">-</strong></div>
+      <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">執行進度</span><span class="bi-line">Run progress</span></span></div><strong id="controlProgressText">-</strong></div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">目前命令</span><span class="bi-line">Current command</span></span></div>
+        <strong id="controlCommandText">-</strong>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">控制 Log</span><span class="bi-line">Control log</span></span></div>
+        <strong id="controlLogText">-</strong>
+      </div>
+    </div>
+    <p class="small control-note" id="controlMessageText"><span class="bi-stack"><span class="bi-line">控制 API 準備中</span><span class="bi-line">Control API is loading</span></span></p>
+  </section>
 </main>
 
 <script>
@@ -405,8 +495,19 @@ const DATA = {
   configHistory: './reports/config_history.json'
 };
 
+const CONTROL = {
+  state: '/api/control',
+  startRun: '/api/start-run',
+  startSuite: '/api/start-suite',
+  startNightly: '/api/start-nightly',
+  stop: '/api/stop'
+};
+
 let autoScroll = true;
 let scoreChartState = [];
+let controlBusy = false;
+let controlConfigSignature = '';
+let taskTypeSignature = '';
 
 async function fetchJSON(url){
   const res = await fetch(url + '?t=' + Date.now());
@@ -418,6 +519,27 @@ async function fetchText(url){
   const res = await fetch(url + '?t=' + Date.now());
   if(!res.ok) throw new Error(url + ' ' + res.status);
   return await res.text();
+}
+
+async function postJSON(url, payload){
+  const res = await fetch(url + '?t=' + Date.now(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {})
+  });
+  const text = await res.text();
+  let data = {};
+  if(text){
+    try{
+      data = JSON.parse(text);
+    }catch{
+      data = { error: text };
+    }
+  }
+  if(!res.ok){
+    throw new Error(data.error || data.message || (url + ' ' + res.status));
+  }
+  return data;
 }
 
 function setText(id, value, cls=''){
@@ -739,9 +861,157 @@ function escapeHtml(value){
     .replaceAll('>', '&gt;');
 }
 
+function parseOptionalInt(id){
+  const raw = document.getElementById(id).value.trim();
+  if(!raw) return null;
+  const value = Number(raw);
+  if(!Number.isInteger(value)) throw new Error(`Invalid integer: ${id}`);
+  return value;
+}
+
+function formatControlCommand(command){
+  if(Array.isArray(command) && command.length){
+    return command.join(' ');
+  }
+  return '-';
+}
+
+function syncControlConfigOptions(configs, defaultConfig){
+  const select = document.getElementById('controlConfig');
+  const signature = JSON.stringify([configs || [], defaultConfig || null]);
+  if(signature === controlConfigSignature){
+    return;
+  }
+
+  const previousValue = select.value;
+  select.innerHTML = '';
+  (configs || []).forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.relative_path || item.name;
+    const configId = item.config_id || item.name;
+    option.textContent = item.runner ? `${configId} (${item.runner})` : configId;
+    select.appendChild(option);
+  });
+
+  if(previousValue && [...select.options].some(option => option.value === previousValue)){
+    select.value = previousValue;
+  } else if(defaultConfig && [...select.options].some(option => option.value === defaultConfig)){
+    select.value = defaultConfig;
+  }
+
+  controlConfigSignature = signature;
+}
+
+function syncTaskTypeOptions(taskTypes, defaultTaskType){
+  const select = document.getElementById('taskType');
+  const signature = JSON.stringify([taskTypes || [], defaultTaskType || null]);
+  if(signature === taskTypeSignature){
+    return;
+  }
+
+  const previousValue = select.value;
+  select.innerHTML = '';
+  (taskTypes || []).forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.value;
+    option.textContent = item.label || item.value;
+    select.appendChild(option);
+  });
+
+  if(previousValue && [...select.options].some(option => option.value === previousValue)){
+    select.value = previousValue;
+  } else if(defaultTaskType && [...select.options].some(option => option.value === defaultTaskType)){
+    select.value = defaultTaskType;
+  }
+
+  taskTypeSignature = signature;
+}
+
+function renderControlPanel(control, status){
+  syncControlConfigOptions(control?.configs, control?.default_config);
+  syncTaskTypeOptions(control?.task_types, control?.default_task_type);
+
+  const active = Boolean(control?.active);
+  const current = control?.current || null;
+  const lastResult = control?.last_result || null;
+  const activeKind = current?.kind || '';
+
+  let lastText = '-';
+  let lastTone = '';
+  if(lastResult){
+    if(lastResult.stopped_by_user){
+      lastText = `stopped (${lastResult.kind || 'run'})`;
+      lastTone = 'warn';
+    } else if(typeof lastResult.returncode === 'number'){
+      lastText = `exit ${lastResult.returncode} (${lastResult.kind || 'run'})`;
+      lastTone = lastResult.returncode === 0 ? 'ok' : 'bad';
+    }
+  }
+
+  setText('controlStateText', active ? `running ${current?.kind || ''}`.trim() : 'idle', active ? 'warn' : '');
+  setText('controlPidText', active ? current?.pid ?? '-' : '-');
+  setText('controlConfigActiveText', current?.config_name || lastResult?.config_name || '-');
+  setText('controlLastText', lastText, lastTone);
+  setText('controlCommandText', current ? formatControlCommand(current.command) : (lastResult ? formatControlCommand(lastResult.command) : '-'));
+  setText('controlLogText', current?.log_path || lastResult?.log_path || '-');
+
+  let progressText = '-';
+  if(active && status?.progress_text){
+    progressText = status.progress_text;
+  } else if(active && status?.suite_progress_text){
+    progressText = status.suite_progress_text;
+  } else if(active && activeKind === 'suite'){
+    const progressCurrent = Number(status?.suite_progress_current ?? 0);
+    const progressTarget = Number(status?.suite_progress_target ?? current?.runs ?? 0);
+    progressText = progressTarget > 0 ? `${progressCurrent}/${progressTarget}` : '-';
+  } else if(active && activeKind === 'nightly'){
+    const progressCurrent = Number(status?.progress_current ?? 0);
+    const progressTarget = Number(status?.progress_target ?? current?.estimated_total_evals ?? 0);
+    progressText = progressTarget > 0 ? `${progressCurrent}/${progressTarget}` : '-';
+  } else if(active && activeKind === 'single'){
+    progressText = '1/1';
+  } else if(lastResult?.progress_text){
+    progressText = lastResult.progress_text;
+  } else if(lastResult?.suite_progress_text){
+    progressText = lastResult.suite_progress_text;
+  } else if(lastResult?.kind === 'single'){
+    progressText = '1/1';
+  }
+  setText('controlProgressText', progressText, active && activeKind !== 'single' ? 'accent-2' : '');
+
+  let noticeZh = '可從這裡啟動單次 run、suite 或 nightly evolution，停止按鈕會終止目前背景程序。';
+  let noticeEn = 'Launch a single run, suite, or nightly evolution here; stop terminates the active background process.';
+  let noticeTone = '';
+
+  if(active && current){
+    const runLabel = activeKind === 'suite'
+      ? 'suite'
+      : activeKind === 'nightly'
+        ? 'nightly evolution'
+        : 'single run';
+    noticeZh = `目前正在執行 ${runLabel}，PID ${current.pid}。`;
+    noticeEn = `Currently running a ${runLabel}, PID ${current.pid}.`;
+    noticeTone = 'warn';
+  } else if(controlBusy){
+    noticeZh = '控制命令送出中...';
+    noticeEn = 'Sending control command...';
+    noticeTone = 'warn';
+  } else if(control?.message){
+    noticeZh = control.message;
+    noticeEn = control.message;
+  }
+
+  setBiHTML('controlMessageText', noticeZh, noticeEn, noticeTone || null);
+
+  document.getElementById('startSingleBtn').disabled = controlBusy || active;
+  document.getElementById('startSuiteBtn').disabled = controlBusy || active;
+  document.getElementById('startNightlyBtn').disabled = controlBusy || active;
+  document.getElementById('stopRunBtn').disabled = controlBusy || !active;
+}
+
 async function refreshAll(){
   try{
-    const [status, score, arch, test, baseline, rollback, nightly, configHistory, streamText] = await Promise.all([
+    const [status, score, arch, test, baseline, rollback, nightly, configHistory, streamText, control] = await Promise.all([
       fetchJSON(DATA.liveStatus).catch(() => null),
       fetchJSON(DATA.scoreHistory).catch(() => null),
       fetchJSON(DATA.archHistory).catch(() => null),
@@ -750,10 +1020,12 @@ async function refreshAll(){
       fetchJSON(DATA.rollbackEvents).catch(() => null),
       fetchJSON(DATA.nightlyHistory).catch(() => null),
       fetchJSON(DATA.configHistory).catch(() => null),
-      fetchText(DATA.liveStream).catch(() => '')
+      fetchText(DATA.liveStream).catch(() => ''),
+      fetchJSON(CONTROL.state).catch(() => null)
     ]);
 
     if(status) renderStatus(status);
+    if(control) renderControlPanel(control, status);
 
     renderList(
       'archList',
@@ -781,6 +1053,70 @@ async function refreshAll(){
   }
 }
 
+async function triggerControl(url, payload){
+  controlBusy = true;
+  document.getElementById('startSingleBtn').disabled = true;
+  document.getElementById('startSuiteBtn').disabled = true;
+  document.getElementById('startNightlyBtn').disabled = true;
+  document.getElementById('stopRunBtn').disabled = true;
+  setBiHTML('controlMessageText', '控制命令送出中...', 'Sending control command...', 'warn');
+  try{
+    const result = await postJSON(url, payload);
+    renderControlPanel(result, null);
+  }catch(error){
+    console.error(error);
+    setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
+  }finally{
+    controlBusy = false;
+    await refreshAll();
+  }
+}
+
+async function startSingleRun(){
+  const payload = {
+    config: document.getElementById('controlConfig').value,
+    task_type: document.getElementById('taskType').value
+  };
+  const seed = parseOptionalInt('singleSeed');
+  if(seed !== null){
+    payload.seed = seed;
+  }
+  await triggerControl(CONTROL.startRun, payload);
+}
+
+async function startSuiteRun(){
+  const runs = parseOptionalInt('suiteRuns');
+  if(runs === null || runs < 1){
+    throw new Error('Suite runs must be at least 1.');
+  }
+
+  const payload = {
+    config: document.getElementById('controlConfig').value,
+    task_type: document.getElementById('taskType').value,
+    runs
+  };
+  const seedStart = parseOptionalInt('suiteSeedStart');
+  if(seedStart !== null){
+    payload.seed_start = seedStart;
+  }
+  await triggerControl(CONTROL.startSuite, payload);
+}
+
+async function startNightlyRun(){
+  const payload = {
+    config: document.getElementById('controlConfig').value
+  };
+  const seedStart = parseOptionalInt('suiteSeedStart');
+  if(seedStart !== null){
+    payload.seed_start = seedStart;
+  }
+  await triggerControl(CONTROL.startNightly, payload);
+}
+
+async function stopCurrentRun(){
+  await triggerControl(CONTROL.stop, {});
+}
+
 function syncScrollButton(){
   setBiHTML(
     'toggleScroll',
@@ -792,6 +1128,30 @@ function syncScrollButton(){
 document.getElementById('toggleScroll').addEventListener('click', () => {
   autoScroll = !autoScroll;
   syncScrollButton();
+});
+document.getElementById('startSingleBtn').addEventListener('click', () => {
+  startSingleRun().catch(error => {
+    console.error(error);
+    setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
+  });
+});
+document.getElementById('startSuiteBtn').addEventListener('click', () => {
+  startSuiteRun().catch(error => {
+    console.error(error);
+    setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
+  });
+});
+document.getElementById('startNightlyBtn').addEventListener('click', () => {
+  startNightlyRun().catch(error => {
+    console.error(error);
+    setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
+  });
+});
+document.getElementById('stopRunBtn').addEventListener('click', () => {
+  stopCurrentRun().catch(error => {
+    console.error(error);
+    setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
+  });
 });
 document.getElementById('refreshNow').addEventListener('click', refreshAll);
 document.getElementById('keyword').addEventListener('input', refreshAll);

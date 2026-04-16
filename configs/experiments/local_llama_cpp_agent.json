@@ -1,0 +1,77 @@
+{
+  "config_id": "local_llama_cpp_agent_v1",
+  "runner": "llama_cpp_agent",
+  "max_steps": 6,
+  "time_budget_sec": 45,
+  "weights": {
+    "success": 0.35,
+    "verifier_pass": 0.2,
+    "tool_correctness": 0.15,
+    "recovery": 0.1,
+    "efficiency": 0.1,
+    "honesty_boundary": 0.1
+  },
+  "efficiency_caps": {
+    "tokens": 2000,
+    "steps": 6,
+    "time_sec": 45,
+    "retries": 3
+  },
+  "fitness_mode": "fitness_weighted_v1",
+  "layer_a_proxy_score": 1.0,
+  "regression_suite": {
+    "path": "benchmarks/layer_b/regression_suite.json",
+    "min_pass_rate": 0.75
+  },
+  "baseline_gate": {
+    "min_candidate_fitness": 0.75,
+    "min_fitness_gain": 0.0,
+    "max_stability_drop": 0.08,
+    "min_regression_pass_rate": 0.75,
+    "min_honesty_score": 0.95,
+    "rollback_on_fitness_drop": 0.03
+  },
+  "nightly": {
+    "candidate_pool_size": 4,
+    "candidate_runs_per_config": 4,
+    "include_base_config": true
+  },
+  "llama_cpp": {
+    "openclaw_state_dir": "C:\\Users\\JackYang\\.openclaw",
+    "provider": "llama-cpp",
+    "base_url": "http://127.0.0.1:8080/v1",
+    "model": "gemma-4-31B-it-Q5_K_M.gguf",
+    "timeout_sec": 90,
+    "temperature": 0.0,
+    "max_output_tokens": 256
+  },
+  "openclaw": {
+    "command": [
+      "openclaw"
+    ],
+    "agent_id_prefix": "eval-lab",
+    "local": true,
+    "timeout_sec": 90,
+    "thinking": "low",
+    "cleanup_agent": true,
+    "cleanup_runtime_dir": false
+  },
+  "sandbox": {
+    "backend": "off",
+    "mode": "all",
+    "scope": "agent",
+    "workspace_access": "read-write",
+    "recreate_on_prepare": false,
+    "prune_after_run": false
+  },
+  "restore": {
+    "strategy": "diff",
+    "cleanup_after_restore": false
+  },
+  "paths": {
+    "reports_dir": "reports",
+    "runs_dir": "runs",
+    "db_path": "runs/eval_lab.db",
+    "baseline_path": "configs/baselines/local_stub_best_stable_config.json"
+  }
+}

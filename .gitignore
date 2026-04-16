@@ -13,3 +13,6 @@ configs/baselines/archive/
 configs/experiments/*_restored.json
 sandbox/workspaces/
 sandbox/snapshots/
+!sandbox/snapshots/
+!sandbox/snapshots/__init__.py
+!sandbox/snapshots/workspace_snapshot.py

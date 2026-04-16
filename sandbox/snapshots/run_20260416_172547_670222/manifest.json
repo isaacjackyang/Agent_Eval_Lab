@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_172547_670222",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-29/docs/field-notes/v2/summary.md",
+      "sha256": "f27378fca8a5fc82994c760a42778b1f690d823a8271976c0433acc3f2d70fc9",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\projects\\Atlas-29\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Atlas-29/knowledge/release/verified/operations_runbook.md",
+      "sha256": "71d36ce5bf38eb0f5ead90282496d3896fac52375eb632f110087e5bccbf999d",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\projects\\Atlas-29\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Cinder-24/delivery/archives/current/operations_runbook.md",
+      "sha256": "b93f32cbdb24d7a1b2a779eeb0b571614528c428eb22f2af2945cf6414f0c3a2",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\projects\\Cinder-24\\delivery\\archives\\current\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Cinder-24/docs/archives/v1/operations_old.md",
+      "sha256": "a61974faa3b9ae9fcea0e6ff8b7fe82a240dd290186b433509209c3a139a974a",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\projects\\Cinder-24\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Cinder-24/ops/handover/current/ops_draft.md",
+      "sha256": "1c0d07cca00c7e8b85ec4116a99a0a6fabb8ed614162f9efbf47763cad3be57c",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\projects\\Cinder-24\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "scratch/Cinder-24/notes.txt",
+      "sha256": "2a8418d62d90ce0bc368dbd41d2f73fe03df3c661bb32bfcaac5d980084df392",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\scratch\\Cinder-24\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "856b74a60d7725e2838c65164c830ba8fcf123bb20ad87d209883bb3b6a03875",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172547_670222\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}

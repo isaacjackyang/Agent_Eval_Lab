@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_163042_438606",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Quartz-38/docs/field-notes/v2/summary.md",
+      "sha256": "1d2e66d9345281f35e6ec604af355a5d90afb9cea351ea5482337cbdec1405ec",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\projects\\Quartz-38\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Quartz-38/knowledge/release/verified/operations_runbook.md",
+      "sha256": "b75feaa495ad32a1d23dcae99e629894f1e116a1b242b5fec4b684f8b74164da",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\projects\\Quartz-38\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Quartz-86/delivery/release/v1/operations_runbook.md",
+      "sha256": "1f5d2d3d2a78844146ff976c62692c0208538812a24b307fd8459d72689187dc",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\projects\\Quartz-86\\delivery\\release\\v1\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Quartz-86/docs/archives/v1/operations_old.md",
+      "sha256": "02a2596c551336c74a3800d24c1ae76cda03f35a4fee1aadc91cdfc5f744e897",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\projects\\Quartz-86\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Quartz-86/ops/handover/current/ops_draft.md",
+      "sha256": "60e261c9cb91922286abb0fa8b1093c5466e364198263d8faed508660cfb6e1a",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\projects\\Quartz-86\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "scratch/Quartz-86/notes.txt",
+      "sha256": "3d037bd42fe78ef0946eb1d17c97bb934b8ab03bb615ff6659b5e9cdc20f5019",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\scratch\\Quartz-86\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "b3de5c64b8ccfacabfccbcae0e4316db869efa9e23446d8890a605ed4857fe91",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163042_438606\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_162706_673956",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-31/docs/field-notes/v2/summary.md",
+      "sha256": "f0647e4c3996901c1dddf7bdd97af66bdc4f5b7301bdc4db77f89257bb83de27",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\projects\\Falcon-31\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Falcon-31/knowledge/release/verified/deployment_note.md",
+      "sha256": "82dbc068980f54a2a02046227ee62a0ebb34a7e22f39c440c0024689c6edcd3c",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\projects\\Falcon-31\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "projects/Nova-13/docs/archives/v1/deployment_draft.md",
+      "sha256": "095d71901e71057e6e1d285701943e29f3b0fa5d135ca920fe59a992663a74cc",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\projects\\Nova-13\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Nova-13/ops/field-notes/v1/deploy_runbook.md",
+      "sha256": "952bbb4ead7a42b40c540e0fd82c19d4a2e1b0ea67f2d3694439449c5d3193a2",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\projects\\Nova-13\\ops\\field-notes\\v1\\deploy_runbook.md"
+    },
+    {
+      "path": "projects/Nova-13/ops/handover/current/deployment_archive.md",
+      "sha256": "2b3394d167be0d04cdbe40c2e68c9f5f11e461f818c5339421bd0d64a14900db",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\projects\\Nova-13\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "scratch/Nova-13/notes.txt",
+      "sha256": "da5ed59695a16a1e30c93a7b7a38dec4b6f849f6486214f34c94be0c9deec89f",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\scratch\\Nova-13\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "ffa1e58554b9913439f20863effa23096bacad9d55fa9198c8f2cef02b86f0f1",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_162706_673956\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

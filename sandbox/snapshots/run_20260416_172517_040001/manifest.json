@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_172517_040001",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-94/delivery/field-notes/current/deployment_note.md",
+      "sha256": "f4f58f8bdb49ac950a32868b3175bd52452aac75255d79e091c163fe0e06f189",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\projects\\Cinder-94\\delivery\\field-notes\\current\\deployment_note.md"
+    },
+    {
+      "path": "projects/Cinder-94/docs/archives/v1/deployment_draft.md",
+      "sha256": "d5a5487452adf6632823021f9982ea190ce055f8cb949906a57125b03d239903",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\projects\\Cinder-94\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Cinder-94/ops/handover/current/deployment_archive.md",
+      "sha256": "ea106d8b9a6e1a454d847f4e3828f7dd7214d968010a174bb75b99a922670648",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\projects\\Cinder-94\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "projects/Nova-99/docs/field-notes/v2/summary.md",
+      "sha256": "6b4743829b3418d43ebd735ada82847ce85622f1482fc601060816fcd8f4df51",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\projects\\Nova-99\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Nova-99/knowledge/release/verified/deployment_note.md",
+      "sha256": "e910f2f5cfbd6363b9188b95dc8e51c535029c5a4ae0dc0152c1c9e4e883a0f7",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\projects\\Nova-99\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "scratch/Cinder-94/notes.txt",
+      "sha256": "35d41917b3a5690cb6b35822ed28a0b14eff1d2de3872314aaf379ef69276a6d",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\scratch\\Cinder-94\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "5ddbe95eedc7c1b48cb9129edc98c0de8bf12cea6aa8bbb173135fee0dcbe9cb",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_172517_040001\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

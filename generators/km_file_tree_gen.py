@@ -24,6 +24,14 @@ DOC_PROFILES = [
         "noise_names": ["operations_old.md", "ops_draft.md"],
     },
 ]
+PROFILE_BY_SLUG = {profile["slug"]: profile for profile in DOC_PROFILES}
+TASK_TYPE_CHOICES = ("auto", "deployment", "handoff", "operations")
+TASK_TYPE_OPTIONS = [
+    {"value": "auto", "label": "Auto (Random)"},
+    {"value": "deployment", "label": "Deployment"},
+    {"value": "handoff", "label": "Handoff"},
+    {"value": "operations", "label": "Operations"},
+]
 
 PROJECT_PREFIXES = ["Atlas", "Nova", "Cinder", "Harbor", "Quartz", "Falcon"]
 FOLDER_L1 = ["knowledge", "ops", "docs", "delivery"]
@@ -67,11 +75,17 @@ def _build_noise_files(rng: random.Random, workspace_root: Path, project_name: s
     return noise_paths
 
 
-def generate_task(run_id: str, workspace_root: Path, seed: int | None = None) -> dict:
+def generate_task(run_id: str, workspace_root: Path, seed: int | None = None, task_type: str | None = None) -> dict:
     rng = random.Random(seed if seed is not None else run_id)
     workspace_root.mkdir(parents=True, exist_ok=True)
 
-    profile = rng.choice(DOC_PROFILES)
+    normalized_task_type = str(task_type or "auto").strip().lower() or "auto"
+    if normalized_task_type == "auto":
+        profile = rng.choice(DOC_PROFILES)
+    else:
+        profile = PROFILE_BY_SLUG.get(normalized_task_type)
+        if profile is None:
+            raise ValueError(f"Unsupported task type: {task_type}")
     project_name = f"{rng.choice(PROJECT_PREFIXES)}-{rng.randint(10, 99)}"
 
     target_dir = (
@@ -98,6 +112,8 @@ def generate_task(run_id: str, workspace_root: Path, seed: int | None = None) ->
     return {
         "id": "km_dynamic_retrieval_01",
         "category": "file_retrieval",
+        "task_type": profile["slug"],
+        "task_type_requested": normalized_task_type,
         "prompt": f"找出專案 {project_name} 的 {profile['doc_type']}，並只顯示檔案位置。",
         "project_name": project_name,
         "doc_type": profile["doc_type"],

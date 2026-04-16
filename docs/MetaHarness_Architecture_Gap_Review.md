@@ -1,351 +1,154 @@
-# MetaHarness 對照架構缺口審視
-
-## 結論
+# MetaHarness Architecture Gap Review
 
-目前這套 `Agent_Eval_Lab` 已經有一些和 MetaHarness 相近的基礎：
+## 文件定位
 
-- 有 run artifact、live stream、history report
-- 有 verifier / score / nightly candidate pool / baseline gate
-- 有工具調用 trace 與 workspace restore
-- 有把 OpenClaw adapter、sandbox 設定、baseline lifecycle 接進主流程
+這份文件是「目標態 vs 現況」的 gap review。
 
-但如果用你提供的 MetaHarness 落地原則來看，現在仍然缺少的不是「更多 if-else」，而是三個核心能力：
+它不再假設 repo 已經完成完整 MetaHarness；相反地，它描述：
 
-1. **夠原始、夠完整、可回放的 Raw Trace**
-2. **真正 declarative 的 Reward / Tool / Task 契約**
-3. **失敗案例驅動的 Proposer-Executor 自我迭代閉環**
+- 現在真的有什麼
+- 跟理想中的 `karpathy/autoresearch` / MetaHarness 還差什麼
+- 下一步最值得補哪些能力
 
----
-
-## 1. Raw Trace 體系仍然不夠「原始」
-
-### 現況
-
-- `runs/live_stream.jsonl` 會記錄 assistant、tool_call、tool_result、verifier、system 事件
-- artifact 會保存 `runner_result.metadata.raw_stdout`
-- verifier 會保存 `tool_trace`
-
-### 缺口
-
-目前的 trace 還是偏「摘要後的事件」，不是 MetaHarness 意義上的 Raw Trace：
-
-- 沒有 **統一 schema version**
-- 沒有 **event_id / parent_id / correlation_id**
-- 沒有把 **OpenClaw 原始事件流完整逐條落盤**
-- 沒有把 **每一步 latency / token throughput / model latency / sandbox latency** 拆出來
-- 沒有保存 **中間變數狀態**
-  例如：
-  - 檢索候選列表與分數
-  - rerank 前後結果
-  - 每輪 prompt / response payload
-  - sandbox explain / recreate 的原始結果與耗時
-- 沒有 **可重播 replay**
-  也就是無法用同一份 raw trace 做反事實診斷或離線分析
+## 現況摘要
 
-### 風險
-
-- 失敗時只能看到「結果錯了」，很難知道是檢索、規劃、工具調用還是 sandbox 狀態出問題
-- nightly 目前只能做粗粒度 selection，無法做 trace-driven mutation
-
-### 建議
-
-優先新增 `storage/raw_trace_writer.py` 與 `runs/traces/<run_id>.jsonl`：
-
-- 一個 event 一列
-- 每列至少包含：
-  - `trace_schema_version`
-  - `run_id`
-  - `event_id`
-  - `parent_event_id`
-  - `stage`
-  - `ts_start`
-  - `ts_end`
-  - `latency_ms`
-  - `token_in`
-  - `token_out`
-  - `token_per_sec`
-  - `tool_name`
-  - `tool_args_raw`
-  - `tool_result_raw`
-  - `model_request_raw`
-  - `model_response_raw`
-  - `sandbox_state`
-  - `intermediate_state`
+截至 `2026-04-16`，`Agent_Eval_Lab` 已具備：
 
----
+- 本機 Layer C file retrieval 任務生成
+- `llama.cpp` runner 主線
+- dashboard 控制 single / suite / nightly
+- sequential single-parameter nightly tuning
+- 連續 partial-credit verifier
+- artifact / history / rollback / baseline 紀錄
 
-## 2. Reward Function 還不夠 declarative
+這表示它已經不是純 benchmark script，但也還不是完整 MetaHarness。
 
-### 現況
+## 已對齊 MetaHarness 精神的部分
 
-- `Stotal` 與 weighted fitness 已存在
-- verifier 有 `task / verify / tool / recovery / efficiency / honesty`
-- nightly 已會依 fitness 做 baseline gate
+### 1. 實驗不是只看最後分數
 
-### 缺口
+目前已有：
 
-現在的 reward 還是偏「程式裡手工寫死的邏輯」：
+- `reports/parameter_history.json`
+- `reports/config_history.json`
+- `reports/nightly_history.json`
 
-- verifier 對 `tool_score` 的規則仍是固定 if-else
-- `search_file -> open_file_location` 的成功路徑被寫進了驗證邏輯
-- task schema 還不夠 declarative
-  - 沒有明確的 `trace expectations`
-  - 沒有 `format expectations`
-  - 沒有 `retrieval quality expectations`
-  - 沒有 `citation / provenance expectations`
-- reward 沒有細分成「中間過程 reward」
-  - 檢索是否找對候選
-  - 是否縮小搜尋範圍成功
-  - 是否有 hallucination precursor
+因此每輪的參數、分數、是否採用，都可追溯。
 
-### 風險
+### 2. 調參開始有「研究循環」味道
 
-- 一旦任務類型擴充，就會快速回到大量特例程式碼
-- proposer 未來即使存在，也缺少可優化的標準化目標
+`scripts/run_nightly.py` 已改成：
 
-### 建議
+1. 量 baseline
+2. 每輪只改一個參數
+3. 提升就採用
+4. 以新 baseline 繼續下一輪
 
-把 task template 升級成 declarative contract，例如：
+這比舊式 candidate pool 更接近 autoresearch 的 iterative loop。
 
-```json
-{
-  "expected_trace": {
-    "required_tools": ["search_file", "open_file_location"],
-    "forbidden_tools": ["write_file", "delete_file"],
-    "preferred_order": ["search_file", "open_file_location"]
-  },
-  "expected_output": {
-    "type": "path",
-    "must_exist": true,
-    "must_match_canonical": true
-  },
-  "intermediate_rewards": {
-    "retrieval_candidate_contains_target": 0.2,
-    "query_refinement_success": 0.1
-  }
-}
-```
+### 3. 評分不再接近 pass/fail 二元
 
----
+`verifiers/km_dynamic_verifier.py` 已加入連續檢索品質訊號：
 
-## 3. 工具箱還不是完整的「受控邊界」
+- same project
+- same doc slug
+- canonical marker
+- filename similarity
+- path similarity
+- search rank
 
-### 現況
+因此現在可以區分：
 
-- 已有 OpenClaw adapter
-- sandbox config 已能注入 agent config
-- file retrieval 類 task 已有基本工具約束
+- 完全錯
+- 接近正解
+- 正解
 
-### 缺口
+## 與完整 MetaHarness 的差距
 
-目前工具層仍然偏 task-specific：
+### Gap A: 還沒有真正的 proposer
 
-- `search_file` 其實還不是正式的 CLI tool 契約，而是 mock / stub 或程式內搜尋邏輯
-- 沒有統一的 tool manifest
-- 沒有 capability metadata：
-  - side effects
-  - required permissions
-  - timeout budget
-  - sandbox requirement
-  - input / output schema
-- 沒有獨立的「本地工具層」供 OpenClaw 與 verifier 共用
+目前 nightly 只會從 `evolution/mutator.py` 裡的固定單參數候選挑下一輪。
 
-### 風險
+這代表：
 
-- 真實 OpenClaw 上線後，tool 行為與 verifier 假設可能逐漸漂移
-- 很難做到跨任務共用與安全治理
+- 目前沒有讀 trace 後自動提出 patch 的 proposer
+- 目前沒有 failure cluster -> parameter proposal 的映射器
+- 目前沒有 prompt patch / policy patch generator
 
-### 建議
+### Gap B: trace 還不夠原始、也不夠結構化
 
-新增 `tools/manifest.json` 與統一 wrapper：
+雖然已有：
 
-- 每個工具都有 schema、timeout、risk class、side-effect class
-- OpenClaw runner 與 verifier 都讀同一份 manifest
+- `runs/live_stream.jsonl`
+- artifact 裡的 `tool_trace`
 
----
+但離完整 MetaHarness trace 還差：
 
-## 4. 現在還沒有真正的 Proposer-Executor
+- event schema version
+- correlation id / parent-child trace structure
+- model latency / token throughput / tool latency 細分
+- replay-friendly raw request / raw response
+- 更完整的 sandbox telemetry
 
-### 現況
+### Gap C: nightly 仍偏 config mutation，不是全面研究循環
 
-- nightly 會產生 candidate pool
-- mutation 已存在 `fast_lane / deep_search / strict_honesty`
+目前 nightly 主要改的是：
 
-### 缺口
+- `max_steps`
+- `time_budget_sec`
+- `efficiency_caps.*`
+- `llama_cpp.*`
+- `openclaw.thinking`
 
-這仍然是「模板變體生成器」，不是 MetaHarness 所說的 proposer：
+還沒有涵蓋：
 
-- 沒有讀取失敗案例 trace 後提出變更建議
-- 沒有針對特定 failure tag 提案
-- 沒有把 proposal 與 executor 分離
-- 沒有自動產生 prompt patch / config patch / tool policy patch
-- 沒有 proposal quality scoring
+- system prompt variant
+- search policy variant
+- rerank policy
+- recovery policy
+- tool routing strategy
 
-### 風險
+### Gap D: dashboard 還沒有研究視圖
 
-- nightly 目前只是在有限模板裡挑最好的一個
-- 一旦遇到新的 failure mode，不會學到新的策略
+目前 dashboard 已能控制流程，也能看高層結果，但還沒有：
 
-### 建議
+- round-by-round parameter diff
+- lineage / ancestry view
+- failure heatmap
+- trace timeline
+- “為什麼這輪被採用 / 被拒絕”的可視化
 
-最小可行版 proposer-executor：
+### Gap E: OpenClaw CLI 真實路徑仍不穩
 
-- `proposer`
-  讀取最近 N 個 failed runs 的 raw trace + failure tags
-- 產出：
-  - config patch proposal
-  - prompt patch proposal
-  - tool policy proposal
-- `executor`
-  把 proposal 套到候選 config 上，跑小規模 candidate + regression
-- 最後再經 baseline gate
+`openclaw_cli` adapter 已存在，但 repo 目前最穩定的實驗路徑仍是本機 `llama_cpp_agent`。
 
-建議新增：
+所以如果目標是完整 MetaHarness + OpenClaw runtime 真實鏈路，還需要：
 
-- `proposer/trace_analyzer.py`
-- `proposer/proposal_schema.json`
-- `scripts/run_proposer_cycle.py`
+- CLI lifecycle 穩定化
+- sandbox lifecycle 檢查
+- trace schema 對齊 OpenClaw event
+- 端到端 smoke tests
 
----
-
-## 5. 缺少「失敗分類 -> 對策」映射層
-
-### 現況
-
-- 目前有 failure tags
-- 有 nightly selection
-
-### 缺口
-
-現在 failure tags 還沒有變成可操作的自動化知識：
-
-- `hallucinated_path` 沒有對應的 proposal strategy
-- `wrong_tool` 沒有對應的 policy tightening
-- `failed_recovery` 沒有對應的 retry / timeout mutation
-- 沒有 failure cluster 與 recurring pattern 分析
-
-### 建議
-
-新增一層：
-
-- `reports/failure_clusters.json`
-- `reports/failure_to_action_map.json`
-
-這會讓 proposer 不只看單次 run，而是看 recurring failure pattern。
-
----
-
-## 6. Docker sandbox 目前是「設定已接上」，不是「實際驗證完畢」
-
-### 現況
-
-- sandbox config 已注入 OpenClaw runtime
-- runner 會呼叫 `sandbox recreate/explain`
-- artifact 會保存 sandbox metadata
-
-### 缺口
-
-這台機器目前沒有 `docker` 指令可驗證，所以還缺：
-
-- 真實 container 啟動驗證
-- volume mount 驗證
-- workspace permissions 驗證
-- network isolation 驗證
-- container cleanup 驗證
-- sandbox failure path 驗證
-
-### 建議
-
-在有 Docker 的機器上補一套 `sandbox smoke tests`：
-
-- `scripts/test_docker_sandbox.py`
-- 驗證：
-  - container exists
-  - workspace mount works
-  - write/read permission matches config
-  - network mode is correct
-  - prune after run works
-
----
-
-## 7. Dashboard 還沒有「trace diagnostics」視角
-
-### 現況
-
-- dashboard 已有 baseline / rollback / nightly / config history
-
-### 缺口
-
-如果要往 MetaHarness 靠近，dashboard 還少：
-
-- raw trace timeline
-- token/s latency chart
-- stage latency breakdown
-- failure tag heatmap
-- proposal vs baseline comparison
-- candidate pool leaderboard detail
-- sandbox health / cleanup status
-
-### 建議
-
-下一版 dashboard 可以增加：
-
-- `Trace Diagnostics`
-- `Failure Heatmap`
-- `Candidate Leaderboard`
-- `Sandbox Status`
-
----
-
-## 8. 缺少「資料血緣」與 schema 治理
-
-### 缺口
-
-目前 artifact 與 reports 雖然多，但還缺：
-
-- `schema_version`
-- `config_hash`
-- `prompt_hash`
-- `tool_manifest_hash`
-- `baseline_lineage`
-- `proposal_id`
-- `parent_run_id`
-
-### 風險
-
-- 之後資料越多，難以知道某個 run 到底屬於哪一代配置
-- 回溯 nightly 決策會越來越痛苦
-
----
-
-## 優先補強順序
+## 建議的優先順序
 
 ### P0
 
-1. 建立真正的 raw trace schema 與落盤
-2. 補 proposer-executor 最小閉環
-3. 把 failure tag 對應到 proposal strategy
+1. 為 nightly 加上更明確的 `accepted / rejected because ...` 結構化理由。
+2. 把 `parameter_history.json` 接到 dashboard。
+3. 把 search trace 補成可穩定取 rank / candidates / chosen path。
 
 ### P1
 
-1. 把 task / tool / reward 改成更 declarative 的契約
-2. 補 Docker sandbox smoke tests
-3. dashboard 加入 diagnostics 視角
+1. 加入 failure-cluster 分析。
+2. 建立 `failure tag -> proposal template` 規則。
+3. 讓 nightly 不只改 numeric config，也能改 prompt / policy。
 
 ### P2
 
-1. 做 trace replay / counterfactual diagnosis
-2. 做多代 proposal lineage
-3. 做 candidate Pareto frontier 與多目標 selection
-
----
+1. 建立真正的 proposer-executor loop。
+2. 建立 trace replay / counterfactual diagnosis。
+3. 加入多策略比較與 lineage 視圖。
 
 ## 一句話結論
 
-我們現在已經有「評測平台」與「基礎選代機制」，但距離 MetaHarness 式的系統還差在：
-
-- **trace 還不夠 raw**
-- **reward 還不夠 declarative**
-- **nightly 還不是 failure-driven proposer-executor**
-
-如果只補更多 mutation 模板，提升會很快碰頂；真正的下一個躍遷點會是 **Raw Trace + Failure-driven Proposer**。
+`Agent_Eval_Lab` 現在已經有 MetaHarness 的骨架與 autoresearch 的迭代精神，但仍屬於「可研究的實驗室」階段，尚未成為完整的自動研究系統。`

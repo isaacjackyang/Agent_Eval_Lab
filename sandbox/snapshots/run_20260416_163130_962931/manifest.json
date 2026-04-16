@@ -1,0 +1,42 @@
+{
+  "workspace_root": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_163130_962931",
+  "snapshot_dir": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-56/docs/archives/v1/handoff_notes.md",
+      "sha256": "1c7c997b247bc4014294392a32dfb560ea5c7dc12c0e12d6c5b2cc51e0154125",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\projects\\Cinder-56\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Cinder-56/ops/handover/current/handoff_archive.md",
+      "sha256": "40461681b026847dc5878f19aa002e7262c449ef3beeb70ccda2a96b23c24eba",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\projects\\Cinder-56\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "projects/Cinder-56/ops/handover/v2/handoff_packet.md",
+      "sha256": "21857fd82b8e316b1f2e9c28a97cd51605bc4c9e0708358176817c9156c579a5",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\projects\\Cinder-56\\ops\\handover\\v2\\handoff_packet.md"
+    },
+    {
+      "path": "projects/Harbor-80/docs/field-notes/v2/summary.md",
+      "sha256": "445fe6dca8cd83ea255853dfe1f787b99166805b1c62ed7f2b50b56a37f4c48e",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\projects\\Harbor-80\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Harbor-80/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "3ead447d0a29614ef8059cdc0261f2c5e175c6e612d4cf97a2692a11e5adf48e",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\projects\\Harbor-80\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "scratch/Cinder-56/notes.txt",
+      "sha256": "4fbbe17bc7651e1d90fad82437dc36fc37b6dc64787929351b2f2c5b84af4bc3",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\scratch\\Cinder-56\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "1f2294bebf19746e49e2fd31626547c2190487002c2c9036194b7ebf2fa6fad8",
+      "backup_path": "F:\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_163130_962931\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

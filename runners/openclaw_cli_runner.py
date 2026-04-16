@@ -21,6 +21,30 @@ class OpenClawCliRunner(BaseRunner):
             run_id=context["run_id"],
         )
         token_estimate = 0
+        status_context = {
+            "run_kind": context.get("run_kind"),
+            "suite_id": context.get("suite_id"),
+            "case_id": context.get("case_id"),
+            "task_type": task.get("task_type") or context.get("task_type"),
+            "suite_progress_current": context.get("suite_progress_current"),
+            "suite_progress_target": context.get("suite_progress_target"),
+            "progress_current": context.get("progress_current"),
+            "progress_target": context.get("progress_target"),
+        }
+        if (
+            status_context["suite_progress_current"] is not None
+            and status_context["suite_progress_target"] is not None
+        ):
+            status_context["suite_progress_text"] = (
+                f"{status_context['suite_progress_current']}/{status_context['suite_progress_target']}"
+            )
+        if (
+            status_context["progress_current"] is not None
+            and status_context["progress_target"] is not None
+        ):
+            status_context["progress_text"] = (
+                f"{status_context['progress_current']}/{status_context['progress_target']}"
+            )
 
         def emit(event_type: str, text: str, **extra) -> None:
             nonlocal token_estimate
@@ -44,6 +68,7 @@ class OpenClawCliRunner(BaseRunner):
                 "elapsed_sec": round(time.perf_counter() - started, 3),
                 "updated_at": context["started_at"],
                 "fitness_mode": context["fitness_mode"],
+                **status_context,
             }
         )
         if sandbox_metadata.get("sandbox_info"):
@@ -89,6 +114,7 @@ class OpenClawCliRunner(BaseRunner):
                 "elapsed_sec": elapsed_sec,
                 "updated_at": context["started_at"],
                 "fitness_mode": context["fitness_mode"],
+                **status_context,
             }
         )
 
