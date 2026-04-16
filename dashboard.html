@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenClaw Eval Lab Dashboard</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#131a2b; --panel2:#0f1524; --text:#e8edf7; --muted:#9aa7bd;
+    --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --accent:#60a5fa; --line:#23304b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC,sans-serif;background:var(--bg);color:var(--text)}
+  header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#0d1322;position:sticky;top:0;z-index:10}
+  header h1{font-size:18px;margin:0}
+  header .meta{font-size:12px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1.1fr 1.1fr 1fr;gap:12px;padding:12px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:120px}
+  .panel h2{margin:0 0 10px 0;font-size:14px}
+  .span-2{grid-column:span 2}
+  .span-3{grid-column:span 3}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .label{font-size:12px;color:var(--muted)}
+  .value{font-size:18px;font-weight:700;margin-top:6px}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  ul{margin:0;padding-left:18px}
+  li{margin:4px 0;color:#d6deed}
+  .status-line{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .progress{height:10px;background:#0c1220;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .progress>div{height:100%;background:linear-gradient(90deg,var(--accent),#93c5fd);width:0%}
+  canvas{width:100%;height:260px;background:#0c1220;border:1px solid var(--line);border-radius:10px}
+  .stream{height:320px;overflow:auto;background:#0c1220;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:Consolas,Menlo,monospace;font-size:12px;line-height:1.5;white-space:pre-wrap}
+  .row{margin-bottom:8px}
+  .t-assistant{color:#dbeafe}
+  .t-tool_call{color:#93c5fd}
+  .t-tool_result{color:#86efac}
+  .t-verifier{color:#fcd34d}
+  .t-system{color:#c4b5fd}
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  input,button,select{background:#0c1220;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+  button{cursor:pointer}
+  small{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>OpenClaw Eval Lab Dashboard</h1>
+    <div class="meta">單檔 HTML / 本地監控台 / 無建置流程</div>
+  </div>
+  <div class="meta" id="lastUpdated">Last update: -</div>
+</header>
+
+<div class="grid">
+  <section class="panel span-3">
+    <h2>總覽</h2>
+    <div class="cards">
+      <div class="card"><div class="label">狀態</div><div class="value" id="statusText">-</div></div>
+      <div class="card"><div class="label">目前 Task</div><div class="value" id="taskText">-</div></div>
+      <div class="card"><div class="label">目前 Config</div><div class="value" id="configText">-</div></div>
+      <div class="card"><div class="label">步數</div><div class="value" id="stepText">-</div></div>
+      <div class="card"><div class="label">經過秒數</div><div class="value" id="elapsedText">-</div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>架構變化</h2>
+    <ul id="archList"><li>尚無資料</li></ul>
+  </section>
+
+  <section class="panel">
+    <h2>測試方式變化</h2>
+    <ul id="testList"><li>尚無資料</li></ul>
+  </section>
+
+  <section class="panel">
+    <h2>目前 Agent 運行情況</h2>
+    <div class="status-line">
+      <div><span class="label">Runner：</span><span id="runnerText">-</span></div>
+      <div><span class="label">Current tool：</span><span id="toolText">-</span></div>
+      <div><span class="label">Last error：</span><span id="errorText">-</span></div>
+    </div>
+    <div style="margin-top:10px" class="progress"><div id="progressBar"></div></div>
+    <small>此進度條預設以 max_steps 估算，可改為真實階段進度。</small>
+  </section>
+
+  <section class="panel span-2">
+    <h2>分數變化歷史長條圖</h2>
+    <canvas id="scoreCanvas" width="900" height="260"></canvas>
+    <small>顯示 recent runs 的 overall fitness。</small>
+  </section>
+
+  <section class="panel span-3">
+    <h2>LLM 即時輸出監看</h2>
+    <div class="toolbar">
+      <button id="toggleScroll">暫停自動捲動</button>
+      <label><input type="checkbox" id="onlyTools"> 只看工具事件</label>
+      <input id="keyword" placeholder="關鍵字過濾" />
+      <button id="refreshNow">立即刷新</button>
+    </div>
+    <div class="stream" id="streamBox">尚無資料</div>
+  </section>
+</div>
+
+<script>
+const DATA = {
+  liveStatus: '../runs/live_status.json',
+  liveStream: '../runs/live_stream.jsonl',
+  scoreHistory: '../reports/score_history.json',
+  archHistory: '../reports/architecture_history.json',
+  testHistory: '../reports/test_method_history.json'
+};
+
+let autoScroll = true;
+
+async function fetchJSON(url){
+  const res = await fetch(url + '?t=' + Date.now());
+  if(!res.ok) throw new Error(url + ' ' + res.status);
+  return await res.json();
+}
+
+async function fetchText(url){
+  const res = await fetch(url + '?t=' + Date.now());
+  if(!res.ok) throw new Error(url + ' ' + res.status);
+  return await res.text();
+}
+
+function setText(id, value){
+  document.getElementById(id).textContent = value ?? '-';
+}
+
+function renderStatus(data){
+  setText('statusText', data.status || '-');
+  setText('taskText', data.task_id || '-');
+  setText('configText', data.config_id || '-');
+  setText('stepText', String(data.step_count ?? '-'));
+  setText('elapsedText', String(data.elapsed_sec ?? '-'));
+  setText('runnerText', data.runner || '-');
+  setText('toolText', data.current_tool || '-');
+  setText('errorText', data.last_error || '-');
+  const steps = Math.max(1, data.max_steps || 12);
+  const pct = Math.min(100, ((data.step_count || 0) / steps) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('lastUpdated').textContent = 'Last update: ' + (data.updated_at || new Date().toLocaleString());
+}
+
+function renderList(id, items, formatter){
+  const ul = document.getElementById(id);
+  ul.innerHTML = '';
+  if(!items || !items.length){
+    ul.innerHTML = '<li>尚無資料</li>';
+    return;
+  }
+  items.slice(0, 12).forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = formatter(item);
+    ul.appendChild(li);
+  });
+}
+
+function drawBarChart(canvas, values, labels){
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = '#0c1220';
+  ctx.fillRect(0,0,w,h);
+
+  const padL = 40, padR = 10, padT = 15, padB = 35;
+  const chartW = w - padL - padR;
+  const chartH = h - padT - padB;
+
+  ctx.strokeStyle = '#23304b';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT);
+  ctx.lineTo(padL, padT + chartH);
+  ctx.lineTo(padL + chartW, padT + chartH);
+  ctx.stroke();
+
+  if(!values.length) return;
+  const max = Math.max(1, ...values);
+  const barGap = 10;
+  const barW = Math.max(8, (chartW - barGap * (values.length + 1)) / values.length);
+
+  values.forEach((v, i) => {
+    const x = padL + barGap + i * (barW + barGap);
+    const bh = (v / max) * (chartH - 10);
+    const y = padT + chartH - bh;
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(x, y, barW, bh);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(String(Math.round(v * 100) / 100), x, y - 4);
+
+    const label = labels[i] || String(i + 1);
+    ctx.save();
+    ctx.translate(x + barW/2, padT + chartH + 12);
+    ctx.rotate(-0.5);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+  });
+}
+
+function renderStream(lines){
+  const box = document.getElementById('streamBox');
+  const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+  const onlyTools = document.getElementById('onlyTools').checked;
+
+  const parsed = lines
+    .map(line => {
+      try { return JSON.parse(line); } catch { return null; }
+    })
+    .filter(Boolean)
+    .filter(row => !onlyTools || ['tool_call','tool_result'].includes(row.type))
+    .filter(row => !keyword || JSON.stringify(row).toLowerCase().includes(keyword));
+
+  if(!parsed.length){
+    box.textContent = '尚無符合條件的資料';
+    return;
+  }
+
+  box.innerHTML = parsed.slice(-200).map(row => {
+    const cls = 't-' + (row.type || 'system');
+    const text = row.text || row.name || JSON.stringify(row);
+    return `<div class="row ${cls}">[${row.ts || '-'}] <b>${row.type || 'event'}</b> ${escapeHtml(text)}</div>`;
+  }).join('');
+
+  if(autoScroll){
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
+}
+
+async function refreshAll(){
+  try{
+    const [status, score, arch, test, streamText] = await Promise.all([
+      fetchJSON(DATA.liveStatus).catch(() => null),
+      fetchJSON(DATA.scoreHistory).catch(() => null),
+      fetchJSON(DATA.archHistory).catch(() => null),
+      fetchJSON(DATA.testHistory).catch(() => null),
+      fetchText(DATA.liveStream).catch(() => '')
+    ]);
+
+    if(status) renderStatus(status);
+
+    renderList('archList', arch?.history || arch?.items || [], item =>
+      `${item.ts || item.date || '-'} | ${item.summary || item.change || JSON.stringify(item)}`
+    );
+
+    renderList('testList', test?.history || test?.items || [], item =>
+      `${item.ts || item.date || '-'} | ${item.summary || item.change || JSON.stringify(item)}`
+    );
+
+    const scoreItems = score?.history || score?.items || [];
+    const labels = scoreItems.slice(-12).map(x => x.run_id || x.date || x.label || '-');
+    const values = scoreItems.slice(-12).map(x => Number(x.fitness ?? x.overall ?? 0));
+    drawBarChart(document.getElementById('scoreCanvas'), values, labels);
+
+    renderStream(streamText.split(/\r?\n/).filter(Boolean));
+  }catch(err){
+    console.error(err);
+  }
+}
+
+document.getElementById('toggleScroll').addEventListener('click', () => {
+  autoScroll = !autoScroll;
+  document.getElementById('toggleScroll').textContent = autoScroll ? '暫停自動捲動' : '恢復自動捲動';
+});
+document.getElementById('refreshNow').addEventListener('click', refreshAll);
+document.getElementById('keyword').addEventListener('input', refreshAll);
+document.getElementById('onlyTools').addEventListener('change', refreshAll);
+
+refreshAll();
+setInterval(refreshAll, 3000);
+</script>
+</body>
+</html>
