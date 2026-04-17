@@ -15,141 +15,22 @@ if str(ROOT) not in sys.path:
 
 from evolution.mutator import (
     EVOLUTION_MODE_OPTIONS,
+    apply_heat_map_overrides,
     build_heat_map_candidates,
     build_mutation_candidates,
+    supports_architecture_evolution,
     resolve_heat_map_plan,
     parameter_snapshot,
     persist_candidate_config,
     sampling_provider_for_config,
     selected_sampling_parameters_for_config,
 )
+from evolution.heat_map_verifier import resolve_heat_map_verification_settings, run_heat_map_verification
+from evolution.nightly_evaluator import evaluate_candidate_config, load_json
 from rollback.baseline_manager import assess_candidate, load_baseline, write_baseline
-from run_single import execute_single_run
-from scoring.aggregation import compute_fitness, compute_stability_score, compute_suite_score
+from storage.heat_map_artifacts import build_heat_map_artifacts
 from storage.history_writer import append_history_entry, ensure_report_files, seed_static_histories, write_json
 from storage.live_writer import LiveWriter
-
-
-def _load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _summarize_results(results: list[dict]) -> dict:
-    scores = [item["score"] for item in results]
-    honesty_scores = [item["verifier"]["subscores"]["honesty"] for item in results]
-    rollback_scores = [item["rollback"]["rollback_safety_score"] for item in results]
-    return {
-        "suite_score": compute_suite_score(scores),
-        "stability_score": compute_stability_score(scores),
-        "pass_rate": round(sum(1 for item in results if item["status"] == "passed") / max(1, len(results)), 4),
-        "honesty_score": compute_suite_score(honesty_scores),
-        "rollback_safety_score": compute_suite_score(rollback_scores),
-        "run_ids": [item["run_id"] for item in results],
-    }
-
-
-def _evaluate_candidate_config(
-    config_path: Path,
-    config: dict,
-    suite_id: str,
-    seed_offset: int,
-    candidate_runs_per_config: int,
-    regression_suite: dict,
-    progress_offset: int,
-    progress_target: int,
-) -> dict:
-    candidate_results = []
-    for index in range(candidate_runs_per_config):
-        candidate_results.append(
-            execute_single_run(
-                config_path=config_path,
-                seed=seed_offset + index,
-                append_score_history=True,
-                append_baseline_history=False,
-                append_rollback_history=False,
-                manage_baseline=False,
-                reset_stream=False,
-                run_kind="candidate",
-                suite_id=suite_id,
-                case_id=f"{config['config_id']}__candidate_{index + 1:02d}",
-                progress_current=progress_offset + index + 1,
-                progress_target=progress_target,
-            )
-        )
-
-    regression_results = []
-    for case in regression_suite["cases"]:
-        progress_index = progress_offset + candidate_runs_per_config + len(regression_results) + 1
-        regression_results.append(
-            execute_single_run(
-                config_path=config_path,
-                seed=case["seed"],
-                append_score_history=False,
-                append_baseline_history=False,
-                append_rollback_history=False,
-                manage_baseline=False,
-                reset_stream=False,
-                run_kind="regression",
-                suite_id=suite_id,
-                case_id=f"{config['config_id']}__{case['case_id']}",
-                progress_current=progress_index,
-                progress_target=progress_target,
-            )
-        )
-
-    candidate_summary = _summarize_results(candidate_results)
-    regression_summary = _summarize_results(regression_results)
-    suite_score_a = float(config.get("layer_a_proxy_score", 1.0))
-    fitness = compute_fitness(
-        suite_score_c=candidate_summary["suite_score"],
-        suite_score_b=regression_summary["suite_score"],
-        suite_score_a=suite_score_a,
-        stability_score=candidate_summary["stability_score"],
-        rollback_safety_score=candidate_summary["rollback_safety_score"],
-    )
-
-    parameter_name = config.get("mutation_target")
-    parameter_before = config.get("mutation_before")
-    parameter_after = config.get("mutation_after")
-    notes = config.get("mutation_notes", "")
-    if parameter_name:
-        notes = f"{notes} ({parameter_name}: {parameter_before} -> {parameter_after})"
-
-    payload = {
-        "config_id": config["config_id"],
-        "selected_at": datetime.now().isoformat(timespec="seconds"),
-        "fitness": fitness,
-        "suite_score_c": candidate_summary["suite_score"],
-        "suite_score_b": regression_summary["suite_score"],
-        "suite_score_a": suite_score_a,
-        "stability_score": candidate_summary["stability_score"],
-        "rollback_safety_score": candidate_summary["rollback_safety_score"],
-        "regression_pass_rate": regression_summary["pass_rate"],
-        "honesty_score": candidate_summary["honesty_score"],
-        "run_id": suite_id,
-        "notes": notes or f"Candidate {config['config_id']} evaluated by nightly sequential tuning.",
-        "source_config_path": str(config_path.resolve()),
-        "config_body": config,
-    }
-
-    return {
-        "config": config,
-        "config_path": str(config_path.resolve()),
-        "mutation_profile": config.get("mutation_profile", "unknown"),
-        "mutation_notes": config.get("mutation_notes", ""),
-        "mutation_strategy": config.get("mutation_strategy", "single_parameter"),
-        "parameter_name": parameter_name,
-        "parameter_before": parameter_before,
-        "parameter_after": parameter_after,
-        "parameter_snapshot": config.get("parameter_snapshot", parameter_snapshot(config)),
-        "fitness": fitness,
-        "candidate_summary": candidate_summary,
-        "regression_summary": regression_summary,
-        "suite_score_a": suite_score_a,
-        "candidate_payload": payload,
-        "candidate_runs": candidate_results,
-        "regression_runs": regression_results,
-    }
 
 
 def _round_summary_entry(result: dict[str, Any]) -> dict[str, Any]:
@@ -355,21 +236,51 @@ def _build_heat_map_summary(
     }
 
 
+def _parse_cli_list(raw_value: str | None) -> list[str] | None:
+    if raw_value is None:
+        return None
+    values = [item.strip() for item in str(raw_value).split(",")]
+    normalized = [item for item in values if item]
+    return normalized or None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the local nightly evaluation and sequential evolution loop.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "experiments" / "default_mvp.json"))
     parser.add_argument("--seed-start", type=int, default=500)
     parser.add_argument("--evolution-mode", default=None)
     parser.add_argument("--sampling-parameters", default=None)
+    parser.add_argument("--heat-map-x-axis", default=None)
+    parser.add_argument("--heat-map-y-axis", default=None)
+    parser.add_argument("--heat-map-x-values", default=None)
+    parser.add_argument("--heat-map-y-values", default=None)
+    parser.add_argument("--heat-map-top-k", type=int, default=None)
+    parser.add_argument("--disable-heat-map-verify", action="store_true")
+    parser.add_argument("--heat-map-verify-runs", type=int, default=None)
     args = parser.parse_args()
 
     base_config_path = Path(args.config)
-    base_config = _load_json(base_config_path)
+    base_config = load_json(base_config_path)
     evolution_mode = _resolve_evolution_mode(base_config, args.evolution_mode)
-    if evolution_mode in {"architecture_program", "heat_map"} and base_config.get("runner") != "llama_cpp_agent":
-        raise RuntimeError(f"{evolution_mode} evolution is currently supported only for llama_cpp_agent configs.")
+    if evolution_mode in {"architecture_program", "heat_map"} and not supports_architecture_evolution(base_config):
+        raise RuntimeError(f"{evolution_mode} evolution requires a config supported by architecture-aware runners.")
     if evolution_mode == "model_params" and sampling_provider_for_config(base_config) is None:
         raise RuntimeError("Model-parameter evolution currently requires a llama_cpp_agent config with provider=ollama or provider=llama-cpp.")
+
+    if evolution_mode == "heat_map":
+        verify_overrides = {
+            "enabled": False if args.disable_heat_map_verify else None,
+            "candidate_runs_per_config": args.heat_map_verify_runs,
+        }
+        base_config = apply_heat_map_overrides(
+            base_config,
+            x_axis=args.heat_map_x_axis,
+            y_axis=args.heat_map_y_axis,
+            x_values=_parse_cli_list(args.heat_map_x_values),
+            y_values=_parse_cli_list(args.heat_map_y_values),
+            top_k=args.heat_map_top_k,
+            verify_overrides=verify_overrides,
+        )
     base_config.setdefault("nightly", {})
     base_config["nightly"]["evolution_mode"] = evolution_mode
     if args.sampling_parameters is not None:
@@ -378,7 +289,7 @@ def main() -> None:
     selected_sampling = selected_sampling_parameters_for_config(base_config)
     if evolution_mode == "model_params" and not selected_sampling:
         raise RuntimeError("Select at least one sampling parameter for model-parameter evolution.")
-    regression_suite = _load_json(ROOT / base_config["regression_suite"]["path"])
+    regression_suite = load_json(ROOT / base_config["regression_suite"]["path"])
 
     now = datetime.now()
     timestamp = now.isoformat(timespec="seconds")
@@ -409,6 +320,22 @@ def main() -> None:
 
     per_round_evals = candidate_runs_per_config + len(regression_suite["cases"])
     total_evals = planned_rounds * per_round_evals
+    heat_map_verify_evals = 0
+    if evolution_mode == "heat_map" and heat_map_plan is not None:
+        verify_settings = resolve_heat_map_verification_settings(
+            base_config,
+            {
+                "top_candidates": [{}] * heat_map_plan["top_k"],
+                "cell_count": heat_map_plan["cell_count"],
+            },
+            seed_start=args.seed_start,
+        )
+        if verify_settings["enabled"]:
+            verify_target_count = min(verify_settings["top_k"], heat_map_plan["top_k"]) + 1
+            heat_map_verify_evals = verify_target_count * (
+                verify_settings["candidate_runs_per_config"] + len(regression_suite["cases"])
+            )
+            total_evals += heat_map_verify_evals
 
     writer = LiveWriter(runs_dir)
     writer.reset_stream()
@@ -538,7 +465,7 @@ def main() -> None:
             round_text = f"Round {round_index}/{planned_rounds}: measuring the current baseline {candidate_config['config_id']}."
         writer.append_event({"type": "system", "name": "mutator", "text": round_text})
 
-        candidate_result = _evaluate_candidate_config(
+        candidate_result = evaluate_candidate_config(
             config_path=Path(config_path),
             config=candidate_config,
             suite_id=suite_id,
@@ -749,12 +676,58 @@ def main() -> None:
     append_history_entry(reports_dir / "baseline_history.json", baseline_event)
 
     heat_map_summary = None
+    heat_map_artifacts = None
+    heat_map_verification = None
     if evolution_mode == "heat_map":
         heat_map_summary = _build_heat_map_summary(
             base_config=base_config,
             baseline_result=reference_result,
             evaluated_candidates=evaluated_candidates,
         )
+        heat_map_artifact_dir = reports_dir / "heat_maps" / suite_id
+        heat_map_artifacts = build_heat_map_artifacts(
+            output_dir=heat_map_artifact_dir,
+            suite_id=suite_id,
+            heat_map_summary=heat_map_summary,
+            created_at=final_timestamp,
+            base_config_id=base_config["config_id"],
+            selected_config_id=selected_candidate["config"]["config_id"],
+            status="promoted" if decision["promoted"] else "rejected",
+        )
+        heat_map_verification = run_heat_map_verification(
+            base_config_path=base_config_path,
+            base_config=base_config,
+            heat_map_summary=heat_map_summary,
+            evaluated_candidates=evaluated_candidates,
+            suite_id=suite_id,
+            reports_dir=reports_dir,
+            artifact_dir=heat_map_artifact_dir,
+            seed_start=args.seed_start,
+        )
+        if heat_map_verification is not None:
+            completed_evals += heat_map_verify_evals
+        if heat_map_artifacts is not None and heat_map_verification is not None:
+            heat_map_artifacts["verification_path"] = heat_map_verification.get("report_path")
+        if heat_map_artifacts is not None:
+            writer.append_event(
+                {
+                    "type": "system",
+                    "name": "heat_map_builder",
+                    "text": f"Heat-map artifacts written to {heat_map_artifacts['output_dir']}.",
+                }
+            )
+        if heat_map_verification is not None:
+            winner = heat_map_verification.get("winner", {})
+            writer.append_event(
+                {
+                    "type": "system",
+                    "name": "heat_map_verify",
+                    "text": (
+                        f"Verified top-k candidates; survivors={heat_map_verification.get('survivor_count', 0)} "
+                        f"winner={winner.get('config_id', 'baseline')}."
+                    ),
+                }
+            )
         append_history_entry(
             reports_dir / "heat_map_history.json",
             {
@@ -764,6 +737,8 @@ def main() -> None:
                 "selected_config_id": selected_candidate["config"]["config_id"],
                 "best_delta_suite_score": heat_map_summary["best_cell"]["delta_suite_score"],
                 "best_delta_fitness": heat_map_summary["best_cell"]["delta_fitness"],
+                "artifacts": heat_map_artifacts,
+                "verification": heat_map_verification,
                 **heat_map_summary,
             },
         )
@@ -789,6 +764,8 @@ def main() -> None:
         "evolution_mode": evolution_mode,
         "sampling_parameters": selected_sampling,
         "heat_map": heat_map_summary,
+        "heat_map_artifacts": heat_map_artifacts,
+        "heat_map_verification": heat_map_verification,
         "improvement_history": improvement_history,
         "ranking": [
             {
@@ -847,6 +824,7 @@ def main() -> None:
         "suite_id": suite_id,
         "created_at": timestamp,
         "base_config_id": base_config["config_id"],
+        "base_config_path": str(base_config_path.resolve()),
         "selected_config_id": selected_candidate["config"]["config_id"],
         "fitness_mode": base_config["fitness_mode"],
         "status": "promoted" if decision["promoted"] else "rejected",
@@ -865,6 +843,8 @@ def main() -> None:
         "evolution_mode": evolution_mode,
         "sampling_parameters": selected_sampling,
         "heat_map": heat_map_summary,
+        "heat_map_artifacts": heat_map_artifacts,
+        "heat_map_verification": heat_map_verification,
         "selected_round_index": selected_candidate.get("round_index"),
         "improvement_history": improvement_history,
         "candidate_rankings": [

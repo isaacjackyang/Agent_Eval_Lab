@@ -3,9 +3,12 @@ from __future__ import annotations
 import unittest
 
 from evolution.mutator import (
+    apply_heat_map_overrides,
     build_heat_map_candidates,
     build_mutation_candidates,
+    heat_map_dimension_options,
     resolve_heat_map_plan,
+    supports_architecture_evolution,
 )
 
 
@@ -81,6 +84,33 @@ class HeatMapModeTests(unittest.TestCase):
         config["nightly"]["heat_map"]["y_axis"] = config["nightly"]["heat_map"]["x_axis"]
         with self.assertRaises(ValueError):
             resolve_heat_map_plan(config)
+
+    def test_apply_heat_map_overrides_replaces_axes_and_values(self) -> None:
+        overridden = apply_heat_map_overrides(
+            _base_config(),
+            x_axis="agent_architecture.prompt_style",
+            y_axis="agent_architecture.recovery_policy",
+            x_values=["strict_json", "planner"],
+            y_values=["none", "ranked"],
+            top_k=2,
+            verify_overrides={"enabled": False, "candidate_runs_per_config": 7},
+        )
+        plan = resolve_heat_map_plan(overridden)
+        self.assertEqual(plan["x_axis"], "agent_architecture.prompt_style")
+        self.assertEqual(plan["y_axis"], "agent_architecture.recovery_policy")
+        self.assertEqual(plan["x_values"], ["strict_json", "planner"])
+        self.assertEqual(plan["y_values"], ["none", "ranked"])
+        self.assertEqual(plan["top_k"], 2)
+        self.assertEqual(overridden["nightly"]["heat_map"]["verify"]["candidate_runs_per_config"], 7)
+        self.assertFalse(overridden["nightly"]["heat_map"]["verify"]["enabled"])
+
+    def test_openclaw_config_is_architecture_compatible(self) -> None:
+        config = _base_config()
+        config["runner"] = "openclaw_cli"
+        self.assertTrue(supports_architecture_evolution(config))
+        self.assertTrue(any(item["value"] == "agent_architecture.query_policy" for item in heat_map_dimension_options()))
+        plan = resolve_heat_map_plan(config)
+        self.assertEqual(plan["cell_count"], 12)
 
 
 if __name__ == "__main__":

@@ -34,7 +34,19 @@
   "nightly": {
     "candidate_pool_size": 4,
     "candidate_runs_per_config": 4,
-    "include_base_config": true
+    "include_base_config": true,
+    "heat_map": {
+      "x_axis": "agent_architecture.search_result_limit",
+      "x_values": [4, 5, 6, 8],
+      "y_axis": "agent_architecture.query_policy",
+      "y_values": ["focused_only", "focused_then_broad", "broad_then_focused"],
+      "top_k": 5,
+      "verify": {
+        "enabled": true,
+        "candidate_runs_per_config": 6,
+        "top_k": 5
+      }
+    }
   },
   "openclaw": {
     "command": [
@@ -46,6 +58,27 @@
     "thinking": "low",
     "cleanup_agent": true,
     "cleanup_runtime_dir": false
+  },
+  "relayer": {
+    "enabled": false,
+    "mode": "metadata_only",
+    "num_layers": 80,
+    "start_layer": 2,
+    "end_layer": 4,
+    "repeat_count": 1,
+    "mock_probe": {
+      "probe_name": "mock_relayer_probe_v1",
+      "preferred_start_layer": 36,
+      "preferred_end_layer": 42,
+      "preferred_repeat_count": 1
+    },
+    "scan": {
+      "start_layer_min": 0,
+      "end_layer_max": 79,
+      "min_block_len": 1,
+      "max_block_len": 8,
+      "repeat_count": 1
+    }
   },
   "sandbox": {
     "backend": "docker",

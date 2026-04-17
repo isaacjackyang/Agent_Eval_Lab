@@ -3,7 +3,9 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+from evolution.relayer_plan import RelayerPlan, resolve_relayer_runtime_context
 from runners.base import BaseRunner, RunnerResult
+from runners.relayer_runner import RecordingLayerBackend, RelayerRunner
 from runners.search_helpers import pick_best_match, search_file
 
 
@@ -13,12 +15,19 @@ class SessionRunner(BaseRunner):
     def run(self, task: dict, live_writer, context: dict) -> RunnerResult:
         workspace_root = Path(task["workspace_root"])
         started = time.perf_counter()
+        relayer_context = resolve_relayer_runtime_context(
+            self.runner_config,
+            runtime_patch_supported=False,
+            runtime_label=self.name,
+            supported_modes=["metadata_only", "mock_layer_stack"],
+        )
         step_count = 0
         retries = 0
         last_error: str | None = None
         current_tool: str | None = None
         token_estimate = 0
         tool_trace: list[dict] = []
+        relayer_runtime: dict | None = None
 
         def emit(event_type: str, text: str, **extra) -> None:
             nonlocal token_estimate
@@ -42,9 +51,37 @@ class SessionRunner(BaseRunner):
                     "elapsed_sec": elapsed,
                     "updated_at": context["started_at"],
                     "fitness_mode": context["fitness_mode"],
+                    "relayer_mode": relayer_context["mode"],
+                    "relayer_applied": relayer_context["applied"],
+                    "relayer_range": relayer_context.get("range_text"),
                 }
             )
 
+        if relayer_context["enabled"]:
+            emit("system", relayer_context["message"], name="relayer")
+        if relayer_context["applied"] and relayer_context["mode"] == "mock_layer_stack":
+            plan_payload = relayer_context.get("plan") or {}
+            execution_order = list(plan_payload.get("execution_order") or [])
+            runtime_backend = RecordingLayerBackend()
+            runtime_result = RelayerRunner(runtime_backend).execute(
+                plan=RelayerPlan(execution_order=execution_order),
+                initial_state=[],
+            )
+            relayer_runtime = {
+                "backend": "mock_layer_stack",
+                "execution_order": execution_order,
+                "layer_trace": runtime_result.layer_trace,
+                "executed_layers": runtime_result.executed_layers,
+                "execution_ok": runtime_result.layer_trace == execution_order,
+            }
+            emit(
+                "system",
+                (
+                    f"mock_layer_stack executed {runtime_result.executed_layers} layers "
+                    f"for relayer range {relayer_context.get('range_text')}."
+                ),
+                name="relayer_runtime",
+            )
         emit("assistant", f"收到任務：{task['prompt']}")
         write_status()
 
@@ -135,6 +172,9 @@ class SessionRunner(BaseRunner):
                 "elapsed_sec": elapsed_sec,
                 "updated_at": context["started_at"],
                 "fitness_mode": context["fitness_mode"],
+                "relayer_mode": relayer_context["mode"],
+                "relayer_applied": relayer_context["applied"],
+                "relayer_range": relayer_context.get("range_text"),
             }
         )
 
@@ -147,5 +187,9 @@ class SessionRunner(BaseRunner):
             last_error=last_error,
             token_estimate=token_estimate,
             tool_trace=tool_trace,
-            metadata={"runner_mode": "mock"},
+            metadata={
+                "runner_mode": "mock",
+                "relayer": relayer_context,
+                "relayer_runtime": relayer_runtime,
+            },
         )

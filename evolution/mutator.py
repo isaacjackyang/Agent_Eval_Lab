@@ -40,6 +40,11 @@ EVOLUTION_MODE_OPTIONS: list[dict[str, str]] = [
     },
 ]
 
+ARCHITECTURE_EVOLUTION_RUNNERS = {
+    "llama_cpp_agent",
+    "openclaw_cli",
+}
+
 SAMPLING_PARAMETER_CATALOG: list[dict[str, Any]] = [
     {
         "id": "temperature",
@@ -314,6 +319,68 @@ def effective_agent_architecture(config: dict[str, Any]) -> dict[str, Any]:
     if isinstance(user_config, dict):
         effective.update(user_config)
     return effective
+
+
+def supports_architecture_evolution(config: dict[str, Any]) -> bool:
+    runner = str(config.get("runner", "")).strip()
+    return runner in ARCHITECTURE_EVOLUTION_RUNNERS
+
+
+def heat_map_dimension_options() -> list[dict[str, Any]]:
+    options: list[dict[str, Any]] = []
+    for dimension_id, spec in HEAT_MAP_DIMENSION_CATALOG.items():
+        options.append(
+            {
+                "value": dimension_id,
+                "label": spec["label"],
+                "choices": list(spec["choices"]),
+            }
+        )
+    return options
+
+
+def apply_heat_map_overrides(
+    base_config: dict[str, Any],
+    *,
+    x_axis: str | None = None,
+    y_axis: str | None = None,
+    x_values: list[Any] | None = None,
+    y_values: list[Any] | None = None,
+    top_k: int | None = None,
+    verify_overrides: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    config = copy.deepcopy(base_config)
+    nightly_cfg = config.setdefault("nightly", {})
+    if not isinstance(nightly_cfg, dict):
+        nightly_cfg = {}
+        config["nightly"] = nightly_cfg
+
+    heat_map_cfg = nightly_cfg.get("heat_map", {})
+    if not isinstance(heat_map_cfg, dict):
+        heat_map_cfg = {}
+    nightly_cfg["heat_map"] = heat_map_cfg
+
+    if x_axis:
+        heat_map_cfg["x_axis"] = str(x_axis).strip()
+    if y_axis:
+        heat_map_cfg["y_axis"] = str(y_axis).strip()
+    if x_values is not None:
+        heat_map_cfg["x_values"] = list(x_values)
+    if y_values is not None:
+        heat_map_cfg["y_values"] = list(y_values)
+    if top_k is not None:
+        heat_map_cfg["top_k"] = int(top_k)
+
+    if verify_overrides:
+        verify_cfg = heat_map_cfg.get("verify", {})
+        if not isinstance(verify_cfg, dict):
+            verify_cfg = {}
+        for key, value in verify_overrides.items():
+            if value is not None:
+                verify_cfg[key] = value
+        heat_map_cfg["verify"] = verify_cfg
+
+    return config
 
 
 def normalize_sampling_provider(raw_value: Any, *, default: str | None = None) -> str | None:

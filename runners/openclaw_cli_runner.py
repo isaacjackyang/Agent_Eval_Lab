@@ -5,7 +5,10 @@ import time
 from pathlib import Path
 from typing import Any
 
+from evolution.mutator import effective_agent_architecture
+from evolution.relayer_plan import relayer_supported_modes_for_runner, resolve_relayer_runtime_context
 from runners.base import BaseRunner, RunnerResult
+from runners.relayer_runtime_bridge import invoke_external_relayer_runtime
 from sandbox.openclaw_agent_runtime import OpenClawRuntime
 from storage.jsonish import load_jsonish_text
 
@@ -15,12 +18,21 @@ class OpenClawCliRunner(BaseRunner):
 
     def run(self, task: dict, live_writer, context: dict) -> RunnerResult:
         started = time.perf_counter()
+        architecture = effective_agent_architecture(self.runner_config)
+        relayer_supported_modes = relayer_supported_modes_for_runner(self.name, config=self.runner_config)
+        relayer_context = resolve_relayer_runtime_context(
+            self.runner_config,
+            runtime_patch_supported="runtime_patch" in relayer_supported_modes,
+            runtime_label=self.name,
+            supported_modes=relayer_supported_modes,
+        )
         runtime = OpenClawRuntime(
             root=Path(context["root"]),
             config=self.runner_config,
             run_id=context["run_id"],
         )
         token_estimate = 0
+        relayer_runtime_backend: dict[str, Any] | None = None
         status_context = {
             "run_kind": context.get("run_kind"),
             "suite_id": context.get("suite_id"),
@@ -68,13 +80,43 @@ class OpenClawCliRunner(BaseRunner):
                 "elapsed_sec": round(time.perf_counter() - started, 3),
                 "updated_at": context["started_at"],
                 "fitness_mode": context["fitness_mode"],
+                "architecture_variant": architecture.get("variant"),
+                "relayer_mode": relayer_context["mode"],
+                "relayer_applied": relayer_context["applied"],
+                "relayer_range": relayer_context.get("range_text"),
                 **status_context,
             }
         )
         if sandbox_metadata.get("sandbox_info"):
             emit("system", "OpenClaw sandbox metadata loaded.", name="sandbox")
 
-        prompt = task["prompt"]
+        prompt = self._build_prompt(task=task, architecture=architecture)
+        emit(
+            "system",
+            (
+                f"Using OpenClaw architecture={architecture.get('variant')} "
+                f"prompt_style={architecture.get('prompt_style')} "
+                f"query_policy={architecture.get('query_policy')} "
+                f"recovery_policy={architecture.get('recovery_policy')} "
+                f"search_limit={architecture.get('search_result_limit')}"
+            ),
+            name="openclaw_architecture",
+        )
+        if relayer_context["enabled"]:
+            emit("system", relayer_context["message"], name="relayer")
+        if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
+            relayer_runtime_backend = invoke_external_relayer_runtime(
+                root=Path(context["root"]),
+                run_id=context["run_id"],
+                runtime_label=self.name,
+                config=self.runner_config,
+                relayer_context=relayer_context,
+            )
+            emit(
+                "system",
+                f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
+                name="relayer_runtime",
+            )
         emit("assistant", f"轉交 OpenClaw：{prompt}")
         completed = runtime.run_agent(prompt)
         stdout = completed.stdout.strip()
@@ -131,11 +173,46 @@ class OpenClawCliRunner(BaseRunner):
                 "adapter": "openclaw_cli",
                 "command": runtime.command_prefix,
                 "agent_id": runtime.agent_id,
+                "architecture": architecture,
+                "relayer": relayer_context,
+                "relayer_runtime_backend": relayer_runtime_backend,
                 "sandbox": sandbox_metadata,
                 "raw_stdout": stdout,
                 "raw_stderr": stderr,
             },
         )
+
+    def _build_prompt(self, *, task: dict[str, Any], architecture: dict[str, Any]) -> str:
+        prompt_style = str(architecture.get("prompt_style", "strict_json"))
+        query_policy = str(architecture.get("query_policy", "focused_then_broad"))
+        recovery_policy = str(architecture.get("recovery_policy", "ranked"))
+        search_result_limit = int(architecture.get("search_result_limit", 5))
+
+        style_guidance = {
+            "planner": "先列一個極短的檢索計畫，再執行。",
+            "recall": "先擴散找出多個可能位置，再快速收斂到最可信的路徑。",
+            "strict_json": "保持指令精簡、結論直接，不要展開多餘說明。",
+        }
+        query_guidance = {
+            "focused_only": "優先使用與專案名和文件型別高度相關的精準查詢。",
+            "focused_then_broad": "先精準查詢，若沒有把握再擴大關鍵字。",
+            "broad_then_focused": "先用較寬鬆關鍵字取樣，再回到精準查詢確認。",
+        }
+        recovery_guidance = {
+            "none": "如果沒有足夠把握，不要硬猜答案。",
+            "ranked": "若多個候選接近，選擇最符合專案名、文件型別與 verified 路徑訊號的結果。",
+            "signal_boost": "優先加權 verified、canonical、release/delivery/ops 這類路徑訊號。",
+        }
+
+        instructions = [
+            "你正在處理本機檔案檢索任務，只能輸出最終檔案位置。",
+            style_guidance.get(prompt_style, style_guidance["strict_json"]),
+            query_guidance.get(query_policy, query_guidance["focused_then_broad"]),
+            recovery_guidance.get(recovery_policy, recovery_guidance["ranked"]),
+            f"每次檢索最多保留約 {search_result_limit} 個候選結果做比較。",
+            "如果找到可信路徑，就只回傳完整檔案路徑，不要附加說明。",
+        ]
+        return "\n".join(instructions) + "\n\n任務：\n" + str(task["prompt"])
 
     def _parse_payload(self, stdout: str) -> dict | None:
         if not stdout:

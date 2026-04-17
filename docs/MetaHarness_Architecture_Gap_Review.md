@@ -129,12 +129,27 @@
 - trace schema 對齊 OpenClaw event
 - 端到端 smoke tests
 
+### Gap F: Relayering 目前只有規劃層與 mock execution
+
+repo 現在已有：
+
+- `RelayerConfig / RelayerPlan`
+- 掃描配置產生器
+- mock layer runner，可驗證 `execution_order`
+- synthetic relayer scan pipeline，可輸出 aggregated CSV / heatmap / top-k
+- 現有 runner 的 honest guard：`runtime_patch` 未實作時會直接報錯
+
+但仍缺：
+
+- 真正改到模型 forward path 的 backend
+- relayering 對 llama.cpp / OpenClaw 實際推理結果的端到端驗證
+
 ## 建議的優先順序
 
 ### P0
 
 1. 為 nightly 加上更明確的 `accepted / rejected because ...` 結構化理由。
-2. 把 `parameter_history.json` 接到 dashboard。
+2. 把 `parameter_history.json` 接到 dashboard。已完成。
 3. 把 search trace 補成可穩定取 rank / candidates / chosen path。
 
 ### P1

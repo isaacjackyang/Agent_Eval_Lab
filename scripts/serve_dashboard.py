@@ -23,12 +23,17 @@ if str(ROOT) not in sys.path:
 
 from evolution.mutator import (
     EVOLUTION_MODE_OPTIONS,
+    apply_heat_map_overrides,
     heat_map_candidate_count,
+    heat_map_dimension_options,
     resolve_heat_map_plan,
     sampling_parameters_for_provider,
     sampling_provider_for_config,
     selected_sampling_parameters_for_config,
+    supports_architecture_evolution,
 )
+from evolution.heat_map_verifier import resolve_heat_map_verification_settings
+from evolution.relayer_plan import summarize_relayer_config
 from generators.km_file_tree_gen import TASK_TYPE_OPTIONS
 
 PROGRESS_KEYS = (
@@ -161,7 +166,11 @@ class RunController:
             "sampling_parameters": [],
             "selected_sampling_parameters": [],
             "default_evolution_mode": "model_params",
+            "architecture_evolution_supported": False,
+            "heat_map_dimensions": heat_map_dimension_options(),
+            "heat_map_settings": {},
             "heat_map_plan": None,
+            "relayer": summarize_relayer_config({}),
         }
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
@@ -175,7 +184,19 @@ class RunController:
             summary["sampling_parameters"] = sampling_parameters_for_provider(provider)
             summary["selected_sampling_parameters"] = selected_sampling_parameters_for_config(payload)
             summary["default_evolution_mode"] = str(payload.get("nightly", {}).get("evolution_mode", "model_params"))
-            if payload.get("runner") == "llama_cpp_agent":
+            summary["architecture_evolution_supported"] = supports_architecture_evolution(payload)
+            summary["relayer"] = summarize_relayer_config(payload)
+            heat_map_cfg = payload.get("nightly", {}).get("heat_map", {})
+            if isinstance(heat_map_cfg, dict):
+                summary["heat_map_settings"] = {
+                    "x_axis": heat_map_cfg.get("x_axis"),
+                    "y_axis": heat_map_cfg.get("y_axis"),
+                    "x_values": heat_map_cfg.get("x_values"),
+                    "y_values": heat_map_cfg.get("y_values"),
+                    "top_k": heat_map_cfg.get("top_k"),
+                    "verify": heat_map_cfg.get("verify", {}),
+                }
+            if summary["architecture_evolution_supported"]:
                 try:
                     summary["heat_map_plan"] = resolve_heat_map_plan(payload)
                 except Exception:
@@ -446,6 +467,7 @@ class RunController:
         return {
             "evolution_modes": [dict(item) for item in EVOLUTION_MODE_OPTIONS],
             "default_evolution_mode": "model_params",
+            "heat_map_dimensions": heat_map_dimension_options(),
         }
 
     def _normalize_task_type(self, raw_value: Any) -> str:
@@ -484,6 +506,28 @@ class RunController:
                 selected.append(value)
         return selected
 
+    def _normalize_bool(self, raw_value: Any) -> bool | None:
+        if raw_value is None:
+            return None
+        if isinstance(raw_value, bool):
+            return raw_value
+        normalized = str(raw_value).strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+        raise RuntimeError(f"Unsupported boolean value: {raw_value}")
+
+    def _normalize_heat_map_values(self, raw_value: Any) -> list[str] | None:
+        if raw_value is None:
+            return None
+        if isinstance(raw_value, list):
+            values = [str(item).strip() for item in raw_value]
+        else:
+            values = [item.strip() for item in str(raw_value).split(",")]
+        normalized = [item for item in values if item]
+        return normalized or None
+
     def _read_live_status(self) -> dict[str, Any]:
         if not self.live_status_path.exists():
             return {}
@@ -516,7 +560,24 @@ class RunController:
             include_base = bool(config.get("nightly", {}).get("include_base_config", True))
             variant_count = max(pool_size, 1 if include_base else 1)
         case_count = len(regression_suite.get("cases", []))
-        return variant_count * (candidate_runs + case_count)
+        total = variant_count * (candidate_runs + case_count)
+        if evolution_mode == "heat_map":
+            try:
+                plan = resolve_heat_map_plan(config)
+                verify_settings = resolve_heat_map_verification_settings(
+                    config,
+                    {
+                        "top_candidates": [{}] * plan["top_k"],
+                        "cell_count": plan["cell_count"],
+                    },
+                    seed_start=500,
+                )
+                if verify_settings["enabled"]:
+                    verify_target_count = min(verify_settings["top_k"], plan["top_k"]) + 1
+                    total += verify_target_count * (verify_settings["candidate_runs_per_config"] + case_count)
+            except Exception:
+                pass
+        return total
 
     def _resolve_config_path(self, raw_value: str | None) -> Path:
         if raw_value:
@@ -598,6 +659,7 @@ class RunController:
             **self.list_configs(),
             **self.list_task_types(),
             **self.list_evolution_modes(),
+            "heat_map_dimensions": heat_map_dimension_options(),
             "active": bool(current),
             "current": current,
             "last_result": last_result,
@@ -627,6 +689,7 @@ class RunController:
             "single": "run_single.py",
             "suite": "run_suite.py",
             "nightly": "run_nightly.py",
+            "relayer_scan": "run_relayer_scan.py",
         }
         script_name = script_name_by_kind.get(kind)
         if script_name is None:
@@ -672,7 +735,9 @@ class RunController:
             progress_target = extras.get("runs")
         elif kind == "single":
             progress_target = 1
-        progress_current = 0 if kind in {"suite", "nightly"} else 1
+        elif kind == "relayer_scan":
+            progress_target = extras.get("candidate_count")
+        progress_current = 0 if kind in {"suite", "nightly", "relayer_scan"} else 1
         status_payload = {
             "run_id": None,
             "status": "launching",
@@ -753,8 +818,8 @@ class RunController:
         config_payload = self._load_config_payload(config_path)
         extra_args: list[str] = []
         evolution_mode = self._normalize_evolution_mode(payload.get("evolution_mode"))
-        if evolution_mode in {"architecture_program", "heat_map"} and config_payload.get("runner") != "llama_cpp_agent":
-            raise RuntimeError(f"{evolution_mode} evolution requires a llama_cpp_agent config.")
+        if evolution_mode in {"architecture_program", "heat_map"} and not supports_architecture_evolution(config_payload):
+            raise RuntimeError(f"{evolution_mode} evolution requires a config supported by architecture-aware runners.")
         extra_args.extend(["--evolution-mode", evolution_mode])
         sampling_parameters = self._normalize_sampling_parameters(payload.get("sampling_parameters"), config_payload)
         if evolution_mode == "model_params":
@@ -768,6 +833,48 @@ class RunController:
             extra_args.extend(["--sampling-parameters", ",".join(sampling_parameters)])
         else:
             sampling_provider = sampling_provider_for_config(config_payload)
+
+        heat_map_x_axis = payload.get("heat_map_x_axis")
+        heat_map_y_axis = payload.get("heat_map_y_axis")
+        heat_map_x_values = self._normalize_heat_map_values(payload.get("heat_map_x_values"))
+        heat_map_y_values = self._normalize_heat_map_values(payload.get("heat_map_y_values"))
+        heat_map_top_k = payload.get("heat_map_top_k")
+        heat_map_verify_enabled = self._normalize_bool(payload.get("heat_map_verify_enabled"))
+        heat_map_verify_runs = payload.get("heat_map_verify_runs")
+        verify_overrides = {
+            "enabled": heat_map_verify_enabled,
+            "candidate_runs_per_config": int(heat_map_verify_runs) if heat_map_verify_runs not in (None, "") else None,
+        }
+        if evolution_mode == "heat_map":
+            config_payload = apply_heat_map_overrides(
+                config_payload,
+                x_axis=str(heat_map_x_axis).strip() if heat_map_x_axis else None,
+                y_axis=str(heat_map_y_axis).strip() if heat_map_y_axis else None,
+                x_values=heat_map_x_values,
+                y_values=heat_map_y_values,
+                top_k=int(heat_map_top_k) if heat_map_top_k not in (None, "") else None,
+                verify_overrides=verify_overrides,
+            )
+            try:
+                resolved_plan = resolve_heat_map_plan(config_payload)
+            except Exception as exc:
+                raise RuntimeError(str(exc)) from exc
+            if heat_map_x_axis:
+                extra_args.extend(["--heat-map-x-axis", str(heat_map_x_axis).strip()])
+            if heat_map_y_axis:
+                extra_args.extend(["--heat-map-y-axis", str(heat_map_y_axis).strip()])
+            if heat_map_x_values:
+                extra_args.extend(["--heat-map-x-values", ",".join(heat_map_x_values)])
+            if heat_map_y_values:
+                extra_args.extend(["--heat-map-y-values", ",".join(heat_map_y_values)])
+            if heat_map_top_k not in (None, ""):
+                extra_args.extend(["--heat-map-top-k", str(int(heat_map_top_k))])
+            if heat_map_verify_enabled is False:
+                extra_args.append("--disable-heat-map-verify")
+            if heat_map_verify_runs not in (None, ""):
+                extra_args.extend(["--heat-map-verify-runs", str(int(heat_map_verify_runs))])
+        else:
+            resolved_plan = resolve_heat_map_plan(config_payload) if supports_architecture_evolution(config_payload) else None
         extras: dict[str, Any] = {
             "estimated_total_evals": self._estimate_nightly_total_evals(config_payload, evolution_mode),
             "evolution_mode": evolution_mode,
@@ -775,7 +882,7 @@ class RunController:
             "sampling_parameters": sampling_parameters,
         }
         if evolution_mode == "heat_map":
-            extras["heat_map_plan"] = resolve_heat_map_plan(config_payload)
+            extras["heat_map_plan"] = resolved_plan
         seed_start = payload.get("seed_start")
         if seed_start is not None and str(seed_start).strip() != "":
             seed_start_value = int(seed_start)
@@ -784,6 +891,43 @@ class RunController:
 
         with self.lock:
             payload = self._launch_locked(kind="nightly", config_path=config_path, extra_args=extra_args, extras=extras)
+        return self._with_local_ai(payload)
+
+    def start_relayer_scan(self, payload: dict[str, Any]) -> dict[str, Any]:
+        config_path = self._resolve_config_path(payload.get("config"))
+        config_payload = self._load_config_payload(config_path)
+        relayer_summary = summarize_relayer_config(config_payload)
+        if not relayer_summary.get("scan_supported"):
+            raise RuntimeError(relayer_summary.get("scan_error") or "Relayer scan is not configured for this config.")
+
+        extra_args: list[str] = []
+        requested_max_candidates = payload.get("max_candidates")
+        candidate_count = relayer_summary.get("scan_candidate_count")
+        if requested_max_candidates not in (None, ""):
+            max_candidates = int(requested_max_candidates)
+            if max_candidates < 1:
+                raise RuntimeError("Relayer scan max_candidates must be at least 1.")
+            extra_args.extend(["--max-candidates", str(max_candidates)])
+            if candidate_count is not None:
+                candidate_count = min(int(candidate_count), max_candidates)
+
+        extras: dict[str, Any] = {
+            "candidate_count": candidate_count,
+            "relayer_mode": relayer_summary.get("mode"),
+            "relayer_scan_backend": relayer_summary.get("scan_backend"),
+            "relayer_runtime_patch_supported": relayer_summary.get("runtime_patch_supported"),
+            "relayer_scan_note": relayer_summary.get("scan_note"),
+        }
+        if requested_max_candidates not in (None, ""):
+            extras["max_candidates"] = int(requested_max_candidates)
+
+        with self.lock:
+            payload = self._launch_locked(
+                kind="relayer_scan",
+                config_path=config_path,
+                extra_args=extra_args,
+                extras=extras,
+            )
         return self._with_local_ai(payload)
 
     def stop(self) -> dict[str, Any]:
@@ -921,6 +1065,8 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                 response = self.server.controller.start_suite(payload)
             elif parsed.path == "/api/start-nightly":
                 response = self.server.controller.start_nightly(payload)
+            elif parsed.path == "/api/start-relayer-scan":
+                response = self.server.controller.start_relayer_scan(payload)
             elif parsed.path == "/api/stop":
                 response = self.server.controller.stop()
             else:

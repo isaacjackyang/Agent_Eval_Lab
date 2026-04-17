@@ -552,6 +552,11 @@
     <ul id="configList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
+  <section class="panel span-4">
+    <h2><span class="bi-stack"><span class="bi-line">參數歷史</span><span class="bi-line">Parameter History</span></span></h2>
+    <ul id="parameterList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
+  </section>
+
   <section class="panel span-8">
     <h2><span class="bi-stack"><span class="bi-line">分數歷史</span><span class="bi-line">Score History</span></span></h2>
     <canvas id="scoreCanvas"></canvas>
@@ -595,6 +600,22 @@
       </div>
     </div>
     <ul id="heatMapList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 heat_map 紀錄</span><span class="bi-line">No heat-map history yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-12">
+    <h2><span class="bi-stack"><span class="bi-line">Relayer Scan 歷史</span><span class="bi-line">Relayer Scan History</span></span></h2>
+    <div class="grid-2">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">最新 synthetic scan</span><span class="bi-line">Latest synthetic scan</span></span></div>
+        <strong id="relayerScanRunText">-</strong>
+        <div class="small" id="relayerScanBestText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">最佳候選：-</span><span class="bi-line">Best candidate: -</span></span></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">說明</span><span class="bi-line">Notes</span></span></div>
+        <strong id="relayerScanNoteText">-</strong>
+      </div>
+    </div>
+    <ul id="relayerScanList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 relayer scan 紀錄</span><span class="bi-line">No relayer scan history yet</span></span></li></ul>
   </section>
 
   <section class="panel span-12">
@@ -651,6 +672,7 @@
       <button id="startSingleBtn" class="primary"><span class="bi-stack"><span class="bi-line">開始單次 Run</span><span class="bi-line">Start Single Run</span></span></button>
       <button id="startSuiteBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Suite</span><span class="bi-line">Start Suite</span></span></button>
       <button id="startNightlyBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Nightly Evolution</span><span class="bi-line">Start Nightly Evolution</span></span></button>
+      <button id="startRelayerScanBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Relayer Scan</span><span class="bi-line">Start Relayer Scan</span></span></button>
       <button id="stopRunBtn" class="danger"><span class="bi-stack"><span class="bi-line">停止目前執行</span><span class="bi-line">Stop Current Run</span></span></button>
     </div>
     <div class="grid-2" style="margin-bottom:12px">
@@ -661,6 +683,58 @@
       <div class="mini">
         <div class="label"><span class="bi-stack"><span class="bi-line">採樣參數摘要</span><span class="bi-line">Sampling Summary</span></span></div>
         <strong id="samplingParamSummaryText">-</strong>
+      </div>
+    </div>
+    <div id="heatMapEditor" class="grid-2" style="margin-bottom:12px; display:none">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 編輯器</span><span class="bi-line">Heat-map Editor</span></span></div>
+        <div class="control-grid">
+          <label for="heatMapXAxis">
+            <span class="small"><span class="bi-stack"><span class="bi-line">X 軸</span><span class="bi-line">X axis</span></span></span>
+            <select id="heatMapXAxis"></select>
+          </label>
+          <label for="heatMapYAxis">
+            <span class="small"><span class="bi-stack"><span class="bi-line">Y 軸</span><span class="bi-line">Y axis</span></span></span>
+            <select id="heatMapYAxis"></select>
+          </label>
+          <label for="heatMapXValues">
+            <span class="small"><span class="bi-stack"><span class="bi-line">X 值</span><span class="bi-line">X values</span></span></span>
+            <input id="heatMapXValues" placeholder="4,5,6,8" />
+          </label>
+          <label for="heatMapYValues">
+            <span class="small"><span class="bi-stack"><span class="bi-line">Y 值</span><span class="bi-line">Y values</span></span></span>
+            <input id="heatMapYValues" placeholder="focused_only,focused_then_broad" />
+          </label>
+          <label for="heatMapTopK">
+            <span class="small"><span class="bi-stack"><span class="bi-line">Top-k</span><span class="bi-line">Top-k</span></span></span>
+            <input id="heatMapTopK" type="number" min="1" placeholder="5" />
+          </label>
+          <label for="heatMapVerifyRuns">
+            <span class="small"><span class="bi-stack"><span class="bi-line">Verify runs/config</span><span class="bi-line">Verify runs/config</span></span></span>
+            <input id="heatMapVerifyRuns" type="number" min="1" placeholder="6" />
+          </label>
+        </div>
+        <label class="toolbar-check" style="margin-top:10px"><input type="checkbox" id="heatMapVerifyEnabled" checked /><span class="small"><span class="bi-stack"><span class="bi-line">Nightly 結束後自動驗證 top-k</span><span class="bi-line">Auto-verify top-k after nightly</span></span></span></label>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 設定摘要</span><span class="bi-line">Heat-map Summary</span></span></div>
+        <strong id="heatMapEditorSummaryText">-</strong>
+      </div>
+    </div>
+    <div id="relayerEditor" class="grid-2" style="margin-bottom:12px; display:none">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Relayer Scan 控制</span><span class="bi-line">Relayer Scan Controls</span></span></div>
+        <div class="control-grid">
+          <label for="relayerScanMaxCandidates">
+            <span class="small"><span class="bi-stack"><span class="bi-line">Max candidates</span><span class="bi-line">Max candidates</span></span></span>
+            <input id="relayerScanMaxCandidates" type="number" min="1" placeholder="留空代表全部" />
+          </label>
+        </div>
+        <p class="small" id="relayerCapabilityText"><span class="bi-stack"><span class="bi-line">Relayer 能力摘要載入中</span><span class="bi-line">Loading relayer capability summary</span></span></p>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Relayer 設定摘要</span><span class="bi-line">Relayer Summary</span></span></div>
+        <strong id="relayerEditorSummaryText">-</strong>
       </div>
     </div>
     <div class="stat-grid">
@@ -707,7 +781,9 @@ const DATA = {
   rollbackEvents: './reports/rollback_events.json',
   nightlyHistory: './reports/nightly_history.json',
   heatMapHistory: './reports/heat_map_history.json',
-  configHistory: './reports/config_history.json'
+  relayerScanHistory: './reports/relayer_scan_history.json',
+  configHistory: './reports/config_history.json',
+  parameterHistory: './reports/parameter_history.json'
 };
 
 const CONTROL = {
@@ -715,6 +791,7 @@ const CONTROL = {
   startRun: '/api/start-run',
   startSuite: '/api/start-suite',
   startNightly: '/api/start-nightly',
+  startRelayerScan: '/api/start-relayer-scan',
   stop: '/api/stop'
 };
 
@@ -724,6 +801,7 @@ let controlBusy = false;
 let controlConfigSignature = '';
 let taskTypeSignature = '';
 let evolutionModeSignature = '';
+let heatMapEditorSignature = '';
 let latestControlState = null;
 
 async function fetchJSON(url){
@@ -1039,14 +1117,14 @@ function renderHeatMap(hist){
     setText('heatMapBestText', latest.best_cell?.config_id || latest.selected_config_id || '-', 'accent');
     setBiHTML(
       'heatMapDeltaText',
-      `最佳 Δscore：${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | 改善格點：${latest.improved_cell_count ?? '-'}`,
-      `Best delta score: ${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | Improved cells: ${latest.improved_cell_count ?? '-'}`
+      `最佳 Δscore：${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | 改善格點：${latest.improved_cell_count ?? '-'} | verify=${latest.verification?.winner?.config_id || '-'}`,
+      `Best delta score: ${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | Improved cells: ${latest.improved_cell_count ?? '-'} | verify=${latest.verification?.winner?.config_id || '-'}` 
     );
   }
   renderList(
     'heatMapList',
     items.slice(-6).reverse(),
-    item => `${item.ts || '-'} | ${item.suite_id || '-'} | axes=${item.y_axis || '-'} x ${item.x_axis || '-'} | best=${item.best_cell?.config_id || item.selected_config_id || '-'} | ΔC=${item.best_delta_suite_score ?? item.best_cell?.delta_suite_score ?? '-'}`,
+    item => `${item.ts || '-'} | ${item.suite_id || '-'} | axes=${item.y_axis || '-'} x ${item.x_axis || '-'} | best=${item.best_cell?.config_id || item.selected_config_id || '-'} | ΔC=${item.best_delta_suite_score ?? item.best_cell?.delta_suite_score ?? '-'} | verify=${item.verification?.winner?.config_id || '-'}`,
     { zh:'尚未有 heat_map 紀錄', en:'No heat-map history yet' }
   );
 }
@@ -1058,6 +1136,40 @@ function renderConfigHistory(hist){
     items.slice(-8).reverse(),
     item => `${item.ts || '-'} | ${item.event || '-'} | ${item.config_id || '-'} | ${item.mutation_profile || '-'} | ${item.fitness ?? '-'}`,
     { zh:'尚未有 config 生命周期紀錄', en:'No config lifecycle history yet' }
+  );
+}
+
+function renderParameterHistory(hist){
+  const items = hist?.history || [];
+  renderList(
+    'parameterList',
+    items.slice(-8).reverse(),
+    item => `${item.ts || '-'} | round=${item.round_index ?? '-'} | ${item.parameter_name || item.mutation_profile || '-'} | ${item.parameter_before ?? '-'} -> ${item.parameter_after ?? '-'} | fitness=${item.fitness ?? '-'} | improved=${stringifyBool(item.improved)}`,
+    { zh:'尚未有參數歷史紀錄', en:'No parameter history yet' }
+  );
+}
+
+function renderRelayerScanHistory(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    setText('relayerScanRunText', latest.run_id || '-', 'accent');
+    setBiHTML(
+      'relayerScanBestText',
+      `最佳候選：${latest.best_config_id || '-'} | Δscore=${latest.best_delta_suite_score ?? '-'}`,
+      `Best candidate: ${latest.best_config_id || '-'} | delta score=${latest.best_delta_suite_score ?? '-'}`,
+    );
+    setText('relayerScanNoteText', 'synthetic mock_layer_stack scan', 'warn');
+  } else {
+    setText('relayerScanRunText', '-');
+    setBiHTML('relayerScanBestText', '最佳候選：-', 'Best candidate: -');
+    setText('relayerScanNoteText', '-');
+  }
+  renderList(
+    'relayerScanList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.run_id || '-'} | best=${item.best_config_id || '-'} | ΔC=${item.best_delta_suite_score ?? '-'} | synthetic`,
+    { zh:'尚未有 relayer scan 紀錄', en:'No relayer scan history yet' }
   );
 }
 
@@ -1172,6 +1284,116 @@ function syncTaskTypeOptions(taskTypes, defaultTaskType){
 function getSelectedConfigSummary(control){
   const selectedValue = document.getElementById('controlConfig').value;
   return (control?.configs || []).find(item => (item.relative_path || item.name) === selectedValue) || null;
+}
+
+function syncSelectOptions(selectId, options, selectedValue){
+  const select = document.getElementById(selectId);
+  const currentValue = selectedValue || select.value;
+  select.innerHTML = '';
+  (options || []).forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.value;
+    option.textContent = item.label || item.value;
+    select.appendChild(option);
+  });
+  if(currentValue && [...select.options].some(option => option.value === currentValue)){
+    select.value = currentValue;
+  }
+}
+
+function updateHeatMapEditorSummary(){
+  const xAxis = document.getElementById('heatMapXAxis').value || '-';
+  const yAxis = document.getElementById('heatMapYAxis').value || '-';
+  const xValues = document.getElementById('heatMapXValues').value || '-';
+  const yValues = document.getElementById('heatMapYValues').value || '-';
+  const topK = document.getElementById('heatMapTopK').value || '-';
+  const verifyRuns = document.getElementById('heatMapVerifyRuns').value || '-';
+  const verifyEnabled = document.getElementById('heatMapVerifyEnabled').checked;
+  setBiHTML(
+    'heatMapEditorSummaryText',
+    `Y=${yAxis} | X=${xAxis} | y值=${yValues} | x值=${xValues} | top-k=${topK} | verify=${verifyEnabled ? 'on' : 'off'} | runs=${verifyRuns}`,
+    `Y=${yAxis} | X=${xAxis} | y values=${yValues} | x values=${xValues} | top-k=${topK} | verify=${verifyEnabled ? 'on' : 'off'} | runs=${verifyRuns}`,
+    'accent'
+  );
+}
+
+function renderHeatMapEditor(control){
+  const container = document.getElementById('heatMapEditor');
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  const visible = evolutionMode === 'heat_map';
+  container.style.display = visible ? '' : 'none';
+  if(!visible){
+    return;
+  }
+
+  if(!config){
+    setBiHTML('heatMapEditorSummaryText', '請先選擇設定檔', 'Select a config first');
+    return;
+  }
+
+  const dimensions = config.heat_map_dimensions || control?.heat_map_dimensions || [];
+  const settings = config.heat_map_settings || {};
+  const verifySettings = settings.verify || {};
+  const signature = JSON.stringify([config.relative_path || config.name, dimensions, settings]);
+  if(signature !== heatMapEditorSignature){
+    syncSelectOptions('heatMapXAxis', dimensions, settings.x_axis || config.heat_map_plan?.x_axis);
+    syncSelectOptions('heatMapYAxis', dimensions, settings.y_axis || config.heat_map_plan?.y_axis);
+    document.getElementById('heatMapXValues').value = (settings.x_values || config.heat_map_plan?.x_values || []).join(',');
+    document.getElementById('heatMapYValues').value = (settings.y_values || config.heat_map_plan?.y_values || []).join(',');
+    document.getElementById('heatMapTopK').value = settings.top_k ?? config.heat_map_plan?.top_k ?? '';
+    document.getElementById('heatMapVerifyRuns').value = verifySettings.candidate_runs_per_config ?? '';
+    document.getElementById('heatMapVerifyEnabled').checked = verifySettings.enabled !== false;
+    heatMapEditorSignature = signature;
+  }
+  updateHeatMapEditorSummary();
+}
+
+function renderRelayerEditor(control){
+  const container = document.getElementById('relayerEditor');
+  const config = getSelectedConfigSummary(control);
+  if(!config){
+    container.style.display = 'none';
+    return;
+  }
+
+  const relayer = config.relayer || {};
+  const hasRelayerData = Boolean(relayer.configured || relayer.num_layers || relayer.scan_error);
+  container.style.display = hasRelayerData ? '' : 'none';
+  if(!hasRelayerData){
+    return;
+  }
+
+  const requestedMaxCandidates = document.getElementById('relayerScanMaxCandidates').value || '-';
+  const runtimeModes = (relayer.runtime_supported_modes || []).join(', ') || '-';
+  if(relayer.scan_supported){
+    setBiHTML(
+      'relayerEditorSummaryText',
+      `mode=${relayer.mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates}`,
+      `mode=${relayer.mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates}`,
+      'accent'
+    );
+    setBiHTML(
+      'relayerCapabilityText',
+      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | synthetic`,
+      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | synthetic`,
+      relayer.runtime_patch_supported ? 'accent' : 'warn'
+    );
+    return;
+  }
+
+  setBiHTML(
+    'relayerEditorSummaryText',
+    `Relayer scan 尚未就緒：${relayer.scan_error || relayer.num_layers_error || 'unknown error'}`,
+    `Relayer scan not ready: ${relayer.scan_error || relayer.num_layers_error || 'unknown error'}`,
+    'bad'
+  );
+  setBiHTML(
+    'relayerCapabilityText',
+    `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
+    `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
+    'warn'
+  );
 }
 
 function syncEvolutionModeOptions(modes, defaultMode){
@@ -1327,6 +1549,8 @@ function renderControlPanel(control, status){
   syncEvolutionModeOptions(control?.evolution_modes, selectedConfig?.default_evolution_mode || control?.default_evolution_mode);
   renderLocalAi(control?.local_ai);
   renderSamplingParameters(control);
+  renderHeatMapEditor(control);
+  renderRelayerEditor(control);
 
   const active = Boolean(control?.active);
   const current = control?.current || null;
@@ -1376,8 +1600,8 @@ function renderControlPanel(control, status){
   }
   setText('controlProgressText', progressText, active && activeKind !== 'single' ? 'accent-2' : '');
 
-  let noticeZh = '可從這裡啟動單次 run、suite 或 nightly evolution，停止按鈕會終止目前背景程序。';
-  let noticeEn = 'Launch a single run, suite, or nightly evolution here; stop terminates the active background process.';
+  let noticeZh = '可從這裡啟動單次 run、suite、nightly evolution 或 relayer scan，停止按鈕會終止目前背景程序。';
+  let noticeEn = 'Launch a single run, suite, nightly evolution, or relayer scan here; stop terminates the active background process.';
   let noticeTone = '';
 
   if(active && current){
@@ -1385,6 +1609,8 @@ function renderControlPanel(control, status){
       ? 'suite'
       : activeKind === 'nightly'
         ? (current?.evolution_mode === 'heat_map' ? 'nightly heat map' : 'nightly evolution')
+        : activeKind === 'relayer_scan'
+          ? 'relayer scan'
         : 'single run';
     noticeZh = `目前正在執行 ${runLabel}，PID ${current.pid}。`;
     noticeEn = `Currently running a ${runLabel}, PID ${current.pid}.`;
@@ -1400,15 +1626,17 @@ function renderControlPanel(control, status){
 
   setBiHTML('controlMessageText', noticeZh, noticeEn, noticeTone || null);
 
+  const relayerScanReady = Boolean(selectedConfig?.relayer?.scan_supported);
   document.getElementById('startSingleBtn').disabled = controlBusy || active;
   document.getElementById('startSuiteBtn').disabled = controlBusy || active;
   document.getElementById('startNightlyBtn').disabled = controlBusy || active;
+  document.getElementById('startRelayerScanBtn').disabled = controlBusy || active || !relayerScanReady;
   document.getElementById('stopRunBtn').disabled = controlBusy || !active;
 }
 
 async function refreshAll(){
   try{
-    const [status, score, arch, test, baseline, rollback, nightly, heatMap, configHistory, streamText, control] = await Promise.all([
+    const [status, score, arch, test, baseline, rollback, nightly, heatMap, relayerScanHistory, configHistory, parameterHistory, streamText, control] = await Promise.all([
       fetchJSON(DATA.liveStatus).catch(() => null),
       fetchJSON(DATA.scoreHistory).catch(() => null),
       fetchJSON(DATA.archHistory).catch(() => null),
@@ -1417,7 +1645,9 @@ async function refreshAll(){
       fetchJSON(DATA.rollbackEvents).catch(() => null),
       fetchJSON(DATA.nightlyHistory).catch(() => null),
       fetchJSON(DATA.heatMapHistory).catch(() => null),
+      fetchJSON(DATA.relayerScanHistory).catch(() => null),
       fetchJSON(DATA.configHistory).catch(() => null),
+      fetchJSON(DATA.parameterHistory).catch(() => null),
       fetchText(DATA.liveStream).catch(() => ''),
       fetchJSON(CONTROL.state).catch(() => null)
     ]);
@@ -1439,7 +1669,9 @@ async function refreshAll(){
     renderRollback(rollback);
     renderNightly(nightly);
     renderHeatMap(heatMap);
+    renderRelayerScanHistory(relayerScanHistory);
     renderConfigHistory(configHistory);
+    renderParameterHistory(parameterHistory);
 
     scoreChartState = getCurrentRoundScoreItems(score, status);
     drawLineChart(document.getElementById('scoreCanvas'), scoreChartState);
@@ -1457,6 +1689,7 @@ async function triggerControl(url, payload){
   document.getElementById('startSingleBtn').disabled = true;
   document.getElementById('startSuiteBtn').disabled = true;
   document.getElementById('startNightlyBtn').disabled = true;
+  document.getElementById('startRelayerScanBtn').disabled = true;
   document.getElementById('stopRunBtn').disabled = true;
   setBiHTML('controlMessageText', '控制命令送出中...', 'Sending control command...', 'warn');
   try{
@@ -1507,11 +1740,37 @@ async function startNightlyRun(){
     evolution_mode: document.getElementById('evolutionMode').value,
     sampling_parameters: getSelectedSamplingParameters()
   };
+  if(payload.evolution_mode === 'heat_map'){
+    payload.heat_map_x_axis = document.getElementById('heatMapXAxis').value;
+    payload.heat_map_y_axis = document.getElementById('heatMapYAxis').value;
+    payload.heat_map_x_values = document.getElementById('heatMapXValues').value;
+    payload.heat_map_y_values = document.getElementById('heatMapYValues').value;
+    payload.heat_map_verify_enabled = document.getElementById('heatMapVerifyEnabled').checked;
+    const topK = parseOptionalInt('heatMapTopK');
+    const verifyRuns = parseOptionalInt('heatMapVerifyRuns');
+    if(topK !== null){
+      payload.heat_map_top_k = topK;
+    }
+    if(verifyRuns !== null){
+      payload.heat_map_verify_runs = verifyRuns;
+    }
+  }
   const seedStart = parseOptionalInt('suiteSeedStart');
   if(seedStart !== null){
     payload.seed_start = seedStart;
   }
   await triggerControl(CONTROL.startNightly, payload);
+}
+
+async function startRelayerScan(){
+  const payload = {
+    config: document.getElementById('controlConfig').value
+  };
+  const maxCandidates = parseOptionalInt('relayerScanMaxCandidates');
+  if(maxCandidates !== null){
+    payload.max_candidates = maxCandidates;
+  }
+  await triggerControl(CONTROL.startRelayerScan, payload);
 }
 
 async function stopCurrentRun(){
@@ -1548,6 +1807,12 @@ document.getElementById('startNightlyBtn').addEventListener('click', () => {
     setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
   });
 });
+document.getElementById('startRelayerScanBtn').addEventListener('click', () => {
+  startRelayerScan().catch(error => {
+    console.error(error);
+    setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
+  });
+});
 document.getElementById('stopRunBtn').addEventListener('click', () => {
   stopCurrentRun().catch(error => {
     console.error(error);
@@ -1555,13 +1820,28 @@ document.getElementById('stopRunBtn').addEventListener('click', () => {
   });
 });
 document.getElementById('controlConfig').addEventListener('change', () => {
+  heatMapEditorSignature = '';
   renderSamplingParameters(latestControlState);
+  renderHeatMapEditor(latestControlState);
+  renderRelayerEditor(latestControlState);
 });
 document.getElementById('evolutionMode').addEventListener('change', () => {
+  heatMapEditorSignature = '';
   renderSamplingParameters(latestControlState);
+  renderHeatMapEditor(latestControlState);
+});
+document.getElementById('relayerScanMaxCandidates').addEventListener('change', () => {
+  renderRelayerEditor(latestControlState);
+});
+document.getElementById('relayerScanMaxCandidates').addEventListener('input', () => {
+  renderRelayerEditor(latestControlState);
 });
 document.getElementById('samplingParamList').addEventListener('change', () => {
   renderSamplingParameters(latestControlState);
+});
+['heatMapXAxis','heatMapYAxis','heatMapXValues','heatMapYValues','heatMapTopK','heatMapVerifyRuns','heatMapVerifyEnabled'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateHeatMapEditorSummary);
+  document.getElementById(id).addEventListener('input', updateHeatMapEditorSummary);
 });
 document.getElementById('refreshNow').addEventListener('click', refreshAll);
 document.getElementById('keyword').addEventListener('input', refreshAll);

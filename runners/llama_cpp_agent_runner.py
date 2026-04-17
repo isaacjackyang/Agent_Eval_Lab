@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from evolution.mutator import effective_agent_architecture, normalize_sampling_provider
+from evolution.relayer_plan import relayer_supported_modes_for_runner, resolve_relayer_runtime_context
 from runners.base import BaseRunner, RunnerResult
+from runners.relayer_runtime_bridge import invoke_external_relayer_runtime
 from runners.search_helpers import search_file
 
 
@@ -40,6 +42,13 @@ class LlamaCppAgentRunner(BaseRunner):
     def run(self, task: dict, live_writer, context: dict) -> RunnerResult:
         cfg = self.runner_config.get("llama_cpp", {})
         architecture = effective_agent_architecture(self.runner_config)
+        relayer_supported_modes = relayer_supported_modes_for_runner(self.name, config=self.runner_config)
+        relayer_context = resolve_relayer_runtime_context(
+            self.runner_config,
+            runtime_patch_supported="runtime_patch" in relayer_supported_modes,
+            runtime_label=self.name,
+            supported_modes=relayer_supported_modes,
+        )
         provider = self._resolve_provider_name(cfg)
         model = str(cfg.get("model", "gemma-4-31B-it-Q5_K_M.gguf"))
         timeout_sec = int(cfg.get("timeout_sec", 90))
@@ -63,6 +72,7 @@ class LlamaCppAgentRunner(BaseRunner):
         tool_trace: list[dict[str, Any]] = []
         last_search_matches: list[dict[str, Any]] = []
         recovery_used = False
+        relayer_runtime_backend: dict[str, Any] | None = None
         status_context = {
             "run_kind": context.get("run_kind"),
             "suite_id": context.get("suite_id"),
@@ -130,6 +140,9 @@ class LlamaCppAgentRunner(BaseRunner):
                     "top_p": top_p,
                     "provider": provider,
                     "architecture_variant": architecture.get("variant"),
+                    "relayer_mode": relayer_context["mode"],
+                    "relayer_applied": relayer_context["applied"],
+                    "relayer_range": relayer_context.get("range_text"),
                     **status_context,
                 }
             )
@@ -142,6 +155,21 @@ class LlamaCppAgentRunner(BaseRunner):
             ),
             name="llama_cpp",
         )
+        if relayer_context["enabled"]:
+            emit("system", relayer_context["message"], name="relayer")
+        if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
+            relayer_runtime_backend = invoke_external_relayer_runtime(
+                root=Path(context["root"]),
+                run_id=context["run_id"],
+                runtime_label=self.name,
+                config=self.runner_config,
+                relayer_context=relayer_context,
+            )
+            emit(
+                "system",
+                f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
+                name="relayer_runtime",
+            )
         write_status()
 
         final_output = ""
@@ -313,6 +341,8 @@ class LlamaCppAgentRunner(BaseRunner):
                 "recovery_policy_used": recovery_used,
                 "architecture_variant": architecture.get("variant"),
                 "architecture": architecture,
+                "relayer": relayer_context,
+                "relayer_runtime_backend": relayer_runtime_backend,
             },
         )
 
