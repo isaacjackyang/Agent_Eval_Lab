@@ -1,0 +1,51 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_145320_206954",
+  "created_at": "2026-04-16T14:53:20",
+  "file_count": 7,
+  "manifest_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\manifest.json",
+  "backup_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files",
+  "files": [
+    {
+      "path": "projects/Cinder-97/docs/field-notes/v2/summary.md",
+      "sha256": "0a5f53b28ddbdabc598a22aa8020896977e82f78662832173e68331894750b2e",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\projects\\Cinder-97\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Cinder-97/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "46208bbec252350c8fa89c1fbb674eff441d17ea1cc41af6bd7f991de4136cb2",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\projects\\Cinder-97\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Falcon-47/docs/archives/v1/handoff_notes.md",
+      "sha256": "e4c8227f68c9bfcf0e21eed289ca9691af3cb85f1ed6bbe84902fddfcc2edff2",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\projects\\Falcon-47\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Falcon-47/knowledge/handover/verified/handoff_packet.md",
+      "sha256": "668baac6b24df0925b6bc8f40af886a3e641fa1fb12f5be683ac8f4570d2c421",
+      "size": 95,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\projects\\Falcon-47\\knowledge\\handover\\verified\\handoff_packet.md"
+    },
+    {
+      "path": "projects/Falcon-47/ops/handover/current/handoff_archive.md",
+      "sha256": "389c1260aa8d847b10c19fa432806307799400792ee9b86d6a60804780d76fba",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\projects\\Falcon-47\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "scratch/Falcon-47/notes.txt",
+      "sha256": "1a208807c9670e7085e62685d143b133749387de028161615dfe84b9111ee54e",
+      "size": 28,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\scratch\\Falcon-47\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "ab9b981ef4323a3c6b3d89c745de164134a4b97de1cd6b02ced82efbc59d72aa",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145320_206954\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

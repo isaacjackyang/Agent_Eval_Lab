@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_114833_132404",
+  "created_at": "2026-04-16T11:48:33",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-20/docs/archives/v1/deployment_draft.md",
+      "sha256": "f8a9db161a8f2b89d37d11bafd23eccf55ab6cd9aa831b6739d0af79a6e446d2",
+      "size": 74
+    },
+    {
+      "path": "projects/Atlas-20/docs/handover/current/deploy_runbook.md",
+      "sha256": "d274e1a1b373b5980b42893b63094bdf44d56b95405dd4db8bb775a9fc826db5",
+      "size": 97
+    },
+    {
+      "path": "projects/Atlas-20/ops/handover/current/deployment_archive.md",
+      "sha256": "19571b22c3d9d02024b5cd7f476cf037406a161d992df9acef2a751236e88f09",
+      "size": 74
+    },
+    {
+      "path": "projects/Quartz-37/docs/field-notes/v2/summary.md",
+      "sha256": "b9b193279438ee6c90fba12033060023d474b37d3544720cf469bb9b986391cd",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-37/knowledge/release/verified/deployment_note.md",
+      "sha256": "835e07a0e3915b0897b4fac141c565d2309ed58ebdb8e4ab1be15e011a9b3976",
+      "size": 75
+    },
+    {
+      "path": "scratch/Atlas-20/notes.txt",
+      "sha256": "af190bf6011151e68633975edbc9c6997c13f77b6483cb323a1a30bdee578da4",
+      "size": 27
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "784fb4c8ff63493a494ac69439f3cefa94a7a07c1bec0c8a25c3b02ad874b41e",
+      "size": 75
+    }
+  ]
+}

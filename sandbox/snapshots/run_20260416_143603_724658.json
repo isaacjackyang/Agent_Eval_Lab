@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143603_724658",
+  "created_at": "2026-04-16T14:36:03",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-73/docs/archives/v1/operations_old.md",
+      "sha256": "769a05aa6d09b6caaafb8180fc3c374fec416154e476091bb4ae564d4729af01",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-73/knowledge/release/v2/operations_runbook.md",
+      "sha256": "d571e6fc3180894dd908d64e514afa7ba006792710a838fc8459a68188b5fcae",
+      "size": 98
+    },
+    {
+      "path": "projects/Cinder-73/ops/handover/current/ops_draft.md",
+      "sha256": "f4dc78710fd657c970feb5b88c39dc0337e875364453c5e6919b3eb3dbddb5ee",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-78/docs/field-notes/v2/summary.md",
+      "sha256": "f1ce5e12c4c269e29d5baf6011a1170bf2ab644ba6ed2d81b7edc3c61d727d08",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-78/knowledge/release/verified/operations_runbook.md",
+      "sha256": "5cb2b4d55f23fdd5c2b756643cba6117cd50bf17bf034b43bb1478c86c460870",
+      "size": 75
+    },
+    {
+      "path": "scratch/Cinder-73/notes.txt",
+      "sha256": "36ea010b405803cc4cc1ff4db4529b6d7977c9da1ed8e35e176188ded71f521e",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "4c3ed7de7a5f2239281b9549f4e02bbc1f1c4434a0038f4cc19cf9ce6579e15c",
+      "size": 75
+    }
+  ]
+}

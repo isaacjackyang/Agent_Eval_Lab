@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_743319",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-64/docs/field-notes/v2/summary.md",
+      "sha256": "193c513aa8286facc58a5226c41e0c0114aca9f4a75c4638ca26987eb87f2384",
+      "size": 74
+    },
+    {
+      "path": "projects/Atlas-64/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "d186b977af7b95403742883ae750dc48d867725ccab73cf8ca143caebd15ebfc",
+      "size": 74
+    },
+    {
+      "path": "projects/Falcon-70/delivery/handover/v2/handoff_packet.md",
+      "sha256": "d2ca947287425a7292a0597adbd2c30b29fd5e0a768d3e9fa1d15bb3637a7ea5",
+      "size": 95
+    },
+    {
+      "path": "projects/Falcon-70/docs/archives/v1/handoff_notes.md",
+      "sha256": "16725a8d2c11e130eeb12cdd819e9be858fbd128b6c836d69d68021f642d860b",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-70/ops/handover/current/handoff_archive.md",
+      "sha256": "565caa879a3a53cf54a2937e2b84da41ce705216823b91b68542d4358a41d619",
+      "size": 75
+    },
+    {
+      "path": "scratch/Falcon-70/notes.txt",
+      "sha256": "27cf053a3075c06e21820c582bd6fa7bb7f522f7f8f61f70dce823394294506c",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "dbbce81f9db9b31b23be6cab96836642ae7dc881f76f736f35a5d128e2ae4c02",
+      "size": 74
+    }
+  ]
+}

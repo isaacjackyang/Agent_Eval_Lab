@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_115656_563036",
+  "created_at": "2026-04-16T11:56:56",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-90/docs/archives/v1/operations_old.md",
+      "sha256": "6c0312229d5b3a95596829bedee4422b45462275bc2651ef7725be85d8a9ea99",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-90/docs/handover/current/ops_manual.md",
+      "sha256": "5930d43eb750bafda8ea437fb24d64f475b510f1632e4b4a434f6d36254b0c8e",
+      "size": 98
+    },
+    {
+      "path": "projects/Cinder-90/ops/handover/current/ops_draft.md",
+      "sha256": "4eb8b0758e4dead095c617e8f12bd3a258e9f8df88c3d88749ab2dc2903ee300",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-56/docs/field-notes/v2/summary.md",
+      "sha256": "e0ca4a12a85525b9ec654257d26e743d24d54884d66bcdfb729124d329de92ef",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-56/knowledge/release/verified/operations_runbook.md",
+      "sha256": "47a85f302c7f72a4ceb3b92696573e7934947a72a6a1d7918b216f2dab3ddfd5",
+      "size": 75
+    },
+    {
+      "path": "scratch/Cinder-90/notes.txt",
+      "sha256": "9d2c56ed2811c34af3eb28aa35b09b913f9da7bc52695bb132ba4c4e0231f1a9",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "b98c33a847236be49d2bcf1863a0c239c6bcf8bb050b0da8463b10f5ef98ed69",
+      "size": 75
+    }
+  ]
+}

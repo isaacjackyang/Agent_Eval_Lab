@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143650_034115",
+  "created_at": "2026-04-16T14:36:50",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-88/docs/field-notes/v2/summary.md",
+      "sha256": "2a39f2ecd56cd6f8f46ef528514353a30115f37d5f863a1fca0ffcaeb53eaf5d",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-88/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "3a360b943335f2ae9ce5ce765eef9b1d0292477d40434c9b8501d28064787582",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-69/delivery/handover/v2/handoff_packet.md",
+      "sha256": "c364fbcd588d4024cdfa1d839f786364cf235d8631042ad19d404e4b4d6f589f",
+      "size": 95
+    },
+    {
+      "path": "projects/Quartz-69/docs/archives/v1/handoff_notes.md",
+      "sha256": "73d19b9c16b60dd15d045beb96ac6b5a2690a848246baced445e7bdbec29ea93",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-69/ops/handover/current/handoff_archive.md",
+      "sha256": "38806b4a0004cd33a94b0abbf1a1c622d85873d093b2b3b5cd55d0fa4a28a41d",
+      "size": 75
+    },
+    {
+      "path": "scratch/Quartz-69/notes.txt",
+      "sha256": "0d91560492855c114f0c1bd2093048283b20486b7e41f1f4d37712b4136e7f51",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "b36238230b215b2f2f2fa7f9158cd003f6cc6c2befdc79c3d3d6b9d0ed6e886b",
+      "size": 75
+    }
+  ]
+}

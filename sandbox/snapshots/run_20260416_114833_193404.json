@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_114833_193404",
+  "created_at": "2026-04-16T11:48:33",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Quartz-11/docs/field-notes/v2/summary.md",
+      "sha256": "367bfd6adb9dbf72bda3ba4ded6ec583bd0e869d62865e438f01895a869dd162",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-11/knowledge/release/verified/deployment_note.md",
+      "sha256": "092a54e81bd8dc292c11e660f79da34634b2ce185d3b9fce5d3432bd7321b3b1",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-79/docs/archives/v1/deployment_draft.md",
+      "sha256": "a745201e8b899a12fec87868df2d2f6c7840c2c8e279bcfe58c2d50659ff4c4a",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-79/ops/field-notes/verified/deployment_note.md",
+      "sha256": "f3724c6b15c546d34e573e18896e2846c55045cc63a0d9bb4df19c6c8131652b",
+      "size": 98
+    },
+    {
+      "path": "projects/Quartz-79/ops/handover/current/deployment_archive.md",
+      "sha256": "d8159e84b3ea39de9c4b797dcdde81cad39ca43b8521561584097139204c33fe",
+      "size": 75
+    },
+    {
+      "path": "scratch/Quartz-79/notes.txt",
+      "sha256": "84c2d4bf0d73fee9b3404c34f87afeabe57ec80ce57e8ae271063b0aee1fc3c2",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "499bb3706b1ab426cf9293afb48b046703f749088a714ee48cc173afddc0c794",
+      "size": 75
+    }
+  ]
+}

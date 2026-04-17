@@ -197,7 +197,7 @@
   }
   .control-grid{
     display:grid;
-    grid-template-columns:repeat(5, minmax(0, 1fr));
+    grid-template-columns:repeat(6, minmax(0, 1fr));
     gap:10px;
     margin-bottom:12px;
   }
@@ -292,13 +292,150 @@
     font-size:16px;
   }
   #controlCommandText,
-  #controlLogText{
+  #controlLogText,
+  #localAiSummaryText{
     word-break:break-all;
     font-size:13px;
+  }
+  #localAiList{
+    max-height:140px;
+    overflow:auto;
+  }
+  #localAiList li{
+    line-height:1.45;
+    word-break:break-word;
+  }
+  .checklist{
+    display:grid;
+    gap:8px;
+    margin-top:8px;
+  }
+  .check-item{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    padding:8px 10px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;
+    background:rgba(255,255,255,.02);
+  }
+  .check-item input{
+    margin-top:2px;
+  }
+  .check-copy{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
   }
   .control-note{
     margin-top:12px;
     min-height:34px;
+  }
+  .dashboard-band{
+    position:relative;
+    padding:18px;
+    border-radius:28px;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    isolation:isolate;
+  }
+  .dashboard-band::before{
+    content:"";
+    position:absolute;
+    inset:0 0 auto 0;
+    height:4px;
+    background:var(--band-bar, linear-gradient(90deg, var(--accent), var(--accent-2)));
+  }
+  .dashboard-band::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.045), transparent 28%);
+    opacity:.85;
+  }
+  .band-overview{
+    --band-bar:linear-gradient(90deg, rgba(120,220,202,.92), rgba(99,166,255,.84));
+    background:
+      radial-gradient(circle at top left, rgba(120,220,202,.10), transparent 32%),
+      linear-gradient(180deg, rgba(17,35,58,.94), rgba(7,17,31,.94));
+    border-color:rgba(120,220,202,.18);
+  }
+  .band-control{
+    --band-bar:linear-gradient(90deg, rgba(247,200,115,.9), rgba(120,220,202,.7));
+    background:
+      radial-gradient(circle at top right, rgba(247,200,115,.10), transparent 34%),
+      linear-gradient(180deg, rgba(24,34,49,.95), rgba(9,16,28,.96));
+    border-color:rgba(247,200,115,.18);
+  }
+  .band-other{
+    --band-bar:linear-gradient(90deg, rgba(99,166,255,.88), rgba(120,220,202,.68));
+    background:
+      radial-gradient(circle at top center, rgba(99,166,255,.10), transparent 30%),
+      linear-gradient(180deg, rgba(14,26,45,.95), rgba(7,17,31,.96));
+    border-color:rgba(99,166,255,.16);
+  }
+  .band-header{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:16px;
+    padding:4px 2px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .band-step{
+    flex:0 0 auto;
+    min-width:68px;
+    padding:10px 12px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.09);
+    background:rgba(255,255,255,.04);
+    color:var(--muted);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    text-align:center;
+  }
+  .band-headline{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .band-headline h2{
+    margin:0;
+    font-size:20px;
+    letter-spacing:.06em;
+    color:#f4f8ff;
+  }
+  .band-copy{
+    max-width:70ch;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .band-grid{
+    position:relative;
+    z-index:1;
+    display:grid;
+    gap:14px;
+    grid-template-columns:repeat(12, minmax(0, 1fr));
+  }
+  .dashboard-band .panel{
+    box-shadow:none;
+    background:rgba(7,14,25,.76);
+    border-color:rgba(255,255,255,.07);
+  }
+  .band-overview .panel.hero{
+    background:
+      linear-gradient(135deg, rgba(120,220,202,.16), rgba(99,166,255,.10)),
+      rgba(18,32,58,.92);
+  }
+  .band-control .panel{
+    background:
+      linear-gradient(180deg, rgba(247,200,115,.04), transparent 42%),
+      rgba(7,14,25,.8);
   }
   @media (max-width: 1100px){
     .cards{grid-template-columns:repeat(3, minmax(0, 1fr))}
@@ -309,6 +446,8 @@
     header{flex-direction:column}
     .cards,.grid-2,.stat-grid,.control-grid{grid-template-columns:1fr}
     .shell{padding:12px}
+    .band-header{flex-direction:column}
+    .band-step{min-width:0;width:fit-content}
     .toolbar-field,
     .toolbar-check{width:100%}
   }
@@ -327,8 +466,17 @@
 </header>
 
 <main class="shell">
+  <section class="dashboard-band band-overview span-12">
+    <div class="band-header">
+      <div class="band-step">01</div>
+      <div class="band-headline">
+        <h2><span class="bi-stack"><span class="bi-line">執行總覽</span><span class="bi-line">Run Overview</span></span></h2>
+        <p class="band-copy"><span class="bi-stack"><span class="bi-line">先看目前 run、baseline 與 rollback 的整體狀態，快速掌握現在發生了什麼。</span><span class="bi-line">Start with the current run, baseline, and rollback state to quickly understand what is happening now.</span></span></p>
+      </div>
+    </div>
+    <div class="band-grid">
   <section class="panel hero span-12">
-    <h2><span class="bi-stack"><span class="bi-line">執行總覽</span><span class="bi-line">Run Overview</span></span></h2>
+    <h2><span class="bi-stack"><span class="bi-line">即時指標</span><span class="bi-line">Live Metrics</span></span></h2>
     <div class="cards">
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">狀態</span><span class="bi-line">Status</span></span></div><div class="value" id="statusText">-</div></div>
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">任務</span><span class="bi-line">Task</span></span></div><div class="value" id="taskText">-</div></div>
@@ -372,7 +520,18 @@
       <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">提升時間</span><span class="bi-line">Promoted at</span></span></div><strong id="baselineTimeText">-</strong></div>
     </div>
   </section>
+    </div>
+  </section>
 
+  <section class="dashboard-band band-other span-12">
+    <div class="band-header">
+      <div class="band-step">02</div>
+      <div class="band-headline">
+        <h2><span class="bi-stack"><span class="bi-line">其他觀測</span><span class="bi-line">Other Views</span></span></h2>
+        <p class="band-copy"><span class="bi-stack"><span class="bi-line">歷史、圖表、heat map 與即時串流集中在這一區，方便回顧、比較與追查問題。</span><span class="bi-line">History, charts, heat-map summaries, and live stream diagnostics are grouped here for review, comparison, and debugging.</span></span></p>
+      </div>
+    </div>
+    <div class="band-grid">
   <section class="panel span-4">
     <h2><span class="bi-stack"><span class="bi-line">架構歷史</span><span class="bi-line">Architecture History</span></span></h2>
     <ul id="archList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
@@ -422,6 +581,23 @@
   </section>
 
   <section class="panel span-12">
+    <h2><span class="bi-stack"><span class="bi-line">Heat Map 歷史</span><span class="bi-line">Heat Map History</span></span></h2>
+    <div class="grid-2">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">最新掃描組</span><span class="bi-line">Latest scan suite</span></span></div>
+        <strong id="heatMapSuiteText">-</strong>
+        <div class="small" id="heatMapAxesText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">掃描軸：-</span><span class="bi-line">Axes: -</span></span></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">最佳格點</span><span class="bi-line">Best cell</span></span></div>
+        <strong id="heatMapBestText">-</strong>
+        <div class="small" id="heatMapDeltaText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">最佳增益：-</span><span class="bi-line">Best delta: -</span></span></div>
+      </div>
+    </div>
+    <ul id="heatMapList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 heat_map 紀錄</span><span class="bi-line">No heat-map history yet</span></span></li></ul>
+  </section>
+
+  <section class="panel span-12">
     <h2><span class="bi-stack"><span class="bi-line">即時串流</span><span class="bi-line">Live Stream</span></span></h2>
     <div class="toolbar">
       <button id="toggleScroll"><span class="bi-stack"><span class="bi-line">暫停自動捲動</span><span class="bi-line">Pause auto-scroll</span></span></button>
@@ -431,8 +607,20 @@
     </div>
     <div class="stream" id="streamBox"><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></div>
   </section>
+    </div>
+  </section>
+
+  <section class="dashboard-band band-control span-12">
+    <div class="band-header">
+      <div class="band-step">03</div>
+      <div class="band-headline">
+        <h2><span class="bi-stack"><span class="bi-line">實驗控制台</span><span class="bi-line">Experiment Control</span></span></h2>
+        <p class="band-copy"><span class="bi-stack"><span class="bi-line">所有啟動、停止、suite 與 nightly 的操作都集中在這裡，和觀測區塊明確分開。</span><span class="bi-line">All launch, stop, suite, and nightly controls live here in one dedicated area, clearly separated from the monitoring views.</span></span></p>
+      </div>
+    </div>
+    <div class="band-grid">
   <section class="panel span-12">
-    <h2><span class="bi-stack"><span class="bi-line">實驗控制台</span><span class="bi-line">Experiment Control</span></span></h2>
+    <h2><span class="bi-stack"><span class="bi-line">控制細節</span><span class="bi-line">Control Detail</span></span></h2>
     <div class="control-grid">
       <label for="controlConfig">
         <span class="small"><span class="bi-stack"><span class="bi-line">設定檔</span><span class="bi-line">Config</span></span></span>
@@ -454,12 +642,26 @@
         <span class="small"><span class="bi-stack"><span class="bi-line">批次起始 seed</span><span class="bi-line">Batch seed start</span></span></span>
         <input id="suiteSeedStart" type="number" placeholder="auto" />
       </label>
+      <label for="evolutionMode">
+        <span class="small"><span class="bi-stack"><span class="bi-line">進化模式</span><span class="bi-line">Evolution mode</span></span></span>
+        <select id="evolutionMode"></select>
+      </label>
     </div>
     <div class="toolbar control-actions">
       <button id="startSingleBtn" class="primary"><span class="bi-stack"><span class="bi-line">開始單次 Run</span><span class="bi-line">Start Single Run</span></span></button>
       <button id="startSuiteBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Suite</span><span class="bi-line">Start Suite</span></span></button>
       <button id="startNightlyBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Nightly Evolution</span><span class="bi-line">Start Nightly Evolution</span></span></button>
       <button id="stopRunBtn" class="danger"><span class="bi-stack"><span class="bi-line">停止目前執行</span><span class="bi-line">Stop Current Run</span></span></button>
+    </div>
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">模型採樣參數</span><span class="bi-line">Sampling Parameters</span></span></div>
+        <div id="samplingParamList" class="checklist"><div class="small"><span class="bi-stack"><span class="bi-line">請先選擇設定檔</span><span class="bi-line">Select a config first</span></span></div></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">採樣參數摘要</span><span class="bi-line">Sampling Summary</span></span></div>
+        <strong id="samplingParamSummaryText">-</strong>
+      </div>
     </div>
     <div class="stat-grid">
       <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">控制狀態</span><span class="bi-line">Control state</span></span></div><strong id="controlStateText">-</strong></div>
@@ -478,7 +680,19 @@
         <strong id="controlLogText">-</strong>
       </div>
     </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">本機 AI</span><span class="bi-line">Local AI</span></span></div>
+        <ul id="localAiList"><li><span class="bi-stack"><span class="bi-line">偵測中</span><span class="bi-line">Detecting</span></span></li></ul>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">AI 偵測摘要</span><span class="bi-line">AI Detection Summary</span></span></div>
+        <strong id="localAiSummaryText">-</strong>
+      </div>
+    </div>
     <p class="small control-note" id="controlMessageText"><span class="bi-stack"><span class="bi-line">控制 API 準備中</span><span class="bi-line">Control API is loading</span></span></p>
+  </section>
+    </div>
   </section>
 </main>
 
@@ -492,6 +706,7 @@ const DATA = {
   baselineHistory: './reports/baseline_history.json',
   rollbackEvents: './reports/rollback_events.json',
   nightlyHistory: './reports/nightly_history.json',
+  heatMapHistory: './reports/heat_map_history.json',
   configHistory: './reports/config_history.json'
 };
 
@@ -508,6 +723,8 @@ let scoreChartState = [];
 let controlBusy = false;
 let controlConfigSignature = '';
 let taskTypeSignature = '';
+let evolutionModeSignature = '';
+let latestControlState = null;
 
 async function fetchJSON(url){
   const res = await fetch(url + '?t=' + Date.now());
@@ -804,8 +1021,33 @@ function renderNightly(hist){
   renderList(
     'nightlyList',
     items.slice(-6).reverse(),
-    item => `${item.ts || '-'} | ${item.status || '-'} | fitness=${item.fitness ?? '-'} | C=${item.suite_score_c ?? '-'} | B=${item.suite_score_b ?? '-'} | reasons=${(item.gate_reasons || []).join(',') || 'none'}`,
+    item => `${item.ts || '-'} | ${item.evolution_mode || '-'} | ${item.status || '-'} | fitness=${item.fitness ?? '-'} | C=${item.suite_score_c ?? '-'} | B=${item.suite_score_b ?? '-'} | reasons=${(item.gate_reasons || []).join(',') || 'none'}`,
     { zh:'尚未有 nightly 紀錄', en:'No nightly history yet' }
+  );
+}
+
+function renderHeatMap(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    setText('heatMapSuiteText', latest.suite_id || '-');
+    setBiHTML(
+      'heatMapAxesText',
+      `掃描軸：${latest.y_label || latest.y_axis || '-'} × ${latest.x_label || latest.x_axis || '-'}`,
+      `Axes: ${latest.y_label || latest.y_axis || '-'} x ${latest.x_label || latest.x_axis || '-'}`
+    );
+    setText('heatMapBestText', latest.best_cell?.config_id || latest.selected_config_id || '-', 'accent');
+    setBiHTML(
+      'heatMapDeltaText',
+      `最佳 Δscore：${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | 改善格點：${latest.improved_cell_count ?? '-'}`,
+      `Best delta score: ${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | Improved cells: ${latest.improved_cell_count ?? '-'}`
+    );
+  }
+  renderList(
+    'heatMapList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.suite_id || '-'} | axes=${item.y_axis || '-'} x ${item.x_axis || '-'} | best=${item.best_cell?.config_id || item.selected_config_id || '-'} | ΔC=${item.best_delta_suite_score ?? item.best_cell?.delta_suite_score ?? '-'}`,
+    { zh:'尚未有 heat_map 紀錄', en:'No heat-map history yet' }
   );
 }
 
@@ -927,9 +1169,164 @@ function syncTaskTypeOptions(taskTypes, defaultTaskType){
   taskTypeSignature = signature;
 }
 
+function getSelectedConfigSummary(control){
+  const selectedValue = document.getElementById('controlConfig').value;
+  return (control?.configs || []).find(item => (item.relative_path || item.name) === selectedValue) || null;
+}
+
+function syncEvolutionModeOptions(modes, defaultMode){
+  const select = document.getElementById('evolutionMode');
+  const signature = JSON.stringify([modes || [], defaultMode || null]);
+  if(signature === evolutionModeSignature){
+    return;
+  }
+
+  const previousValue = select.value;
+  select.innerHTML = '';
+  (modes || []).forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.value;
+    option.textContent = item.label || item.value;
+    select.appendChild(option);
+  });
+
+  if(previousValue && [...select.options].some(option => option.value === previousValue)){
+    select.value = previousValue;
+  } else if(defaultMode && [...select.options].some(option => option.value === defaultMode)){
+    select.value = defaultMode;
+  }
+
+  evolutionModeSignature = signature;
+}
+
+function getSelectedSamplingParameters(){
+  return [...document.querySelectorAll('#samplingParamList input[type="checkbox"]:checked')].map(input => input.value);
+}
+
+function renderSamplingParameters(control){
+  const list = document.getElementById('samplingParamList');
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  const existingSelected = getSelectedSamplingParameters();
+  list.innerHTML = '';
+
+  if(!config){
+    list.innerHTML = `<div class="small">${biHTML('請先選擇設定檔', 'Select a config first')}</div>`;
+    setBiHTML('samplingParamSummaryText', '尚未選擇設定檔', 'No config selected');
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    const plan = config.heat_map_plan;
+    if(plan){
+      list.innerHTML = `<div class="small">${biHTML(
+        `heat_map 會固定 baseline，並掃描 ${plan.y_label} × ${plan.x_label} 共 ${plan.cell_count} 格`,
+        `heat_map keeps a fixed baseline and scans ${plan.y_label} x ${plan.x_label} across ${plan.cell_count} cells`
+      )}</div>`;
+      setBiHTML(
+        'samplingParamSummaryText',
+        `Heat map：${plan.y_label} ${plan.y_values?.length || 0} 格 × ${plan.x_label} ${plan.x_values?.length || 0} 格`,
+        `Heat map: ${plan.y_label} ${plan.y_values?.length || 0} cells x ${plan.x_label} ${plan.x_values?.length || 0} cells`,
+        'accent'
+      );
+    } else {
+      list.innerHTML = `<div class="small">${biHTML('這個設定檔尚未提供 heat_map 掃描軸', 'This config does not expose a heat-map scan plan yet')}</div>`;
+      setBiHTML('samplingParamSummaryText', 'heat_map 設定尚未就緒', 'Heat-map plan not ready');
+    }
+    return;
+  }
+
+  if(evolutionMode !== 'model_params'){
+    list.innerHTML = `<div class="small">${biHTML('架構程式模式不使用模型採樣參數勾選', 'Architecture mode does not use sampling parameter checkboxes')}</div>`;
+    setBiHTML(
+      'samplingParamSummaryText',
+      `模式：${evolutionMode}`,
+      `Mode: ${evolutionMode}`
+    );
+    return;
+  }
+
+  const provider = config.sampling_provider;
+  const available = config.sampling_parameters || [];
+  if(!provider || !available.length){
+    list.innerHTML = `<div class="small">${biHTML('這個設定檔目前沒有可用的 provider-specific sampling 參數', 'This config has no provider-specific sampling parameters available')}</div>`;
+    setBiHTML('samplingParamSummaryText', '此設定檔不支援模型採樣參數進化', 'This config does not support model-parameter evolution');
+    return;
+  }
+
+  const preferredSelected = existingSelected.length ? existingSelected : (config.selected_sampling_parameters || []).map(item => String(item));
+  const selectedSet = new Set(preferredSelected);
+  available.forEach(item => {
+    const row = document.createElement('label');
+    row.className = 'check-item';
+    row.innerHTML = `
+      <input type="checkbox" value="${escapeHtml(item.id)}" ${selectedSet.has(String(item.id)) ? 'checked' : ''} />
+      <span class="check-copy">
+        <strong>${escapeHtml(item.label || item.id)}</strong>
+        <span class="small">${escapeHtml(item.description || '')}</span>
+      </span>
+    `;
+    list.appendChild(row);
+  });
+
+  const finalSelected = getSelectedSamplingParameters();
+  setBiHTML(
+    'samplingParamSummaryText',
+    `Provider：${provider}，已勾選 ${finalSelected.length}/${available.length}`,
+    `Provider: ${provider}, selected ${finalSelected.length}/${available.length}`,
+    finalSelected.length ? 'accent' : null
+  );
+}
+
+function renderLocalAi(localAi){
+  const list = document.getElementById('localAiList');
+  const items = localAi?.items || [];
+  list.innerHTML = '';
+
+  if(!items.length){
+    list.innerHTML = `<li>${biHTML('目前未偵測到常見本機 AI / 模型服務', 'No common local AI or model services detected')}</li>`;
+    setBiHTML('localAiSummaryText', '尚未偵測到常見本機 AI', 'No common local AI detected');
+    return;
+  }
+
+  items.forEach(item => {
+    const li = document.createElement('li');
+    const parts = [item.label || 'AI', item.status || 'detected'];
+    if(item.pid){
+      parts.push(`PID ${item.pid}`);
+    }
+    if(item.endpoint){
+      parts.push(item.endpoint);
+    }
+    if(Array.isArray(item.models) && item.models.length){
+      const preview = item.models.slice(0, 3).join(', ');
+      const hasMore = Number(item.model_count || 0) > item.models.length;
+      parts.push(`models: ${preview}${hasMore ? ' ...' : ''}`);
+    } else if(item.process_name){
+      parts.push(item.process_name);
+    }
+    li.textContent = parts.join(' | ');
+    list.appendChild(li);
+  });
+
+  const count = Number(localAi?.count || items.length || 0);
+  const reachable = Number(localAi?.reachable_count || 0);
+  setBiHTML(
+    'localAiSummaryText',
+    `偵測到 ${count} 個，本機 API 可連線 ${reachable} 個`,
+    `${count} detected, ${reachable} API reachable`,
+    reachable > 0 ? 'accent' : null
+  );
+}
+
 function renderControlPanel(control, status){
+  latestControlState = control;
   syncControlConfigOptions(control?.configs, control?.default_config);
   syncTaskTypeOptions(control?.task_types, control?.default_task_type);
+  const selectedConfig = getSelectedConfigSummary(control);
+  syncEvolutionModeOptions(control?.evolution_modes, selectedConfig?.default_evolution_mode || control?.default_evolution_mode);
+  renderLocalAi(control?.local_ai);
+  renderSamplingParameters(control);
 
   const active = Boolean(control?.active);
   const current = control?.current || null;
@@ -987,7 +1384,7 @@ function renderControlPanel(control, status){
     const runLabel = activeKind === 'suite'
       ? 'suite'
       : activeKind === 'nightly'
-        ? 'nightly evolution'
+        ? (current?.evolution_mode === 'heat_map' ? 'nightly heat map' : 'nightly evolution')
         : 'single run';
     noticeZh = `目前正在執行 ${runLabel}，PID ${current.pid}。`;
     noticeEn = `Currently running a ${runLabel}, PID ${current.pid}.`;
@@ -1011,7 +1408,7 @@ function renderControlPanel(control, status){
 
 async function refreshAll(){
   try{
-    const [status, score, arch, test, baseline, rollback, nightly, configHistory, streamText, control] = await Promise.all([
+    const [status, score, arch, test, baseline, rollback, nightly, heatMap, configHistory, streamText, control] = await Promise.all([
       fetchJSON(DATA.liveStatus).catch(() => null),
       fetchJSON(DATA.scoreHistory).catch(() => null),
       fetchJSON(DATA.archHistory).catch(() => null),
@@ -1019,6 +1416,7 @@ async function refreshAll(){
       fetchJSON(DATA.baselineHistory).catch(() => null),
       fetchJSON(DATA.rollbackEvents).catch(() => null),
       fetchJSON(DATA.nightlyHistory).catch(() => null),
+      fetchJSON(DATA.heatMapHistory).catch(() => null),
       fetchJSON(DATA.configHistory).catch(() => null),
       fetchText(DATA.liveStream).catch(() => ''),
       fetchJSON(CONTROL.state).catch(() => null)
@@ -1040,6 +1438,7 @@ async function refreshAll(){
     renderBaseline(baseline);
     renderRollback(rollback);
     renderNightly(nightly);
+    renderHeatMap(heatMap);
     renderConfigHistory(configHistory);
 
     scoreChartState = getCurrentRoundScoreItems(score, status);
@@ -1104,7 +1503,9 @@ async function startSuiteRun(){
 
 async function startNightlyRun(){
   const payload = {
-    config: document.getElementById('controlConfig').value
+    config: document.getElementById('controlConfig').value,
+    evolution_mode: document.getElementById('evolutionMode').value,
+    sampling_parameters: getSelectedSamplingParameters()
   };
   const seedStart = parseOptionalInt('suiteSeedStart');
   if(seedStart !== null){
@@ -1152,6 +1553,15 @@ document.getElementById('stopRunBtn').addEventListener('click', () => {
     console.error(error);
     setBiHTML('controlMessageText', `控制命令失敗：${error.message}`, `Control request failed: ${error.message}`, 'bad');
   });
+});
+document.getElementById('controlConfig').addEventListener('change', () => {
+  renderSamplingParameters(latestControlState);
+});
+document.getElementById('evolutionMode').addEventListener('change', () => {
+  renderSamplingParameters(latestControlState);
+});
+document.getElementById('samplingParamList').addEventListener('change', () => {
+  renderSamplingParameters(latestControlState);
 });
 document.getElementById('refreshNow').addEventListener('click', refreshAll);
 document.getElementById('keyword').addEventListener('input', refreshAll);

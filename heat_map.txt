@@ -1,0 +1,831 @@
+# OpenClaw / Python 專案用實作規格書
+
+**專案名稱：Layer Relayering Heatmap Scanner**
+
+## 1. 文件目的
+
+本文件定義一套可在 OpenClaw 與 Python 執行環境中落地的實作規格，用於：
+
+1. 對大型語言模型執行 layer block repeat / relayering 掃描。
+2. 以固定 probe 任務量測不同 `(start_layer, end_layer)` 配置的性能變化。
+3. 將結果整理為結構性能地圖（heatmap）。
+4. 對高分候選配置做二次驗證。
+
+本規格書處理的是**架構干預掃描**，不是 attention map、activation 可視化或 neuron saliency 分析。
+
+---
+
+## 2. 專案目標
+
+### 2.1 核心目標
+
+建立一套自動化掃描系統，對模型做區段重跑（layer block repeat）干預，找出：
+
+* 哪些 layer 區間重跑後會帶來性能改善
+* 哪些區間會造成退化
+* 不同能力 probe 是否指向相近的高價值區域
+
+### 2.2 非目標
+
+本系統**不負責**：
+
+* 訓練新模型
+* 修改原始權重
+* LoRA / SFT / RLHF
+* 內部 attention 權重可視化
+* neuron level attribution
+* 對外宣稱「找到真正推理電路」
+
+最後一點很重要：本系統只能產出**結構干預結果**，不能直接把結果上升成機制真理。
+
+---
+
+## 3. 系統邊界
+
+### 3.1 允許的輸入
+
+* 本地模型或可離線調用的模型執行後端
+* 模型 layer 數量與 layer 索引映射
+* probe 題庫
+* 掃描設定檔
+
+### 3.2 允許的輸出
+
+* 每組 `(i, j)` 的原始測試紀錄
+* probe 分數
+* 相對 baseline 的 delta
+* 匯總 CSV / JSONL
+* heatmap 圖檔
+* top-k 候選配置報告
+
+### 3.3 不可破壞原則
+
+* 原始模型權重檔不可被覆寫
+* 每次掃描配置必須可重現
+* 所有推理參數必須顯式記錄
+* baseline 與 candidate 必須使用相同評測條件
+
+---
+
+## 4. 高階架構
+
+系統拆成六個模組：
+
+1. **Config Manager**：讀取與驗證設定
+2. **Scanner**：產生 `(i, j)` 配置並排程
+3. **Relayer Runner**：套用 layer repeat 路徑並執行模型
+4. **Probe Evaluator**：執行數學 / EQ / 其他 probe 評測
+5. **Result Store**：保存逐題、逐配置、逐批次結果
+6. **Heatmap Builder**：將結果轉成矩陣與圖檔
+
+另有一個可選模組：
+
+7. **Verifier**：對 top-k 候選配置跑擴大版 benchmark
+
+---
+
+## 5. 目錄結構
+
+```text
+project_root/
+├─ pyproject.toml
+├─ README.md
+├─ configs/
+│  ├─ scanner.default.yaml
+│  ├─ model.qwen72b.yaml
+│  ├─ probes.math.yaml
+│  ├─ probes.eq.yaml
+│  └─ verification.yaml
+├─ data/
+│  ├─ probes/
+│  │  ├─ math_probe_v1.jsonl
+│  │  ├─ eq_probe_v1.jsonl
+│  │  └─ math_probe_v2.jsonl
+│  ├─ baselines/
+│  ├─ runs/
+│  └─ reports/
+├─ src/
+│  ├─ main.py
+│  ├─ cli/
+│  │  ├─ scan.py
+│  │  ├─ verify.py
+│  │  ├─ build_heatmap.py
+│  │  └─ baseline.py
+│  ├─ core/
+│  │  ├─ config.py
+│  │  ├─ scanner.py
+│  │  ├─ scheduler.py
+│  │  ├─ run_context.py
+│  │  └─ manifest.py
+│  ├─ model/
+│  │  ├─ adapter_base.py
+│  │  ├─ relayer_plan.py
+│  │  ├─ relayer_runner.py
+│  │  ├─ cache_policy.py
+│  │  └─ backends/
+│  │     ├─ exllama_adapter.py
+│  │     ├─ llama_cpp_adapter.py
+│  │     └─ mock_adapter.py
+│  ├─ probes/
+│  │  ├─ base.py
+│  │  ├─ math_probe.py
+│  │  ├─ eq_probe.py
+│  │  ├─ parser.py
+│  │  └─ scoring.py
+│  ├─ storage/
+│  │  ├─ jsonl_store.py
+│  │  ├─ csv_store.py
+│  │  └─ sqlite_store.py
+│  ├─ analysis/
+│  │  ├─ aggregate.py
+│  │  ├─ matrix_builder.py
+│  │  ├─ heatmap.py
+│  │  └─ topk.py
+│  └─ utils/
+│     ├─ hashing.py
+│     ├─ logging.py
+│     ├─ retry.py
+│     └─ time.py
+├─ scripts/
+│  ├─ run_scan.ps1
+│  ├─ run_verify.ps1
+│  └─ export_report.ps1
+└─ tests/
+   ├─ test_scanner.py
+   ├─ test_matrix_builder.py
+   ├─ test_math_scoring.py
+   ├─ test_relayer_plan.py
+   └─ test_manifest.py
+```
+
+---
+
+## 6. 執行資料流
+
+```text
+Config -> Baseline -> Scanner -> Relayer Runner -> Probe Evaluator
+      -> Result Store -> Aggregator -> Heatmap Builder -> Top-k Verifier
+```
+
+說白話就是：
+
+1. 先鎖定設定
+2. 先量 baseline
+3. 枚舉所有區間
+4. 每個區間跑 probe
+5. 存結果
+6. 算 delta
+7. 畫 heatmap
+8. 挑高分配置做二次驗證
+
+---
+
+## 7. 設定檔規格
+
+### 7.1 scanner.default.yaml
+
+```yaml
+run_name: qwen72b_scan_v1
+model_backend: exllama
+model_config: configs/model.qwen72b.yaml
+probe_sets:
+  - configs/probes.math.yaml
+  - configs/probes.eq.yaml
+output_dir: data/runs/qwen72b_scan_v1
+start_layer_min: 0
+end_layer_max: 79
+min_block_len: 1
+max_block_len: 40
+include_baseline: true
+max_workers: 1
+random_seed: 42
+sampling:
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  max_new_tokens: 32
+resume: true
+fail_fast: false
+save_per_question: true
+```
+
+### 7.2 model.qwen72b.yaml
+
+```yaml
+model_name: qwen2_72b
+num_layers: 80
+weight_path: D:/models/qwen2-72b
+quantization: exl2
+dtype: fp16
+context_length: 8192
+backend_options:
+  gpu_split: auto
+  cache_mode: default
+```
+
+### 7.3 probes.math.yaml
+
+```yaml
+probe_name: math_probe_v1
+probe_type: math
+input_path: data/probes/math_probe_v1.jsonl
+score_mode: partial_credit
+max_questions: 64
+prompt_template: direct_answer_only
+```
+
+### 7.4 probes.eq.yaml
+
+```yaml
+probe_name: eq_probe_v1
+probe_type: eq
+input_path: data/probes/eq_probe_v1.jsonl
+score_mode: benchmark_rule
+max_questions: 64
+prompt_template: scalar_rating_only
+```
+
+---
+
+## 8. 資料模型規格
+
+### 8.1 掃描配置資料結構
+
+```python
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class RelayerConfig:
+    start_layer: int
+    end_layer: int
+    repeat_count: int = 1
+```
+
+### 8.2 單題結果資料結構
+
+```python
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class QuestionResult:
+    run_id: str
+    config_id: str
+    probe_name: str
+    question_id: str
+    raw_output: str
+    parsed_output: Optional[str]
+    score: float
+    latency_ms: int
+    success: bool
+    error: Optional[str] = None
+```
+
+### 8.3 配置匯總結果
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class ConfigScore:
+    run_id: str
+    config_id: str
+    start_layer: int
+    end_layer: int
+    probe_name: str
+    raw_score: float
+    baseline_score: float
+    delta: float
+    answered: int
+    failed: int
+```
+
+---
+
+## 9. config_id 規則
+
+`config_id` 必須可重現，建議格式：
+
+```text
+{model_name}__s{start_layer}_e{end_layer}_r{repeat_count}
+```
+
+例如：
+
+```text
+qwen2_72b__s45_e51_r1
+```
+
+如果後續加入更多干預模式，可追加 mode 欄位。
+
+---
+
+## 10. 掃描邏輯
+
+### 10.1 合法配置產生規則
+
+對於 `num_layers = L`：
+
+* `0 <= start_layer < L`
+* `start_layer <= end_layer < L`
+* `block_len = end_layer - start_layer + 1`
+* `min_block_len <= block_len <= max_block_len`
+
+### 10.2 Scanner 偽程式
+
+```python
+def generate_configs(num_layers, min_block_len=1, max_block_len=None):
+    for s in range(num_layers):
+        for e in range(s, num_layers):
+            block_len = e - s + 1
+            if block_len < min_block_len:
+                continue
+            if max_block_len is not None and block_len > max_block_len:
+                continue
+            yield RelayerConfig(start_layer=s, end_layer=e, repeat_count=1)
+```
+
+### 10.3 排程規則
+
+* 預設單機單 worker，先求穩定
+* 若要平行化，需保證不同 worker 的輸出目錄隔離
+* 任務中斷後必須可 resume
+* 已完成的 `config_id + probe_name` 不重跑
+
+---
+
+## 11. Relayer Runner 規格
+
+### 11.1 Runner 責任
+
+* 根據 `RelayerConfig` 建立執行計畫
+* 對指定 layer block 做 repeat
+* 執行模型 forward
+* 回傳模型輸出與推理 metadata
+
+### 11.2 執行計畫資料結構
+
+```python
+@dataclass(frozen=True)
+class RelayerPlan:
+    execution_order: list[int]
+```
+
+例如原始 8 層模型、重跑 2~4：
+
+```python
+RelayerPlan(execution_order=[0, 1, 2, 3, 4, 2, 3, 4, 5, 6, 7])
+```
+
+### 11.3 規格要求
+
+Runner 必須支援：
+
+* 讀取原始 layer stack
+* 根據 `execution_order` 跑 forward
+* 不修改底層權重檔
+* 可記錄單題推理 latency
+* 遇到單題錯誤時能回報並不中止整批（除非 fail_fast = true）
+
+### 11.4 風險提醒
+
+這裡是整個系統最容易出現假成功的地方。
+
+如果 runner 沒真正改到 forward path，只是 config 寫得漂亮，你最後會得到一張假的 heatmap。這不是小 bug，是整個研究直接作廢。
+
+所以必須有單元測試驗證 `execution_order` 確實生效。
+
+---
+
+## 12. Probe Evaluator 規格
+
+### 12.1 通用介面
+
+```python
+class ProbeEvaluator:
+    def run(self, runner, relayer_config) -> list[QuestionResult]:
+        raise NotImplementedError
+```
+
+### 12.2 Math Probe
+
+要求：
+
+* prompt 必須壓成固定格式
+* 限制輸出只允許答案
+* parser 必須能處理常見髒輸出
+* scoring 採 partial credit
+
+#### 建議輸入格式
+
+```text
+Solve the following and output only the final numeric answer.
+Question: 78313086360375 × 88537453126609 = ?
+Answer:
+```
+
+### 12.3 EQ Probe
+
+要求：
+
+* 輸出固定為單一數值或 JSON 標準欄位
+* parser 對非標準輸出要有容錯
+* scoring 規則固定且版本化
+
+---
+
+## 13. Scoring 規格
+
+### 13.1 Math partial credit
+
+建議輸入：
+
+* ground_truth
+* parsed_output
+
+輸出：
+
+* `0.0 ~ 1.0`
+
+最小可行規則：
+
+1. 若 parser 失敗，記 0 分
+2. 若完全相等，記 1 分
+3. 否則按相對誤差做連續評分
+
+### 13.2 EQ scoring
+
+依資料集規格回傳分數，需固定版本。
+
+### 13.3 匯總分數
+
+每個 probe 的配置分數：
+
+```python
+config_score = mean(question_scores)
+```
+
+### 13.4 Delta
+
+```python
+delta = config_score - baseline_score
+```
+
+---
+
+## 14. Baseline 規格
+
+### 14.1 為什麼 baseline 要獨立做
+
+因為 heatmap 畫的是相對差異，不先鎖 baseline，後面所有 delta 都會漂。
+
+### 14.2 baseline 要記錄的欄位
+
+* model_name
+* backend
+* quantization
+* prompt_template_version
+* sampling params
+* probe dataset version
+* score
+* timestamp
+
+### 14.3 禁止事項
+
+baseline 與 scan candidates 不可使用不同：
+
+* 溫度
+* top_p / top_k
+* max_new_tokens
+* parser 版本
+* 題目版本
+* backend
+
+---
+
+## 15. 儲存格式
+
+### 15.1 per-question JSONL
+
+```json
+{"run_id":"qwen72b_scan_v1","config_id":"qwen2_72b__s45_e51_r1","probe_name":"math_probe_v1","question_id":"math_001","raw_output":"6934","parsed_output":"6934","score":0.81,"latency_ms":723,"success":true,"error":null}
+```
+
+### 15.2 aggregated CSV
+
+欄位建議：
+
+```text
+run_id,config_id,start_layer,end_layer,probe_name,raw_score,baseline_score,delta,answered,failed
+```
+
+### 15.3 manifest.json
+
+每次 run 都要產出 manifest，記錄：
+
+* git commit hash
+* config hash
+* model config
+* probe versions
+* run start/end time
+* machine info
+
+---
+
+## 16. Heatmap Builder 規格
+
+### 16.1 輸入
+
+* aggregated CSV 或 SQLite 匯總結果
+* 指定 probe_name
+
+### 16.2 輸出
+
+* PNG heatmap
+* CSV matrix
+* top-k summary
+
+### 16.3 Matrix 建構規則
+
+```python
+matrix[end_layer][start_layer] = delta
+```
+
+未填格子使用 `NaN`。
+
+### 16.4 視覺化要求
+
+* 標題需包含 model_name, probe_name, run_id
+* X 軸：start_layer
+* Y 軸：end_layer
+* colorbar：delta
+* 保留 0 作為中性顏色中心
+
+### 16.5 Python 繪圖注意
+
+若使用 matplotlib，先設定：
+
+```python
+import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "Noto Serif CJK JP"
+```
+
+---
+
+## 17. 驗證流程（Verifier）
+
+### 17.1 目的
+
+避免你只是把 probe 調到漂亮，卻沒有真正提升整體能力。
+
+### 17.2 流程
+
+1. 挑選每個 probe 的 top-k 配置
+2. 跑更大題集或正式 benchmark
+3. 比較是否維持提升
+4. 產出 verification report
+
+### 17.3 成功標準
+
+* 不同 probe 中有重疊高分區塊
+* 擴大驗證後仍維持優勢
+* 沒有因 parser 或格式偏差造成假提升
+
+---
+
+## 18. llama.cpp 與 Ollama 的實作差異
+
+### 18.1 先修正一個過度概括
+
+以下敘述不宜直接寫成事實：
+
+> llama.cpp 開源社群目前重現此類架構干預實驗的標準操作，皆是在模型載入推理引擎前，透過如 mergekit 等靜態腳本工具，在模型檔中直接修改結構配置與複製層級權重。
+
+較安全、可引用的版本應改成：
+
+**可確認的是**，`mergekit` 官方明確支援以 layer slices 做 piecewise assembly，也就是所謂的「Frankenmerging」；它是在權重空間與模型切片層級上組裝新模型，而不是在 llama.cpp 推理時用官方參數直接做 layer repeat。`mergekit` README 也把這類能力列為功能之一。([github.com](https://github.com/arcee-ai/mergekit))
+
+**無法直接確定的是**，你說的「目前標準操作」「皆是如此」這兩句。從可查到的公開文件來看，這比較像社群常見路線之一，而不是被 llama.cpp 官方定義成標準實驗介面。([github.com](https://github.com/arcee-ai/mergekit))
+
+### 18.2 llama.cpp 路線
+
+在 llama.cpp 路線下，若要做 layer repeat / relayering 類實驗，通常有兩種層級：
+
+1. **靜態模型改造**：先在外部把模型切片、重組、輸出成新模型，再交給 llama.cpp 載入推理。`mergekit` 官方明確支援 layer slicing 與 piecewise assembly。([github.com](https://github.com/arcee-ai/mergekit))
+2. **推理引擎內部改造**：直接修改 llama.cpp 的模型載入或 graph / forward path。這屬於原始碼級客製，不是一般命令列或 GGUF 參數能直接做到的功能。從 llama.cpp 維護者對 backend weight reordering 的討論也能看出，這類結構處理若要做，建議在載入或 buffer/type 層完成，而不是在 graph compute 期間臨時亂改 tensor。([github.com](https://github.com/ggml-org/llama.cpp/discussions/5277?utm_source=chatgpt.com))
+
+因此，**llama.cpp 較適合的實作定位**是：
+
+* 若你要快速掃描大量候選配置：優先做**離線靜態產模**
+* 若你要研究真正的 runtime relayering：就得 fork llama.cpp，改模型結構與 forward graph
+
+### 18.3 Ollama 路線
+
+Ollama 的模型包裝核心是 `Modelfile`。官方文件顯示，`FROM` 可以指向一個既有模型或本地 GGUF，`ADAPTER` 可以加上 LoRA / QLoRA adapter；`PARAMETER` 則是執行參數設定。也就是說，Ollama 本身提供的是**模型封裝、模板、參數與 adapter 組裝層**，不是 layer surgery 介面。([docs.ollama.com](https://docs.ollama.com/modelfile?utm_source=chatgpt.com))
+
+這代表：
+
+* Ollama **可以載入你已經改造好的 GGUF**
+* Ollama **可以在 Modelfile 疊 adapter 與執行參數**
+* Ollama **沒有官方 Modelfile 指令讓你宣告「重跑第 i 到 j 層」**
+
+所以在 Ollama 這條路上，若你要做 relayering 掃描，合理方式通常是：
+
+1. 先在外部生成改造後模型（例如 mergekit / 自製腳本 / 自改 GGUF 轉換流程）
+2. 再用 `Modelfile` 的 `FROM ./your-model.gguf` 匯入
+3. 用 Ollama API 統一調用與評測
+
+### 18.4 實務差異總結
+
+| 面向                 | llama.cpp           | Ollama                    |
+| ------------------ | ------------------- | ------------------------- |
+| 核心定位               | 推理引擎 / 原始碼可改        | 模型封裝與服務層                  |
+| 是否適合做 runtime 結構實驗 | 較適合，但通常需改原始碼        | 不適合直接做                    |
+| 是否適合載入已改造模型        | 可以                  | 可以                        |
+| 層級重排 / 重複的官方高階介面   | 查無官方穩定介面            | 查無官方介面                    |
+| 實驗推薦做法             | 外部產模後載入，或 fork 原始碼  | 外部產模後匯入，再用 API 跑評測        |
+| 優勢                 | 控制深、可碰 forward path | 調度簡單、批量測試方便               |
+| 缺點                 | 工程門檻高、維護成本高         | 結構控制淺，無法直接做 layer surgery |
+
+### 18.5 對本專案規格的影響
+
+因此本專案若要同時兼容兩條路線，規格應改成：
+
+* **研究核心版本**：以 `llama.cpp fork / custom backend` 或外部靜態產模工具為主
+* **批次評測版本**：以 Ollama 作為 serving / orchestration 介面
+* **共通抽象**：Python 專案只接收一個 `model_artifact_path`，不假設模型是原生、merge 後、還是 relayered 版本
+
+### 18.6 規格增補建議
+
+新增兩種 backend mode：
+
+```yaml
+model_build_mode: static_artifact   # static_artifact | runtime_patch
+serving_backend: llama_cpp          # llama_cpp | ollama
+```
+
+說明：
+
+* `static_artifact`：先產出改造好的模型，再載入
+* `runtime_patch`：由自定 llama.cpp fork 在執行時改變 layer path
+* `serving_backend=ollama` 時，僅支援載入既有產物，不負責 runtime surgery
+
+## 19. OpenClaw 整合規格
+
+### 18.1 OpenClaw 角色定位
+
+OpenClaw 不應直接承擔所有底層掃描運算。較合理的角色是：
+
+* 生成實驗計畫
+* 觸發 Python CLI
+* 監看執行狀態
+* 匯總報告
+* 讀取 top-k 結果後安排後續驗證
+
+### 18.2 建議模式
+
+OpenClaw = Orchestrator
+Python = Execution Engine
+
+這樣的切法比較穩，因為：
+
+* 掃描任務重複且批次化，適合 Python
+* 任務切分、回報、摘要適合 OpenClaw
+* 可降低 agent 把研究流程講得很懂、其實什麼都沒跑的風險
+
+### 18.3 CLI 介面
+
+```bash
+python -m src.cli.baseline --config configs/scanner.default.yaml
+python -m src.cli.scan --config configs/scanner.default.yaml
+python -m src.cli.build_heatmap --run data/runs/qwen72b_scan_v1 --probe math_probe_v1
+python -m src.cli.verify --config configs/verification.yaml
+```
+
+---
+
+## 19. 失敗處理與回滾
+
+### 19.1 必須處理的失敗類型
+
+* 模型載入失敗
+* 特定配置 forward 崩潰
+* 單題 parser 失敗
+* 中途斷電或程序中止
+* heatmap 生成時資料缺損
+
+### 19.2 回滾原則
+
+* 原始模型不變，因此不需要權重回滾
+* 執行層面需支援 run resume
+* 任何失敗配置記錄為 failed，不得靜默忽略
+
+### 19.3 你之前提過的問題：有無回滾機制？
+
+這類專案的真正回滾，不是還原模型，而是：
+
+1. 保證所有干預只存在於執行期
+2. 結果資料版本化
+3. 任務可中斷後續跑
+4. 可明確排除失敗配置
+
+如果你連這四點都沒有，就別說自己有實驗平台，只是一次性腳本而已。
+
+---
+
+## 20. 測試規格
+
+至少要有以下測試：
+
+### 20.1 Scanner 測試
+
+* `(i, j)` 是否正確產生
+* 邊界值是否正確
+* `min_block_len / max_block_len` 是否生效
+
+### 20.2 RelayerPlan 測試
+
+* 給定 `(2, 4)` 是否生成正確 `execution_order`
+
+### 20.3 Runner 測試
+
+* 是否真的按 `execution_order` 跑
+* mock backend 下是否可驗證 layer 呼叫序列
+
+### 20.4 Parser / Scoring 測試
+
+* 髒輸出是否正確處理
+* partial credit 是否穩定
+
+### 20.5 Manifest 測試
+
+* 每次 run 是否完整記錄版本資訊
+
+---
+
+## 21. 最小可行里程碑（MVP）
+
+### M0：骨架
+
+* 完成 config / scanner / result store
+* mock backend 可跑通
+
+### M1：單 probe 掃描
+
+* 支援 math probe
+* 支援 baseline
+* 可輸出 aggregated CSV
+
+### M2：heatmap 產出
+
+* 能從 CSV 生成 heatmap PNG
+* 能輸出 top-k
+
+### M3：第二 probe
+
+* 加入 EQ probe
+* 支援多 probe 匯總
+
+### M4：驗證階段
+
+* 支援 verify CLI
+* 對 top-k 跑擴大題集
+
+---
+
+## 22. 成功標準
+
+專案完成不代表圖畫出來就算成功。至少要滿足：
+
+1. 掃描流程可重跑、可 resume
+2. baseline 與 candidates 可嚴格比較
+3. heatmap 能穩定輸出
+4. top-k 配置可被二次驗證
+5. 整個流程可被 OpenClaw 調度
+
+---
+
+## 23. 後續擴充方向
+
+可擴充但不應在第一版就做爆：
+
+* repeat_count > 1
+* skip / splice / reorder 其他結構干預模式
+* 多模型比較
+* 分散式掃描
+* 自動產出報告
+* 將 top-k 結果回饋給 agent 做下一輪搜尋
+
+---
+
+## 24. 最終一句話
+
+這個專案的本質不是畫圖，而是建立一套**可驗證、可重現、可批量掃描的模型結構干預實驗平台**。
+
+如果你一開始就把重心放在「圖好不好看」，那是完全抓錯重點。真正值錢的是：
+
+* 你的 runner 有沒有真的改到 forward path
+* 你的 baseline 有沒有鎖死
+* 你的 delta 能不能被複驗
+
+這三件事沒站穩，整個 heatmap 都只是漂亮噪音。

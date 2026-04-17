@@ -6,7 +6,7 @@
 - 用本機 runner 執行 agent
 - 以 verifier 計分並寫出 artifact / history
 - 透過 dashboard 啟動單次、suite、nightly evolution
-- 在 nightly 中做逐步、單參數的 hill-climb 調參
+- 在 nightly 中做逐步 hill-climb，或用 `heat_map` 模式掃描架構格點
 
 目前已對齊實作的核心精神是比較接近 `karpathy/autoresearch`：
 
@@ -30,13 +30,20 @@
 ### 2. Nightly evolution
 
 - `scripts/run_nightly.py`
-  不是舊的 multi-parameter pool search；現在是 sequential single-parameter tuning。
-- 每輪只改一個參數，候選來自 `evolution/mutator.py`。
-- 若 `suite_score_c` 提升，且 regression pass rate 沒低於 gate，該輪會成為新的 baseline。
+  不是舊的 multi-parameter pool search；現在支援三種 nightly 模式。
+- `model_params`
+  逐輪做單參數 hill-climb。
+- `architecture_program`
+  逐輪切換 agent retrieval policy preset。
+- `heat_map`
+  固定 baseline，掃描兩條架構軸形成的格點，輸出 matrix / top-k 候選摘要。
+- `model_params` 與 `architecture_program`
+  若 `suite_score_c` 提升，且 regression pass rate 沒低於 gate，該輪會成為新的 baseline。
 - 每輪結果會寫入：
   - `reports/parameter_history.json`
   - `reports/config_history.json`
   - `reports/nightly_history.json`
+  - `reports/heat_map_history.json`（heat_map 模式）
 
 ### 3. Verifier
 
@@ -101,6 +108,12 @@ python scripts/run_suite.py --config configs/experiments/local_llama_cpp_agent.j
 python scripts/run_nightly.py --config configs/experiments/local_llama_cpp_agent.json --seed-start 500
 ```
 
+### Nightly heat map
+
+```powershell
+python scripts/run_nightly.py --config configs/experiments/local_llama_cpp_agent.json --evolution-mode heat_map --seed-start 500
+```
+
 ### Dashboard
 
 ```powershell
@@ -128,6 +141,7 @@ http://127.0.0.1:8765/dashboard.html
 - `reports/baseline_history.json`
 - `reports/rollback_events.json`
 - `reports/nightly_history.json`
+- `reports/heat_map_history.json`
 - `reports/config_history.json`
 - `reports/parameter_history.json`
 

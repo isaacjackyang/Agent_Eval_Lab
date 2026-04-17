@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_115707_990264",
+  "created_at": "2026-04-16T11:57:08",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-99/docs/archives/v1/deployment_draft.md",
+      "sha256": "4ba181f597aade50b23b48f9dc6a04396983abc6c6fae35265db42a4299fe0ac",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-99/ops/archives/current/deployment_note.md",
+      "sha256": "3c67ce70d3cb3360f8349a7a2909cfa68dfaccefabcb5c60ac3f6a6adacab3d0",
+      "size": 98
+    },
+    {
+      "path": "projects/Cinder-99/ops/handover/current/deployment_archive.md",
+      "sha256": "742c0ec63b83272337063ba47f09143cb031d53dae8e21aee65dee1651ac791a",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-86/docs/field-notes/v2/summary.md",
+      "sha256": "4c1fe68dfb54b693bcbc61cba647cd1d6a97b1954b211c9ad6da2151a13640de",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-86/knowledge/release/verified/deployment_note.md",
+      "sha256": "a1b0195b30381fa2997955782528de3e405ea741ff81f190478d973f66bc4087",
+      "size": 75
+    },
+    {
+      "path": "scratch/Cinder-99/notes.txt",
+      "sha256": "9e436dfe163f3fdd2232bb3c50063a1a6d28b15f58457551ddf1dd0d414632b2",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "4e4c243220de9b1e80ca6af9356440726674c88c32352f535ea5d01f087ce00e",
+      "size": 75
+    }
+  ]
+}

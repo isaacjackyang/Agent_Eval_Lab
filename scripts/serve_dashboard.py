@@ -6,6 +6,9 @@ import os
 import subprocess
 import sys
 import threading
+import time
+import urllib.error
+import urllib.request
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -18,6 +21,14 @@ CONFIGS_DIR = ROOT / "configs" / "experiments"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from evolution.mutator import (
+    EVOLUTION_MODE_OPTIONS,
+    heat_map_candidate_count,
+    resolve_heat_map_plan,
+    sampling_parameters_for_provider,
+    sampling_provider_for_config,
+    selected_sampling_parameters_for_config,
+)
 from generators.km_file_tree_gen import TASK_TYPE_OPTIONS
 
 PROGRESS_KEYS = (
@@ -28,6 +39,94 @@ PROGRESS_KEYS = (
     "progress_current",
     "progress_target",
     "progress_text",
+)
+
+LOCAL_AI_DETECTION_TTL_SEC = 5.0
+AI_PROCESS_HINTS = (
+    {
+        "id": "ollama",
+        "label": "Ollama",
+        "match": ("ollama",),
+        "ports": (11434,),
+    },
+    {
+        "id": "lm_studio",
+        "label": "LM Studio",
+        "match": ("lm studio", "lmstudio", "lms"),
+        "ports": (1234,),
+    },
+    {
+        "id": "llama_cpp",
+        "label": "llama.cpp",
+        "match": ("llama-server", "llama_cpp", "llama-cpp", "llama.cpp"),
+        "ports": (8080, 8000),
+    },
+    {
+        "id": "vllm",
+        "label": "vLLM",
+        "match": ("vllm",),
+        "ports": (8000,),
+    },
+    {
+        "id": "text_generation_webui",
+        "label": "Text Generation WebUI",
+        "match": ("text-generation-webui", "text_generation_webui"),
+        "ports": (7860, 5000, 8000),
+    },
+    {
+        "id": "koboldcpp",
+        "label": "KoboldCpp",
+        "match": ("koboldcpp",),
+        "ports": (5001,),
+    },
+    {
+        "id": "openclaw",
+        "label": "OpenClaw",
+        "match": ("openclaw",),
+        "ports": (),
+    },
+)
+AI_ENDPOINT_PROBES = (
+    {
+        "hint_id": "ollama",
+        "label": "Ollama",
+        "base_url": "http://127.0.0.1:11434",
+        "path": "/api/tags",
+        "parser": "ollama",
+        "port": 11434,
+    },
+    {
+        "hint_id": "lm_studio",
+        "label": "LM Studio",
+        "base_url": "http://127.0.0.1:1234",
+        "path": "/v1/models",
+        "parser": "openai",
+        "port": 1234,
+    },
+    {
+        "hint_id": "llama_cpp",
+        "label": "llama.cpp",
+        "base_url": "http://127.0.0.1:8080",
+        "path": "/v1/models",
+        "parser": "openai",
+        "port": 8080,
+    },
+    {
+        "hint_id": None,
+        "label": "OpenAI-compatible endpoint",
+        "base_url": "http://127.0.0.1:8000",
+        "path": "/v1/models",
+        "parser": "openai",
+        "port": 8000,
+    },
+    {
+        "hint_id": None,
+        "label": "OpenAI-compatible endpoint",
+        "base_url": "http://127.0.0.1:8001",
+        "path": "/v1/models",
+        "parser": "openai",
+        "port": 8001,
+    },
 )
 
 
@@ -47,6 +146,7 @@ class RunController:
         self.log_handle = None
         self.current: dict[str, Any] | None = None
         self.last_result: dict[str, Any] | None = None
+        self.local_ai_cache: dict[str, Any] | None = None
 
     def _config_dir(self) -> Path:
         return CONFIGS_DIR
@@ -57,6 +157,11 @@ class RunController:
             "relative_path": self._relative_path(path),
             "config_id": path.stem,
             "runner": None,
+            "sampling_provider": None,
+            "sampling_parameters": [],
+            "selected_sampling_parameters": [],
+            "default_evolution_mode": "model_params",
+            "heat_map_plan": None,
         }
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
@@ -65,6 +170,16 @@ class RunController:
         if isinstance(payload, dict):
             summary["config_id"] = payload.get("config_id") or summary["config_id"]
             summary["runner"] = payload.get("runner")
+            provider = sampling_provider_for_config(payload)
+            summary["sampling_provider"] = provider
+            summary["sampling_parameters"] = sampling_parameters_for_provider(provider)
+            summary["selected_sampling_parameters"] = selected_sampling_parameters_for_config(payload)
+            summary["default_evolution_mode"] = str(payload.get("nightly", {}).get("evolution_mode", "model_params"))
+            if payload.get("runner") == "llama_cpp_agent":
+                try:
+                    summary["heat_map_plan"] = resolve_heat_map_plan(payload)
+                except Exception:
+                    summary["heat_map_plan"] = None
         return summary
 
     def _default_config_path(self) -> Path | None:
@@ -77,6 +192,232 @@ class RunController:
                 return candidate
         matches = sorted(self._config_dir().glob("*.json"))
         return matches[0] if matches else None
+
+    def _with_local_ai(self, payload: dict[str, Any]) -> dict[str, Any]:
+        data = dict(payload)
+        data["local_ai"] = self.list_local_ai()
+        return data
+
+    def _list_processes(self) -> list[dict[str, Any]]:
+        if os.name == "nt":
+            command = [
+                "powershell.exe",
+                "-NoProfile",
+                "-Command",
+                (
+                    "$ErrorActionPreference='Stop'; "
+                    "Get-CimInstance Win32_Process | "
+                    "Select-Object ProcessId, Name, CommandLine | "
+                    "ConvertTo-Json -Compress"
+                ),
+            ]
+            try:
+                result = subprocess.run(
+                    command,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    timeout=8,
+                )
+            except Exception:
+                return []
+            if result.returncode != 0 or not result.stdout.strip():
+                return []
+            try:
+                payload = json.loads(result.stdout)
+            except Exception:
+                return []
+            rows = payload if isinstance(payload, list) else [payload]
+            processes: list[dict[str, Any]] = []
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                processes.append(
+                    {
+                        "pid": row.get("ProcessId"),
+                        "name": row.get("Name"),
+                        "command_line": row.get("CommandLine") or "",
+                    }
+                )
+            return processes
+
+        try:
+            result = subprocess.run(
+                ["ps", "-axo", "pid=,comm=,args="],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=8,
+            )
+        except Exception:
+            return []
+        if result.returncode != 0:
+            return []
+        processes = []
+        for line in result.stdout.splitlines():
+            parts = line.strip().split(None, 2)
+            if len(parts) < 2:
+                continue
+            pid, name = parts[0], parts[1]
+            command_line = parts[2] if len(parts) > 2 else ""
+            processes.append({"pid": pid, "name": name, "command_line": command_line})
+        return processes
+
+    def _fetch_json(self, url: str) -> Any | None:
+        request = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "Agent-Eval-Lab/1.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=1.0) as response:
+                payload = response.read()
+        except (OSError, TimeoutError, urllib.error.URLError, urllib.error.HTTPError):
+            return None
+        try:
+            return json.loads(payload.decode("utf-8"))
+        except Exception:
+            return None
+
+    def _extract_openai_models(self, payload: Any) -> list[str] | None:
+        if not isinstance(payload, dict):
+            return None
+        data = payload.get("data")
+        if not isinstance(data, list):
+            return None
+        models = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            model_id = str(item.get("id") or item.get("name") or "").strip()
+            if model_id:
+                models.append(model_id)
+        return models
+
+    def _extract_ollama_models(self, payload: Any) -> list[str] | None:
+        if not isinstance(payload, dict):
+            return None
+        models_section = payload.get("models")
+        if not isinstance(models_section, list):
+            return None
+        models = []
+        for item in models_section:
+            if not isinstance(item, dict):
+                continue
+            model_id = str(item.get("name") or item.get("model") or "").strip()
+            if model_id:
+                models.append(model_id)
+        return models
+
+    def _probe_local_ai_endpoint(self, probe: dict[str, Any]) -> dict[str, Any] | None:
+        payload = self._fetch_json(f"{probe['base_url']}{probe['path']}")
+        if probe["parser"] == "openai":
+            models = self._extract_openai_models(payload)
+        else:
+            models = self._extract_ollama_models(payload)
+        if models is None:
+            return None
+        return {
+            "hint_id": probe.get("hint_id"),
+            "label": probe["label"],
+            "endpoint": probe["base_url"],
+            "port": probe["port"],
+            "models": models[:5],
+            "model_count": len(models),
+        }
+
+    def _detect_local_ai(self) -> dict[str, Any]:
+        items: list[dict[str, Any]] = []
+        for process in self._list_processes():
+            process_name = str(process.get("name") or "").strip()
+            command_line = str(process.get("command_line") or "").strip()
+            haystack = f"{process_name} {command_line}".lower()
+            for hint in AI_PROCESS_HINTS:
+                if not any(token in haystack for token in hint["match"]):
+                    continue
+                item = {
+                    "id": f"{hint['id']}:process:{process.get('pid')}",
+                    "hint_id": hint["id"],
+                    "label": hint["label"],
+                    "status": "process detected",
+                    "pid": process.get("pid"),
+                    "process_name": process_name or None,
+                    "command_preview": command_line[:180] if command_line else None,
+                    "endpoint": None,
+                    "port": None,
+                    "models": [],
+                    "model_count": 0,
+                    "api_reachable": False,
+                    "ports": list(hint["ports"]),
+                }
+                items.append(item)
+                break
+
+        for probe in AI_ENDPOINT_PROBES:
+            endpoint_item = self._probe_local_ai_endpoint(probe)
+            if endpoint_item is None:
+                continue
+
+            merged = False
+            for item in items:
+                if probe.get("hint_id") and item.get("hint_id") == probe["hint_id"]:
+                    merged = True
+                elif probe["port"] in (item.get("ports") or []):
+                    merged = True
+                if not merged:
+                    continue
+                item["endpoint"] = endpoint_item["endpoint"]
+                item["port"] = endpoint_item["port"]
+                item["models"] = endpoint_item["models"]
+                item["model_count"] = endpoint_item["model_count"]
+                item["api_reachable"] = True
+                item["status"] = "process + API"
+                break
+
+            if merged:
+                continue
+
+            items.append(
+                {
+                    "id": f"endpoint:{probe['port']}",
+                    "hint_id": probe.get("hint_id"),
+                    "label": endpoint_item["label"],
+                    "status": "API reachable",
+                    "pid": None,
+                    "process_name": None,
+                    "command_preview": None,
+                    "endpoint": endpoint_item["endpoint"],
+                    "port": endpoint_item["port"],
+                    "models": endpoint_item["models"],
+                    "model_count": endpoint_item["model_count"],
+                    "api_reachable": True,
+                    "ports": [probe["port"]],
+                }
+            )
+
+        items.sort(key=lambda item: (str(item.get("label") or ""), str(item.get("pid") or ""), str(item.get("port") or "")))
+        cleaned_items = []
+        for item in items:
+            cleaned_items.append({key: value for key, value in item.items() if key != "ports"})
+        return {
+            "items": cleaned_items,
+            "count": len(cleaned_items),
+            "reachable_count": sum(1 for item in cleaned_items if item.get("api_reachable")),
+            "checked_at": now_iso(),
+        }
+
+    def list_local_ai(self) -> dict[str, Any]:
+        now = time.monotonic()
+        cached = self.local_ai_cache or {}
+        cached_at = float(cached.get("cached_at", 0.0) or 0.0)
+        cached_payload = cached.get("payload")
+        if cached_payload is not None and (now - cached_at) < LOCAL_AI_DETECTION_TTL_SEC:
+            return dict(cached_payload)
+        payload = self._detect_local_ai()
+        self.local_ai_cache = {"cached_at": now, "payload": payload}
+        return dict(payload)
 
     def _relative_path(self, path: Path) -> str:
         try:
@@ -101,12 +442,47 @@ class RunController:
             "default_task_type": "auto",
         }
 
+    def list_evolution_modes(self) -> dict[str, Any]:
+        return {
+            "evolution_modes": [dict(item) for item in EVOLUTION_MODE_OPTIONS],
+            "default_evolution_mode": "model_params",
+        }
+
     def _normalize_task_type(self, raw_value: Any) -> str:
         value = str(raw_value or "auto").strip().lower() or "auto"
         valid_values = {item["value"] for item in TASK_TYPE_OPTIONS}
         if value not in valid_values:
             raise RuntimeError(f"Unsupported task type: {raw_value}")
         return value
+
+    def _normalize_evolution_mode(self, raw_value: Any) -> str:
+        value = str(raw_value or "model_params").strip().lower() or "model_params"
+        valid_values = {item["value"] for item in EVOLUTION_MODE_OPTIONS}
+        if value not in valid_values:
+            raise RuntimeError(f"Unsupported evolution mode: {raw_value}")
+        return value
+
+    def _load_config_payload(self, path: Path) -> dict[str, Any]:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else {}
+
+    def _normalize_sampling_parameters(self, raw_value: Any, config_payload: dict[str, Any]) -> list[str]:
+        provider = sampling_provider_for_config(config_payload)
+        supported = {item["id"] for item in sampling_parameters_for_provider(provider)}
+        if not supported:
+            return []
+
+        values: list[str] = []
+        if isinstance(raw_value, list):
+            values = [str(item).strip() for item in raw_value]
+        elif isinstance(raw_value, str):
+            values = [item.strip() for item in raw_value.split(",")]
+
+        selected = []
+        for value in values:
+            if value and value in supported and value not in selected:
+                selected.append(value)
+        return selected
 
     def _read_live_status(self) -> dict[str, Any]:
         if not self.live_status_path.exists():
@@ -117,11 +493,8 @@ class RunController:
             return {}
         return payload if isinstance(payload, dict) else {}
 
-    def _estimate_nightly_total_evals(self, config_path: Path) -> int | None:
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-        except Exception:
-            return None
+    def _estimate_nightly_total_evals(self, config_payload: dict[str, Any], evolution_mode: str) -> int | None:
+        config = config_payload if isinstance(config_payload, dict) else {}
         regression_path_value = config.get("regression_suite", {}).get("path")
         if not regression_path_value:
             return None
@@ -130,15 +503,18 @@ class RunController:
             regression_suite = json.loads(regression_path.read_text(encoding="utf-8"))
         except Exception:
             return None
-        pool_size = int(config.get("nightly", {}).get("candidate_pool_size", 1))
         candidate_runs = int(
             config.get("nightly", {}).get(
                 "candidate_runs_per_config",
                 config.get("nightly", {}).get("candidate_runs", 4),
             )
         )
-        include_base = bool(config.get("nightly", {}).get("include_base_config", True))
-        variant_count = max(pool_size, 1 if include_base else 1)
+        if evolution_mode == "heat_map":
+            variant_count = heat_map_candidate_count(config) + 1
+        else:
+            pool_size = int(config.get("nightly", {}).get("candidate_pool_size", 1))
+            include_base = bool(config.get("nightly", {}).get("include_base_config", True))
+            variant_count = max(pool_size, 1 if include_base else 1)
         case_count = len(regression_suite.get("cases", []))
         return variant_count * (candidate_runs + case_count)
 
@@ -221,6 +597,7 @@ class RunController:
         data = {
             **self.list_configs(),
             **self.list_task_types(),
+            **self.list_evolution_modes(),
             "active": bool(current),
             "current": current,
             "last_result": last_result,
@@ -231,7 +608,8 @@ class RunController:
 
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
-            return self._snapshot_locked()
+            payload = self._snapshot_locked()
+        return self._with_local_ai(payload)
 
     def _launch_locked(
         self,
@@ -348,7 +726,8 @@ class RunController:
             extras["seed"] = seed_value
 
         with self.lock:
-            return self._launch_locked(kind="single", config_path=config_path, extra_args=extra_args, extras=extras)
+            payload = self._launch_locked(kind="single", config_path=config_path, extra_args=extra_args, extras=extras)
+        return self._with_local_ai(payload)
 
     def start_suite(self, payload: dict[str, Any]) -> dict[str, Any]:
         config_path = self._resolve_config_path(payload.get("config"))
@@ -366,14 +745,37 @@ class RunController:
             extras["seed_start"] = seed_start_value
 
         with self.lock:
-            return self._launch_locked(kind="suite", config_path=config_path, extra_args=extra_args, extras=extras)
+            payload = self._launch_locked(kind="suite", config_path=config_path, extra_args=extra_args, extras=extras)
+        return self._with_local_ai(payload)
 
     def start_nightly(self, payload: dict[str, Any]) -> dict[str, Any]:
         config_path = self._resolve_config_path(payload.get("config"))
+        config_payload = self._load_config_payload(config_path)
         extra_args: list[str] = []
+        evolution_mode = self._normalize_evolution_mode(payload.get("evolution_mode"))
+        if evolution_mode in {"architecture_program", "heat_map"} and config_payload.get("runner") != "llama_cpp_agent":
+            raise RuntimeError(f"{evolution_mode} evolution requires a llama_cpp_agent config.")
+        extra_args.extend(["--evolution-mode", evolution_mode])
+        sampling_parameters = self._normalize_sampling_parameters(payload.get("sampling_parameters"), config_payload)
+        if evolution_mode == "model_params":
+            sampling_provider = sampling_provider_for_config(config_payload)
+            if sampling_provider is None:
+                raise RuntimeError("Model-parameter evolution requires a llama_cpp_agent config with provider=ollama or provider=llama-cpp.")
+            if not sampling_parameters:
+                sampling_parameters = selected_sampling_parameters_for_config(config_payload)
+            if not sampling_parameters:
+                raise RuntimeError("Select at least one sampling parameter for model-parameter evolution.")
+            extra_args.extend(["--sampling-parameters", ",".join(sampling_parameters)])
+        else:
+            sampling_provider = sampling_provider_for_config(config_payload)
         extras: dict[str, Any] = {
-            "estimated_total_evals": self._estimate_nightly_total_evals(config_path),
+            "estimated_total_evals": self._estimate_nightly_total_evals(config_payload, evolution_mode),
+            "evolution_mode": evolution_mode,
+            "sampling_provider": sampling_provider,
+            "sampling_parameters": sampling_parameters,
         }
+        if evolution_mode == "heat_map":
+            extras["heat_map_plan"] = resolve_heat_map_plan(config_payload)
         seed_start = payload.get("seed_start")
         if seed_start is not None and str(seed_start).strip() != "":
             seed_start_value = int(seed_start)
@@ -381,79 +783,88 @@ class RunController:
             extras["seed_start"] = seed_start_value
 
         with self.lock:
-            return self._launch_locked(kind="nightly", config_path=config_path, extra_args=extra_args, extras=extras)
+            payload = self._launch_locked(kind="nightly", config_path=config_path, extra_args=extra_args, extras=extras)
+        return self._with_local_ai(payload)
 
     def stop(self) -> dict[str, Any]:
         with self.lock:
             self._refresh_process_locked()
             if self.process is None or self.current is None:
-                return self._snapshot_locked(message="No active experiment to stop.")
-
-            metadata = dict(self.current)
-            pid = self.process.pid
-
-            if os.name == "nt":
-                subprocess.run(
-                    ["taskkill", "/PID", str(pid), "/T", "/F"],
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                    timeout=20,
-                )
+                payload = self._snapshot_locked(message="No active experiment to stop.")
             else:
-                self.process.terminate()
+                metadata = dict(self.current)
+                pid = self.process.pid
+
+                if os.name == "nt":
+                    subprocess.run(
+                        ["taskkill", "/PID", str(pid), "/T", "/F"],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        timeout=20,
+                    )
+                else:
+                    self.process.terminate()
+                    try:
+                        self.process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        self.process.kill()
+
                 try:
                     self.process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    self.process.kill()
+                except Exception:
+                    pass
 
-            try:
-                self.process.wait(timeout=5)
-            except Exception:
-                pass
+                returncode = self.process.poll()
+                stopped_at = now_iso()
+                current_status = self._read_live_status()
+                for key in PROGRESS_KEYS:
+                    if current_status.get(key) is not None:
+                        metadata[key] = current_status.get(key)
+                metadata.update(
+                    {
+                        "active": False,
+                        "stopped_by_user": True,
+                        "stopped_at": stopped_at,
+                        "returncode": returncode,
+                    }
+                )
+                self.last_result = metadata
+                self.process = None
+                self.current = None
+                self._close_log_handle_locked()
 
-            returncode = self.process.poll()
-            stopped_at = now_iso()
-            current_status = self._read_live_status()
-            for key in PROGRESS_KEYS:
-                if current_status.get(key) is not None:
-                    metadata[key] = current_status.get(key)
-            metadata.update({"active": False, "stopped_by_user": True, "stopped_at": stopped_at, "returncode": returncode})
-            self.last_result = metadata
-            self.process = None
-            self.current = None
-            self._close_log_handle_locked()
-
-            status_payload = {
-                "run_id": None,
-                "status": "stopped_by_user",
-                "task_id": None,
-                "config_id": metadata.get("config_id"),
-                "runner": "dashboard_control",
-                "current_tool": None,
-                "last_error": "Stopped from dashboard",
-                "step_count": 0,
-                "max_steps": metadata.get("progress_target") or metadata.get("suite_progress_target") or 1,
-                "elapsed_sec": 0,
-                "updated_at": stopped_at,
-                "run_kind": metadata.get("kind"),
-                "suite_id": None,
-                "case_id": None,
-                "task_type": metadata.get("task_type"),
-                "control_active": False,
-                "control_pid": None,
-                "control_command": " ".join(metadata.get("command", [])),
-            }
-            for key in PROGRESS_KEYS:
-                if metadata.get(key) is not None:
-                    status_payload[key] = metadata.get(key)
-            self._write_live_status(status_payload)
-            self._append_live_event(
-                "Stopped active experiment from dashboard.",
-                control_kind=metadata.get("kind"),
-                control_config=metadata.get("config_name"),
-            )
-            return self._snapshot_locked(message="Stopped active experiment.")
+                status_payload = {
+                    "run_id": None,
+                    "status": "stopped_by_user",
+                    "task_id": None,
+                    "config_id": metadata.get("config_id"),
+                    "runner": "dashboard_control",
+                    "current_tool": None,
+                    "last_error": "Stopped from dashboard",
+                    "step_count": 0,
+                    "max_steps": metadata.get("progress_target") or metadata.get("suite_progress_target") or 1,
+                    "elapsed_sec": 0,
+                    "updated_at": stopped_at,
+                    "run_kind": metadata.get("kind"),
+                    "suite_id": None,
+                    "case_id": None,
+                    "task_type": metadata.get("task_type"),
+                    "control_active": False,
+                    "control_pid": None,
+                    "control_command": " ".join(metadata.get("command", [])),
+                }
+                for key in PROGRESS_KEYS:
+                    if metadata.get(key) is not None:
+                        status_payload[key] = metadata.get(key)
+                self._write_live_status(status_payload)
+                self._append_live_event(
+                    "Stopped active experiment from dashboard.",
+                    control_kind=metadata.get("kind"),
+                    control_config=metadata.get("config_name"),
+                )
+                payload = self._snapshot_locked(message="Stopped active experiment.")
+        return self._with_local_ai(payload)
 
 
 class DashboardServer(ThreadingHTTPServer):

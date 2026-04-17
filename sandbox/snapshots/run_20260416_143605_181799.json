@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143605_181799",
+  "created_at": "2026-04-16T14:36:05",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Harbor-10/docs/archives/v1/deployment_draft.md",
+      "sha256": "39d59d4d6917a5bf7766b22abb89ba9ba555cd82b6966bb52a44ef6faaa394fe",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-10/knowledge/release/current/deployment_note.md",
+      "sha256": "6120e934cd24cb677e7c952d207b2c359c9984213e53ec7bc8121d6ba71da335",
+      "size": 98
+    },
+    {
+      "path": "projects/Harbor-10/ops/handover/current/deployment_archive.md",
+      "sha256": "c7f955918932cf6f91b7f9d8d0141eb0096ecce7c512b1ae0aa75e42b0f873be",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-22/docs/field-notes/v2/summary.md",
+      "sha256": "7e09c798b09f60c1944a61b65ac4e62002c7ecbe8f21093e41210e521fe9045d",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-22/knowledge/release/verified/deployment_note.md",
+      "sha256": "b034f064137b4f4fa065a0e1005fe74496cf79ab613aec250aa177d1a7079ae8",
+      "size": 75
+    },
+    {
+      "path": "scratch/Harbor-10/notes.txt",
+      "sha256": "d02142f935efce680d61b448744f0a7786735aae239b020ce3383be8451193bc",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "5407195698db88058d74d32ee75b45bc82d30674dbc10a88979c6b1bce142ce4",
+      "size": 75
+    }
+  ]
+}

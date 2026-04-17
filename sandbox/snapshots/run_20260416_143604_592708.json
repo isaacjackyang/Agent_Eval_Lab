@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_592708",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-91/delivery/archives/v1/handoff_checklist.md",
+      "sha256": "f1a51a2f64c8669f8891d691211125cd8469e3ab2dd835120e922ec946decc6d",
+      "size": 95
+    },
+    {
+      "path": "projects/Falcon-91/docs/archives/v1/handoff_notes.md",
+      "sha256": "b695c8b369f25b1e2cb4e58d8bee26d3e820a8dda433493bbde0be6eec1342de",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-91/ops/handover/current/handoff_archive.md",
+      "sha256": "81875183609a5391c114bf581a91bb2de3888ae64313d1973d727ba7c745dd4c",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-92/docs/field-notes/v2/summary.md",
+      "sha256": "23ebc86c12337b8e09857e13d0afdc89be1345587f2d059d52c292d6f9d2db81",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-92/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "0785bfd14ba3f8644bfcd408dab1ba97e5b15a67557dc4b8322c6745d06378f9",
+      "size": 75
+    },
+    {
+      "path": "scratch/Falcon-91/notes.txt",
+      "sha256": "7aede125e84490ff340984cf1001e22359ef9152d66af1938c756e7d4ea8e8f4",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "0d69887948aee969e4b1271575305e95e1e0ff66e3941ef22a7defab7ebff287",
+      "size": 75
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_115707_928970",
+  "created_at": "2026-04-16T11:57:07",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-13/docs/archives/v1/operations_old.md",
+      "sha256": "83bbf843b78c52e776b982a0297d96e501e1e1e9fd32ba8200ea96c817dd4569",
+      "size": 74
+    },
+    {
+      "path": "projects/Atlas-13/docs/handover/v2/operations_runbook.md",
+      "sha256": "4bc2cf76a65f766f619025ef43bde5b1986a3a7b394b611d36eedf9ee9c15207",
+      "size": 97
+    },
+    {
+      "path": "projects/Atlas-13/ops/handover/current/ops_draft.md",
+      "sha256": "029b807ba31f5d1deb4002fda3c9e72ca5be4e60b3f85c71490a48d45b19092e",
+      "size": 74
+    },
+    {
+      "path": "projects/Falcon-23/docs/field-notes/v2/summary.md",
+      "sha256": "70fb246c305454baa0c3c018e62bc32360b9cff5ffa407303d9cd8da3e7710ec",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-23/knowledge/release/verified/operations_runbook.md",
+      "sha256": "e2a0e7e2bc2b09667bad5c62fc5eeedd97a93bd39a5c593787598371655b8f73",
+      "size": 75
+    },
+    {
+      "path": "scratch/Atlas-13/notes.txt",
+      "sha256": "2ef969f92285fdc6e9b6b3cb919a9048b1ca0d13f568dbba1468d66d639a9d44",
+      "size": 27
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "99725f965290a6a634effcaee8d07be2be4b5b583fe72ca0209caded1e320608",
+      "size": 75
+    }
+  ]
+}

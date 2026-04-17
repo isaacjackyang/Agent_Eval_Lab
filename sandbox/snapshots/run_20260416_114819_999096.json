@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_114819_999096",
+  "created_at": "2026-04-16T11:48:20",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-96/delivery/field-notes/verified/handoff_checklist.md",
+      "sha256": "08885591d6f6ae4071b6e88575e715d9b9dea40e92b30d5c542416438400884c",
+      "size": 95
+    },
+    {
+      "path": "projects/Falcon-96/docs/archives/v1/handoff_notes.md",
+      "sha256": "1fc982b0114a7803dbe42f24bb613713e758733855c82e5b82a7b4dfa603e079",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-96/ops/handover/current/handoff_archive.md",
+      "sha256": "87c0c65ee9c9db860fd94f4c04ebc7b0329e8ed025d8dfc2a0b46ab5717e84a0",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-10/docs/field-notes/v2/summary.md",
+      "sha256": "c1fd10b3bc6416b4733a74eb0e93358029fbf73b595955d415471af18f9a0d05",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-10/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "a42bd77bb766cca8c5d62d537a60ce9216ecc3faeea392c5527322b43455b05c",
+      "size": 75
+    },
+    {
+      "path": "scratch/Falcon-96/notes.txt",
+      "sha256": "cfd80ea4e0146368512e312efb41e490066f267e0bdb0dbe416dad6e79526da4",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "fcb9976e9e3ff35d4448e9d6085d4cf658d75d736750edc5f697b69bea5904f9",
+      "size": 75
+    }
+  ]
+}

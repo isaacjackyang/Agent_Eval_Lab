@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_911384",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Nova-21/delivery/handover/verified/deploy_runbook.md",
+      "sha256": "0f8770e4cb110db3ab3d192f60dd275f4872f0a2baf695d000de372435a97059",
+      "size": 96
+    },
+    {
+      "path": "projects/Nova-21/docs/archives/v1/deployment_draft.md",
+      "sha256": "203349a072878ad17b2aab7c88244e6bec64c00c94da85ad4e400906ca262d9a",
+      "size": 73
+    },
+    {
+      "path": "projects/Nova-21/ops/handover/current/deployment_archive.md",
+      "sha256": "a872485a5353c130965863c22f8e0c7815552e5d74cbb342730246cac3e573b2",
+      "size": 73
+    },
+    {
+      "path": "projects/Quartz-93/docs/field-notes/v2/summary.md",
+      "sha256": "4c16fd3fc37870f15c6eafbb6e4f4a95a036d8055ef2a15d8bce15c028d14ffb",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-93/knowledge/release/verified/deployment_note.md",
+      "sha256": "b635d6bf4603b1b811acd439cfc3eeeeadd8b6c483d8887ffb9dbc90cf23141a",
+      "size": 75
+    },
+    {
+      "path": "scratch/Nova-21/notes.txt",
+      "sha256": "629fc1c91edada072cc8e06aa21e5db802ed0589f2afcd6424643ad374209ae6",
+      "size": 26
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "30e9443c2a0143def7d5e36ac8bf8a44d0656920f8c8bf78a0f444b5176def1b",
+      "size": 75
+    }
+  ]
+}

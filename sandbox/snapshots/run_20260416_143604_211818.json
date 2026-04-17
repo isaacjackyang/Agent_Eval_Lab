@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_211818",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-54/docs/field-notes/v2/summary.md",
+      "sha256": "3eb66c1407cb2c95bf4cb2b72aefc9718e193a6164043cc08054b1c65bbe9d76",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-54/knowledge/release/verified/operations_runbook.md",
+      "sha256": "d75eccd3409842a7a20bbda793e6320be08ac3911ecf951bb80f8e5fcf35aca7",
+      "size": 75
+    },
+    {
+      "path": "projects/Nova-80/docs/archives/v1/operations_old.md",
+      "sha256": "8575b5924ce6748af838bf08fc25e11cd816ae4b1c31caad214c05c26f6830bf",
+      "size": 73
+    },
+    {
+      "path": "projects/Nova-80/docs/field-notes/current/operations_runbook.md",
+      "sha256": "642a7c565b42a8bbc25ff5798e4a4a8104ee035f91ecfd44a9781f40bbc7e625",
+      "size": 96
+    },
+    {
+      "path": "projects/Nova-80/ops/handover/current/ops_draft.md",
+      "sha256": "22865a4b4f60738d1e4961e271ad078634864bc15a73ea398e418affbb0091e9",
+      "size": 73
+    },
+    {
+      "path": "scratch/Nova-80/notes.txt",
+      "sha256": "5a542a8b600735257765e0e414b5f47ac2f4481572c30ad23a2e31940909643b",
+      "size": 26
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "fd2850e6b30583d814ee4796648a63a6d579366492f6f8107845aede65237472",
+      "size": 75
+    }
+  ]
+}

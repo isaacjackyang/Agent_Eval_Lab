@@ -1,0 +1,51 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_145328_667518",
+  "created_at": "2026-04-16T14:53:28",
+  "file_count": 7,
+  "manifest_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\manifest.json",
+  "backup_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files",
+  "files": [
+    {
+      "path": "projects/Cinder-33/docs/archives/v1/deployment_draft.md",
+      "sha256": "9596289139e78792858061ef07479780015af246ca6f9fd8b6859a1f6cab8586",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\projects\\Cinder-33\\docs\\archives\\v1\\deployment_draft.md"
+    },
+    {
+      "path": "projects/Cinder-33/docs/field-notes/verified/deploy_runbook.md",
+      "sha256": "f96004779e33ee23c0007df20fa759e8c0d1df5aff5cbb48d211a16f07e88447",
+      "size": 98,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\projects\\Cinder-33\\docs\\field-notes\\verified\\deploy_runbook.md"
+    },
+    {
+      "path": "projects/Cinder-33/ops/handover/current/deployment_archive.md",
+      "sha256": "497e43a6dcbc643878f03022a46bd660f7f939bab301696331822248eea32d23",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\projects\\Cinder-33\\ops\\handover\\current\\deployment_archive.md"
+    },
+    {
+      "path": "projects/Quartz-90/docs/field-notes/v2/summary.md",
+      "sha256": "3961bef1fb0a63b662e3a7f4df76c9d61c8ff8006183f13306dd8277fc55dba6",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\projects\\Quartz-90\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Quartz-90/knowledge/release/verified/deployment_note.md",
+      "sha256": "89f2355921eea2fd39dbde9208d587467088bb203aa2609eded41d139a5f31bd",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\projects\\Quartz-90\\knowledge\\release\\verified\\deployment_note.md"
+    },
+    {
+      "path": "scratch/Cinder-33/notes.txt",
+      "sha256": "2d7cf4d1af8f4c51f91bb9619ffe3b6f9cff90698bb48dfd2cf3c047faf3bb30",
+      "size": 28,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\scratch\\Cinder-33\\notes.txt"
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "5305a9e2b3b26617746286bcc83cdc851fb782041f54b9be64b830786348bdc1",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145328_667518\\files\\shared\\templates\\deployment_template.md"
+    }
+  ]
+}

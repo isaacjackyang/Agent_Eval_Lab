@@ -1,0 +1,51 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_145325_389456",
+  "created_at": "2026-04-16T14:53:25",
+  "file_count": 7,
+  "manifest_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\manifest.json",
+  "backup_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files",
+  "files": [
+    {
+      "path": "projects/Falcon-81/docs/field-notes/v2/summary.md",
+      "sha256": "ff99a426ed141c7d9a7b8c229cb48a5a1d10d777658bb4bbc0aa8ce3979b04bc",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\projects\\Falcon-81\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Falcon-81/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "e9d5be6df02e158c65945e25881c4f9a09ff2311c635cc71661b38a9e37057b8",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\projects\\Falcon-81\\knowledge\\release\\verified\\handoff_checklist.md"
+    },
+    {
+      "path": "projects/Harbor-56/docs/archives/v1/handoff_notes.md",
+      "sha256": "4f5250b1881a6ee7f66335f3a867518af63df94de61025464aedda018ae35d2f",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\projects\\Harbor-56\\docs\\archives\\v1\\handoff_notes.md"
+    },
+    {
+      "path": "projects/Harbor-56/ops/handover/current/handoff_archive.md",
+      "sha256": "51780b40d0aa990623aa1c702218965aa52152ade69ad3e2354f63aaa0d795af",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\projects\\Harbor-56\\ops\\handover\\current\\handoff_archive.md"
+    },
+    {
+      "path": "projects/Harbor-56/ops/handover/v2/handoff_checklist.md",
+      "sha256": "56c9f1cb5648ea4a531dd4a80277342eac7c2bc26cb3dc40070c3c3463aa8b9b",
+      "size": 95,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\projects\\Harbor-56\\ops\\handover\\v2\\handoff_checklist.md"
+    },
+    {
+      "path": "scratch/Harbor-56/notes.txt",
+      "sha256": "164230aef9e7f4d073d25d33d25aebe56deb63a5f19d057ca92b9f0e9629628a",
+      "size": 28,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\scratch\\Harbor-56\\notes.txt"
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "b213db733f2d8d5b3cfdfb825e7f0ec47c071a4c72455c6e076f465c0a1e8749",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145325_389456\\files\\shared\\templates\\handoff_template.md"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_145319_871306",
+  "created_at": "2026-04-16T14:53:19",
+  "file_count": 7,
+  "manifest_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\manifest.json",
+  "backup_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files",
+  "files": [
+    {
+      "path": "projects/Atlas-30/docs/field-notes/v2/summary.md",
+      "sha256": "61637d54cf29adf9136b38ddd7465b62b2f8bbec7a090bd21d7fba8a2640f73a",
+      "size": 74,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\projects\\Atlas-30\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Atlas-30/knowledge/release/verified/operations_runbook.md",
+      "sha256": "b25a5ff3c5bfae895b06d1d4e93137942ca94b98f155f93074680ed11cf4c4f4",
+      "size": 74,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\projects\\Atlas-30\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Nova-57/docs/archives/v1/operations_old.md",
+      "sha256": "719eda50e077a580462a84f71fbedbe591e3eed8ee059b066db730b6767cdfd0",
+      "size": 73,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\projects\\Nova-57\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Nova-57/knowledge/release/v2/ops_manual.md",
+      "sha256": "be794ba7f36742ccf02f1e8504641cdacde67d5083dda9a7f270c5e676a6bbf4",
+      "size": 96,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\projects\\Nova-57\\knowledge\\release\\v2\\ops_manual.md"
+    },
+    {
+      "path": "projects/Nova-57/ops/handover/current/ops_draft.md",
+      "sha256": "56f4b2611bcd4963a455910d686b2b19cf2d087b27f21f42489b17abdc55f8a0",
+      "size": 73,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\projects\\Nova-57\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "scratch/Nova-57/notes.txt",
+      "sha256": "fafd8fa97e57238c0215bae9c624c6221982bf30a3d02d3e4a8280cddda53ce4",
+      "size": 26,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\scratch\\Nova-57\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "b10aafa79995b350a444203a697f082fa1572b6df52e9c070f1f9e2f07679cff",
+      "size": 74,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145319_871306\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}

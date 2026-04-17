@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_099549",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-14/docs/field-notes/v2/summary.md",
+      "sha256": "b623790de4050615ac8d81de4f53c77170b6c31b74a353199a32e5ea31a0e0b9",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-14/knowledge/release/verified/operations_runbook.md",
+      "sha256": "1297385fa79af1343ee9f8b8d006fe231f4a4be728a21b35a5e9c48c441868d4",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-85/docs/archives/v1/operations_old.md",
+      "sha256": "77524cc05bed7a9cb6890f44062d07f56d26cb20490edc1f3c9e0be27d9bce37",
+      "size": 75
+    },
+    {
+      "path": "projects/Harbor-85/knowledge/archives/verified/ops_manual.md",
+      "sha256": "b428b3c8717bc248af4393caa6376c7f359228405b848f97a284708d3c0bf999",
+      "size": 98
+    },
+    {
+      "path": "projects/Harbor-85/ops/handover/current/ops_draft.md",
+      "sha256": "d0bc33ec3889eadf31ca15cce68a4ec8ad99d6c35ccda5f05db0501be2b8030a",
+      "size": 75
+    },
+    {
+      "path": "scratch/Harbor-85/notes.txt",
+      "sha256": "961a291e74c3be11158debc9cde51f19580e4a02a3215321571144ef6e31e415",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "adc37c209fd6ef46b6301448e1d745211c07badda2554c2856bca8a1181b8486",
+      "size": 75
+    }
+  ]
+}

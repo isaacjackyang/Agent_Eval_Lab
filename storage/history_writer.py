@@ -11,6 +11,7 @@ REPORT_FILES = [
     "baseline_history.json",
     "rollback_events.json",
     "nightly_history.json",
+    "heat_map_history.json",
     "config_history.json",
     "parameter_history.json",
 ]

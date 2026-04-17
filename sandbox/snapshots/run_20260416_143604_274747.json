@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_274747",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Nova-39/docs/field-notes/v2/summary.md",
+      "sha256": "72e6f093131b54ccd8697f8080eaab05a1ff750717827d7652f2c8e2e5fa17b5",
+      "size": 73
+    },
+    {
+      "path": "projects/Nova-39/knowledge/release/verified/deployment_note.md",
+      "sha256": "44cc1fe1419836a1133d83d7e22abcb1711cf184ae062a49e762b6c616e3706b",
+      "size": 73
+    },
+    {
+      "path": "projects/Nova-72/delivery/release/v2/deployment_note.md",
+      "sha256": "d3e6548eab25569930192b0102bd41d6a2da382f22a3c3b44c528f9888867f48",
+      "size": 96
+    },
+    {
+      "path": "projects/Nova-72/docs/archives/v1/deployment_draft.md",
+      "sha256": "88e4eb7181067419fda8b77179d55d6c515f53bd789b8ac0c48113eaf6b27a0f",
+      "size": 73
+    },
+    {
+      "path": "projects/Nova-72/ops/handover/current/deployment_archive.md",
+      "sha256": "c8e9359a9e2b47992d366ab812f031d79619c8babd5aad389c3795756b2a26f7",
+      "size": 73
+    },
+    {
+      "path": "scratch/Nova-72/notes.txt",
+      "sha256": "9bb99265d40bdd69c05e1c3748bd3d568cc7a2797eb1ffda12f46bb55d94d968",
+      "size": 26
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "cf5fbe20776d3311b3de3afe8f4713b6089db01bfd98e1d34ff37daa491b3ce3",
+      "size": 73
+    }
+  ]
+}

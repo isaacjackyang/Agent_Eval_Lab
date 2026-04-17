@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143603_862352",
+  "created_at": "2026-04-16T14:36:03",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-23/docs/field-notes/v2/summary.md",
+      "sha256": "449a1ce016f634bd06ac67f8b083af2f12bffe99cf29b4b610f71706d6a20460",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-23/knowledge/release/verified/deployment_note.md",
+      "sha256": "44605d43f7401fb5a801895822948bbb2052da316cdbebe38454f55c57dda1fc",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-29/delivery/handover/verified/deployment_note.md",
+      "sha256": "b62f5402b50718fb462115dd1b6f73bdf81996cafb231bbc845c48d0900bb31f",
+      "size": 98
+    },
+    {
+      "path": "projects/Cinder-29/docs/archives/v1/deployment_draft.md",
+      "sha256": "906c000e88f343a0edd198963aff3da1d8169ee651e8c05f8bdccb85c52ffae5",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-29/ops/handover/current/deployment_archive.md",
+      "sha256": "5587ab77c31e96885f6a146ca83ecd1be6fbee7cd8f895f6fc4013cab44765c2",
+      "size": 75
+    },
+    {
+      "path": "scratch/Cinder-29/notes.txt",
+      "sha256": "44c63349d705a5881a5282c5c72f56e20a0f3688628976a6106ab12fe37e9704",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "fee31c62defb508ffab56cb35615d9265a46feffb4c6e5407759f8bd4c6dab54",
+      "size": 75
+    }
+  ]
+}

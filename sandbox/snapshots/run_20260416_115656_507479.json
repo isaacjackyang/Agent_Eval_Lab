@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_115656_507479",
+  "created_at": "2026-04-16T11:56:56",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Atlas-53/docs/field-notes/v2/summary.md",
+      "sha256": "2525e4eb2c01ea8fb07fd0b8b77a0e4678113bebba17ccc39ef14d9e831d6549",
+      "size": 74
+    },
+    {
+      "path": "projects/Atlas-53/knowledge/release/verified/handoff_checklist.md",
+      "sha256": "3acfdae2229329371ff7e51d6535b954a4f537e31a18a08181e0b48f7614ae19",
+      "size": 74
+    },
+    {
+      "path": "projects/Quartz-84/delivery/field-notes/verified/handoff_checklist.md",
+      "sha256": "94f46f661bc32c9980da588cd3d57ef8a47f2b960570211bcf7b245b994d30c3",
+      "size": 95
+    },
+    {
+      "path": "projects/Quartz-84/docs/archives/v1/handoff_notes.md",
+      "sha256": "4fdd5b9500323dd598723f95678e07fceaad33f69f83fc50c02a60dfadddc5a6",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-84/ops/handover/current/handoff_archive.md",
+      "sha256": "4531e3bec6c28a83f771c825f35b253fde30ddf75db036a0fc09e903f3a6e923",
+      "size": 75
+    },
+    {
+      "path": "scratch/Quartz-84/notes.txt",
+      "sha256": "2f91ef9cb6c957d5e8197da8fe0aeb3d93685f505398cf91716682d5fa0c9e55",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/handoff_template.md",
+      "sha256": "241dad961b6bf2ccf70f6113e1c24f6ed9e49d44de118ee368aac81ac25724aa",
+      "size": 74
+    }
+  ]
+}

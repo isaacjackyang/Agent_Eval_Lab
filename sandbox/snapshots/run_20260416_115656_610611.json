@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_115656_610611",
+  "created_at": "2026-04-16T11:56:56",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Cinder-31/docs/archives/v1/operations_old.md",
+      "sha256": "5db50bb308b39a054b817d45ab75e193693649f193529f5eb0906dca331f487a",
+      "size": 75
+    },
+    {
+      "path": "projects/Cinder-31/docs/handover/verified/operations_runbook.md",
+      "sha256": "557cb5dfbb3f7cb3b513aebe1d74913ac4ccbeb219294c74895c7db431055d7e",
+      "size": 98
+    },
+    {
+      "path": "projects/Cinder-31/ops/handover/current/ops_draft.md",
+      "sha256": "43cb1060e416f7806a50f79616d5030dd2561a368bd6b85adb0895e16ac266b9",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-58/docs/field-notes/v2/summary.md",
+      "sha256": "1f15fafc1c95bb8c16b54f1196d05d85c1655b9ba797181bf27d0c14e142c2a3",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-58/knowledge/release/verified/operations_runbook.md",
+      "sha256": "ce7f03e297c8846271c1276d85bc0ab390275c9da412d80e983eacb89914a6fd",
+      "size": 75
+    },
+    {
+      "path": "scratch/Cinder-31/notes.txt",
+      "sha256": "6f517161e653e93a129955a61fe2bbcc2c3249b3bf1b2780b1b26e013f05c385",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "96fd3aee7728d9396ec842d1671789a060894a0a820fbff443e067b4ac534573",
+      "size": 75
+    }
+  ]
+}

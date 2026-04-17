@@ -1,0 +1,42 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_143604_655132",
+  "created_at": "2026-04-16T14:36:04",
+  "file_count": 7,
+  "files": [
+    {
+      "path": "projects/Falcon-93/docs/archives/v1/deployment_draft.md",
+      "sha256": "fcc69da061eca794179cb04eab1fc7181a9c948e4b3f6f9079124c2ba466f8c6",
+      "size": 75
+    },
+    {
+      "path": "projects/Falcon-93/knowledge/field-notes/verified/deployment_note.md",
+      "sha256": "d3bd4876313a4adeb29675ff47a8cd00cf927cb6eeb97d6c823198b3245d0494",
+      "size": 98
+    },
+    {
+      "path": "projects/Falcon-93/ops/handover/current/deployment_archive.md",
+      "sha256": "82233f626fa3b3621c70964b1c2fbedaf3ae87811bd27c64e834504ca12d3183",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-34/docs/field-notes/v2/summary.md",
+      "sha256": "650ea3551d86efba8f26ab9b094b28334d1cdfb247f5ee85cdd99eb75bcda9f7",
+      "size": 75
+    },
+    {
+      "path": "projects/Quartz-34/knowledge/release/verified/deployment_note.md",
+      "sha256": "036a97dbcc32748f121011ca231dd12f0867544627a77c80de63ba2c43a2795c",
+      "size": 75
+    },
+    {
+      "path": "scratch/Falcon-93/notes.txt",
+      "sha256": "06bd89cb11e238eb1fd8d72662c6239e176c3ae1a663b5b5635bd2f4e374fe20",
+      "size": 28
+    },
+    {
+      "path": "shared/templates/deployment_template.md",
+      "sha256": "ddf06a28513144242865afeee3be990e71baeea8331940b9049109f8bd28d976",
+      "size": 75
+    }
+  ]
+}

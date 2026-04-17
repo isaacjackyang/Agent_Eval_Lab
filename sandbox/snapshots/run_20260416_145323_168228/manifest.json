@@ -1,0 +1,51 @@
+{
+  "workspace_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\workspaces\\run_20260416_145323_168228",
+  "created_at": "2026-04-16T14:53:23",
+  "file_count": 7,
+  "manifest_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\manifest.json",
+  "backup_root": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files",
+  "files": [
+    {
+      "path": "projects/Harbor-26/docs/field-notes/v2/summary.md",
+      "sha256": "1af2957aa08ccc56fdd0bacfeaa9a437670027ac73d01975c41dce1668fec96b",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\projects\\Harbor-26\\docs\\field-notes\\v2\\summary.md"
+    },
+    {
+      "path": "projects/Harbor-26/knowledge/release/verified/operations_runbook.md",
+      "sha256": "8d5c5c189ee93c9488ccbaf2c6fcb7c57e8ea66d433b1a1c324acfa7ea9d593b",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\projects\\Harbor-26\\knowledge\\release\\verified\\operations_runbook.md"
+    },
+    {
+      "path": "projects/Quartz-63/docs/archives/v1/operations_old.md",
+      "sha256": "20d8144d93ae766da876d51c6ff76281b44354ad240e46dedd87c5d761bb9703",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\projects\\Quartz-63\\docs\\archives\\v1\\operations_old.md"
+    },
+    {
+      "path": "projects/Quartz-63/ops/handover/current/ops_draft.md",
+      "sha256": "559c16948747bc67072d8f3454e3c3218e875b3a1735afa04adb7b80cd530f2b",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\projects\\Quartz-63\\ops\\handover\\current\\ops_draft.md"
+    },
+    {
+      "path": "projects/Quartz-63/ops/handover/v2/ops_manual.md",
+      "sha256": "fd58929afa9f584337fceb8e1573cba437940240ef8efe8a48afa77d407afb30",
+      "size": 98,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\projects\\Quartz-63\\ops\\handover\\v2\\ops_manual.md"
+    },
+    {
+      "path": "scratch/Quartz-63/notes.txt",
+      "sha256": "5d8959f494661503b1df1c510dc4dfb58e5f08b0d1d4cfab9ea373eea01ed68b",
+      "size": 28,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\scratch\\Quartz-63\\notes.txt"
+    },
+    {
+      "path": "shared/templates/operations_template.md",
+      "sha256": "2a677b3c48de9b6b1c58e0352f2aad3f481f873bf76d30ae567091f4de469830",
+      "size": 75,
+      "backup_path": "C:\\Users\\USER\\Documents\\GitHub\\Agent_Eval_Lab\\sandbox\\snapshots\\run_20260416_145323_168228\\files\\shared\\templates\\operations_template.md"
+    }
+  ]
+}
