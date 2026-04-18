@@ -8,7 +8,11 @@ from typing import Any
 from evolution.mutator import effective_agent_architecture
 from evolution.relayer_plan import relayer_supported_modes_for_runner, resolve_relayer_runtime_context
 from runners.base import BaseRunner, RunnerResult
-from runners.relayer_runtime_bridge import invoke_external_relayer_runtime
+from runners.relayer_runtime_bridge import (
+    extract_runtime_backend_effects,
+    invoke_external_relayer_runtime,
+    summarize_runtime_backend_effects,
+)
 from sandbox.openclaw_agent_runtime import OpenClawRuntime
 from storage.jsonish import load_jsonish_text
 
@@ -34,6 +38,7 @@ class OpenClawCliRunner(BaseRunner):
         )
         token_estimate = 0
         relayer_runtime_backend: dict[str, Any] | None = None
+        relayer_runtime_effects: dict[str, Any] = {}
         sandbox_metadata: dict[str, Any] = {}
         cleanup_summary: dict[str, Any] = {}
         stdout = ""
@@ -76,6 +81,32 @@ class OpenClawCliRunner(BaseRunner):
 
         emit("system", f"Preparing OpenClaw agent {runtime.agent_id}.", name="openclaw")
         try:
+            if relayer_context["enabled"]:
+                emit("system", relayer_context["message"], name="relayer")
+            if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
+                relayer_runtime_backend = invoke_external_relayer_runtime(
+                    root=Path(context["root"]),
+                    run_id=context["run_id"],
+                    runtime_label=self.name,
+                    config=self.runner_config,
+                    relayer_context=relayer_context,
+                )
+                emit(
+                    "system",
+                    f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
+                    name="relayer_runtime",
+                )
+                relayer_runtime_effects = extract_runtime_backend_effects(relayer_runtime_backend)
+                if relayer_runtime_effects:
+                    runtime.apply_runtime_effects(relayer_runtime_effects)
+                    summary = summarize_runtime_backend_effects(relayer_runtime_effects)
+                    if summary:
+                        emit(
+                            "system",
+                            f"Applied relayer runtime effects: {summary}.",
+                            name="relayer_runtime_effects",
+                        )
+
             sandbox_metadata = runtime.prepare(Path(task["workspace_root"]))
             live_writer.write_status(
                 {
@@ -110,6 +141,7 @@ class OpenClawCliRunner(BaseRunner):
                 emit("system", "OpenClaw sandbox metadata loaded.", name="sandbox")
 
             prompt = self._build_prompt(task=task, architecture=architecture)
+            prompt = self._apply_runtime_prompt_effects(prompt, relayer_runtime_effects.get("prompt"))
             emit(
                 "system",
                 (
@@ -121,21 +153,6 @@ class OpenClawCliRunner(BaseRunner):
                 ),
                 name="openclaw_architecture",
             )
-            if relayer_context["enabled"]:
-                emit("system", relayer_context["message"], name="relayer")
-            if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
-                relayer_runtime_backend = invoke_external_relayer_runtime(
-                    root=Path(context["root"]),
-                    run_id=context["run_id"],
-                    runtime_label=self.name,
-                    config=self.runner_config,
-                    relayer_context=relayer_context,
-                )
-                emit(
-                    "system",
-                    f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
-                    name="relayer_runtime",
-                )
 
             emit("system", "Sending task prompt to OpenClaw agent.", name="openclaw")
             completed = runtime.run_agent(prompt)
@@ -205,6 +222,7 @@ class OpenClawCliRunner(BaseRunner):
                 "task_category": task_category,
                 "relayer": relayer_context,
                 "relayer_runtime_backend": relayer_runtime_backend,
+                "relayer_runtime_effects": relayer_runtime_effects,
                 "sandbox": sandbox_metadata,
                 "runtime": runtime.describe_runtime(),
                 "cleanup": cleanup_summary,
@@ -212,6 +230,22 @@ class OpenClawCliRunner(BaseRunner):
                 "raw_stderr": stderr,
             },
         )
+
+    def _apply_runtime_prompt_effects(
+        self,
+        prompt: str,
+        prompt_effects: dict[str, Any] | None,
+    ) -> str:
+        if not isinstance(prompt_effects, dict):
+            return prompt
+        result = str(prompt)
+        prefix = str(prompt_effects.get("task_prefix") or prompt_effects.get("user_prefix") or "").strip()
+        suffix = str(prompt_effects.get("task_suffix") or prompt_effects.get("user_suffix") or "").strip()
+        if prefix:
+            result = f"{prefix}\n{result}"
+        if suffix:
+            result = f"{result}\n{suffix}"
+        return result
 
     def _build_prompt(self, *, task: dict[str, Any], architecture: dict[str, Any]) -> str:
         prompt_style = str(architecture.get("prompt_style", "strict_json"))

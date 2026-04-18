@@ -13,6 +13,15 @@ RUNNER_CONFIG_SECTION_MAP = {
     "openclaw_cli": "openclaw",
     "session_mock": None,
 }
+PROMPT_EFFECT_KEYS = {
+    "system_prefix",
+    "system_suffix",
+    "user_prefix",
+    "user_suffix",
+    "task_prefix",
+    "task_suffix",
+}
+SCALAR_SAMPLING_VALUE_TYPES = (str, int, float, bool)
 
 
 def _runtime_backend_section(config: dict[str, Any]) -> dict[str, Any]:
@@ -57,6 +66,129 @@ def _runtime_config_snapshot(config: dict[str, Any], runtime_label: str) -> dict
         return {}
     section = config.get(section_name, {})
     return dict(section) if isinstance(section, dict) else {}
+
+
+def _nonempty_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _string_dict(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, str] = {}
+    for key, item in value.items():
+        normalized = _nonempty_string(item)
+        if normalized is not None:
+            result[str(key)] = normalized
+    return result
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    result: list[str] = []
+    for item in value:
+        normalized = _nonempty_string(item)
+        if normalized is not None:
+            result.append(normalized)
+    return result
+
+
+def extract_runtime_backend_effects(runtime_backend: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(runtime_backend, dict):
+        return {}
+    result = runtime_backend.get("result")
+    if not isinstance(result, dict):
+        return {}
+
+    raw_effects = result.get("runtime_effects")
+    if not isinstance(raw_effects, dict):
+        raw_effects = {}
+        for key in ("prompt", "llama_cpp", "openclaw"):
+            value = result.get(key)
+            if isinstance(value, dict):
+                raw_effects[key] = value
+
+    normalized: dict[str, Any] = {}
+
+    prompt_effects = raw_effects.get("prompt")
+    if isinstance(prompt_effects, dict):
+        prompt_payload = {
+            key: text
+            for key in PROMPT_EFFECT_KEYS
+            if (text := _nonempty_string(prompt_effects.get(key))) is not None
+        }
+        if prompt_payload:
+            normalized["prompt"] = prompt_payload
+
+    llama_effects = raw_effects.get("llama_cpp")
+    if isinstance(llama_effects, dict):
+        llama_payload: dict[str, Any] = {}
+        base_url = _nonempty_string(llama_effects.get("base_url"))
+        if base_url is not None:
+            llama_payload["base_url"] = base_url
+        model = _nonempty_string(llama_effects.get("model"))
+        if model is not None:
+            llama_payload["model"] = model
+        sampling_options = llama_effects.get("sampling_options")
+        if isinstance(sampling_options, dict):
+            normalized_sampling = {
+                str(key): value
+                for key, value in sampling_options.items()
+                if isinstance(value, SCALAR_SAMPLING_VALUE_TYPES)
+            }
+            if normalized_sampling:
+                llama_payload["sampling_options"] = normalized_sampling
+        if llama_payload:
+            normalized["llama_cpp"] = llama_payload
+
+    openclaw_effects = raw_effects.get("openclaw")
+    if isinstance(openclaw_effects, dict):
+        openclaw_payload: dict[str, Any] = {}
+        model = _nonempty_string(openclaw_effects.get("model"))
+        if model is not None:
+            openclaw_payload["model"] = model
+        env = _string_dict(openclaw_effects.get("env"))
+        if env:
+            openclaw_payload["env"] = env
+        agent_args = _string_list(openclaw_effects.get("agent_args"))
+        if agent_args:
+            openclaw_payload["agent_args"] = agent_args
+        if openclaw_payload:
+            normalized["openclaw"] = openclaw_payload
+
+    return normalized
+
+
+def summarize_runtime_backend_effects(effects: dict[str, Any] | None) -> str | None:
+    if not isinstance(effects, dict) or not effects:
+        return None
+    parts: list[str] = []
+    prompt = effects.get("prompt")
+    if isinstance(prompt, dict):
+        parts.extend(f"prompt.{key}" for key in sorted(prompt))
+    llama_cpp = effects.get("llama_cpp")
+    if isinstance(llama_cpp, dict):
+        if "base_url" in llama_cpp:
+            parts.append("llama_cpp.base_url")
+        if "model" in llama_cpp:
+            parts.append("llama_cpp.model")
+        if "sampling_options" in llama_cpp:
+            parts.append("llama_cpp.sampling_options")
+    openclaw = effects.get("openclaw")
+    if isinstance(openclaw, dict):
+        if "model" in openclaw:
+            parts.append("openclaw.model")
+        if "env" in openclaw:
+            parts.append("openclaw.env")
+        if "agent_args" in openclaw:
+            parts.append("openclaw.agent_args")
+    if not parts:
+        return None
+    return ", ".join(parts)
 
 
 def invoke_external_relayer_runtime(
@@ -133,6 +265,7 @@ def invoke_external_relayer_runtime(
             result_payload = None
     if result_payload is not None:
         result_path.write_text(json.dumps(result_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    runtime_effects = extract_runtime_backend_effects({"result": result_payload} if result_payload is not None else None)
 
     metadata = {
         "command": args,
@@ -146,6 +279,8 @@ def invoke_external_relayer_runtime(
         "stdout": stdout,
         "stderr": stderr,
         "result": result_payload,
+        "runtime_effects": runtime_effects,
+        "runtime_effect_summary": summarize_runtime_backend_effects(runtime_effects),
     }
     if completed.returncode != 0:
         raise RuntimeError(

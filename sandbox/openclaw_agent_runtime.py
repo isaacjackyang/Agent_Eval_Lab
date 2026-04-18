@@ -45,6 +45,7 @@ class OpenClawRuntime:
         self.prepared = False
         self.cleaned_up = False
         self.created_at = _now_iso()
+        self.runtime_effects: dict[str, Any] = {}
         self.agent_metadata: dict[str, Any] = {
             "agent_id": self.agent_id,
             "runtime_dir": str(self.runtime_dir.resolve()),
@@ -139,6 +140,7 @@ class OpenClawRuntime:
                 "last_error": self.last_error,
                 "command_prefix": self.command_prefix,
                 "agent_metadata": self.agent_metadata,
+                "runtime_effects": self.runtime_effects,
                 "smoke_test": self.smoke_result,
                 "cleanup": self.cleanup_result,
                 "lifecycle_event_count": len(self.lifecycle_events),
@@ -184,6 +186,40 @@ class OpenClawRuntime:
             "runtime_report_path": str(self.runtime_report_path.resolve()),
             "smoke_report_path": str(self.smoke_report_path.resolve()),
         }
+
+    def apply_runtime_effects(self, effects: dict[str, Any] | None) -> None:
+        if not isinstance(effects, dict):
+            return
+        openclaw_effects = effects.get("openclaw")
+        if not isinstance(openclaw_effects, dict):
+            return
+
+        applied: dict[str, Any] = {}
+        model = openclaw_effects.get("model")
+        if model is not None:
+            self.openclaw_config["model"] = str(model)
+            applied["model"] = self.openclaw_config["model"]
+
+        env = openclaw_effects.get("env")
+        if isinstance(env, dict):
+            normalized_env = {str(key): str(value) for key, value in env.items()}
+            self.env.update(normalized_env)
+            if normalized_env:
+                applied["env"] = normalized_env
+
+        agent_args = openclaw_effects.get("agent_args")
+        if isinstance(agent_args, list):
+            normalized_args = [str(item) for item in agent_args if str(item).strip()]
+            if normalized_args:
+                self.openclaw_config["_runtime_agent_args"] = normalized_args
+                applied["agent_args"] = normalized_args
+
+        if not applied:
+            return
+
+        self.runtime_effects = {**self.runtime_effects, "openclaw": applied}
+        self.agent_metadata["runtime_effects"] = self.runtime_effects
+        self._record_event("runtime_effects_applied", effects=applied)
 
     def _prepare_temp_config(self) -> None:
         base_path = self._resolve_base_config_path()
@@ -463,6 +499,9 @@ class OpenClawRuntime:
             args.extend(["--thinking", str(self.openclaw_config["thinking"])])
         if self.openclaw_config.get("timeout_sec"):
             args.extend(["--timeout", str(int(self.openclaw_config["timeout_sec"]))])
+        runtime_agent_args = self.openclaw_config.get("_runtime_agent_args", [])
+        if isinstance(runtime_agent_args, list):
+            args.extend(str(item) for item in runtime_agent_args if str(item).strip())
 
         self._record_event("run_started", agent_id=self.agent_id)
         try:

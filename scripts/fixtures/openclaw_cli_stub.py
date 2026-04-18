@@ -264,6 +264,10 @@ def handle_agent() -> None:
         {
             "ok": True,
             "output_text": final_output,
+            "received_prompt": prompt,
+            "runtime_patch_env": {
+                "AEL_RUNTIME_PATCH_MARK": os.environ.get("AEL_RUNTIME_PATCH_MARK"),
+            },
             "trace": trace,
             "usage": {
                 "total_tokens": max(32, len(prompt) + len(final_output)),

@@ -25,6 +25,15 @@ def main() -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     relayer = manifest.get("relayer", {})
     execution_order = relayer.get("plan", {}).get("execution_order", [])
+    runtime_effects = {}
+    runtime_effects_json = os.environ.get("AEL_STUB_RUNTIME_EFFECTS_JSON", "").strip()
+    if runtime_effects_json:
+        try:
+            parsed = json.loads(runtime_effects_json)
+            if isinstance(parsed, dict):
+                runtime_effects = parsed
+        except Exception:
+            runtime_effects = {}
 
     payload = {
         "ok": True,
@@ -38,6 +47,7 @@ def main() -> None:
         "env_manifest": os.environ.get("AEL_RELAYER_MANIFEST"),
         "env_runtime_label": os.environ.get("AEL_RELAYER_RUNTIME_LABEL"),
         "env_run_id": os.environ.get("AEL_RELAYER_RUN_ID"),
+        "runtime_effects": runtime_effects,
     }
     sidecar_path = manifest_path.parent / "stub_runtime_applied.json"
     sidecar_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

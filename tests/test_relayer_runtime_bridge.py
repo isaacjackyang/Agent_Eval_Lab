@@ -30,6 +30,13 @@ class RelayerRuntimeBridgeTests(unittest.TestCase):
                         "timeout_sec": 30,
                         "extra_env": {
                             "AEL_STUB_FLAG": "1",
+                            "AEL_STUB_RUNTIME_EFFECTS_JSON": json.dumps(
+                                {
+                                    "prompt": {"task_suffix": "runtime-suffix"},
+                                    "openclaw": {"env": {"AEL_RUNTIME_PATCH_MARK": "bridge"}},
+                                },
+                                ensure_ascii=False,
+                            ),
                         },
                     }
                 },
@@ -57,6 +64,9 @@ class RelayerRuntimeBridgeTests(unittest.TestCase):
             self.assertEqual(result["result"]["config_id"], "bridge_test_config")
             self.assertEqual(result["result"]["env_manifest"], result["manifest_path"])
             self.assertTrue(Path(result["result"]["sidecar_path"]).exists())
+            self.assertEqual(result["runtime_effects"]["prompt"]["task_suffix"], "runtime-suffix")
+            self.assertEqual(result["runtime_effects"]["openclaw"]["env"]["AEL_RUNTIME_PATCH_MARK"], "bridge")
+            self.assertIn("prompt.task_suffix", result["runtime_effect_summary"])
 
             manifest = json.loads(Path(result["manifest_path"]).read_text(encoding="utf-8"))
             self.assertEqual(manifest["runtime_config"], {})

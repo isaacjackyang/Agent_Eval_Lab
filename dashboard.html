@@ -54,7 +54,11 @@
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
+    flex-wrap:wrap;
     gap:16px;
+  }
+  header > .top-meta-pills{
+    margin-left:auto;
   }
   h1,h2,h3,p{margin:0}
   header h1{
@@ -87,11 +91,116 @@
     flex-direction:column;
     gap:4px;
   }
+  .top-meta-pills{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:8px;
+  }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:32px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.05);
+    color:#e8f1ff;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .status-pill.ok{
+    border-color:rgba(105,226,139,.35);
+    background:rgba(105,226,139,.12);
+    color:#c6ffd4;
+  }
+  .status-pill.warn{
+    border-color:rgba(255,207,102,.4);
+    background:rgba(255,207,102,.12);
+    color:#ffe4a8;
+  }
+  .status-pill.bad{
+    border-color:rgba(255,133,133,.38);
+    background:rgba(255,133,133,.12);
+    color:#ffd0d0;
+  }
   .shell{
     padding:18px;
     display:grid;
     gap:4px;
     grid-template-columns:repeat(12, minmax(0, 1fr));
+  }
+  .command-deck{
+    display:grid;
+    grid-template-columns:minmax(240px, 1.1fr) minmax(320px, 1.4fr) auto;
+    gap:12px;
+    align-items:center;
+    padding:16px 18px;
+    margin-bottom:4px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.08);
+    background:
+      radial-gradient(circle at left center, rgba(120,220,202,.16), transparent 34%),
+      linear-gradient(135deg, rgba(18,32,58,.94), rgba(8,18,32,.94));
+    box-shadow:var(--shadow);
+  }
+  .deck-copy{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .deck-eyebrow{
+    color:var(--accent);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .deck-copy strong{
+    font-size:18px;
+    color:#f2f7ff;
+  }
+  .deck-actions,
+  .deck-tools{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+  .deck-tools{
+    justify-content:flex-end;
+  }
+  .nav-chip,
+  .filter-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:36px;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.04);
+    color:#e9f2ff;
+    font-size:12px;
+    letter-spacing:.03em;
+  }
+  .nav-chip.is-active,
+  .filter-chip.is-active{
+    border-color:rgba(120,220,202,.45);
+    background:linear-gradient(135deg, rgba(120,220,202,.18), rgba(99,166,255,.12));
+    box-shadow:inset 0 0 0 1px rgba(120,220,202,.15);
+  }
+  .filter-chip-count{
+    min-width:20px;
+    padding:2px 7px;
+    border-radius:999px;
+    background:rgba(0,0,0,.24);
+    color:var(--muted);
+    font-size:11px;
+    text-align:center;
   }
   .panel{
     background:var(--panel);
@@ -285,6 +394,20 @@
   .t-tool_result{color:#9ef0b0}
   .t-verifier{color:#ffd987}
   .t-system{color:#c8b6ff}
+  .stream-meta{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .stream-filter-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:12px;
+  }
   .stat-grid{
     display:grid;
     grid-template-columns:repeat(2, minmax(0, 1fr));
@@ -533,6 +656,8 @@
     .cards{grid-template-columns:repeat(3, minmax(0, 1fr))}
     .control-grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
     .mode-summary-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+    .command-deck{grid-template-columns:1fr}
+    .deck-tools{justify-content:flex-start}
     .span-8,.span-6,.span-4,.span-3{grid-column:span 12}
   }
   @media (max-width: 700px){
@@ -543,6 +668,10 @@
     .band-step{min-width:0;width:fit-content}
     .toolbar-field,
     .toolbar-check{width:100%}
+    .top-meta{text-align:left}
+    .top-meta-pills{justify-content:flex-start}
+    header > .top-meta-pills{margin-left:0}
+    .command-deck{padding:14px}
   }
 </style>
 </head>
@@ -556,10 +685,34 @@
     <div id="lastUpdated"><span class="bi-stack"><span class="bi-line">最後更新：-</span><span class="bi-line">Last update: -</span></span></div>
     <div id="dataState"><span class="bi-stack"><span class="bi-line">資料來源：runs/* + reports/*</span><span class="bi-line">Data source: runs/* + reports/*</span></span></div>
   </div>
+  <div class="top-meta-pills">
+    <div class="status-pill warn" id="freshnessPill">Awaiting refresh</div>
+    <div class="status-pill" id="streamSummaryPill">Stream idle</div>
+  </div>
 </header>
 
 <main class="shell">
-  <section class="dashboard-band band-overview span-12">
+  <section class="command-deck span-12" id="commandDeck">
+    <div class="deck-copy">
+      <div class="deck-eyebrow">Dashboard Flow</div>
+      <strong>Keep navigation, working context, and refresh health visible.</strong>
+      <p class="small">Section jumps, saved UI preferences, and stream filters now stay close to the top of the page.</p>
+    </div>
+    <div class="deck-actions">
+      <button type="button" class="nav-chip is-active" data-jump-target="overviewBand">Overview</button>
+      <button type="button" class="nav-chip" data-jump-target="otherBand">Other Views</button>
+      <button type="button" class="nav-chip" data-jump-target="streamPanel">Live Stream</button>
+      <button type="button" class="nav-chip" data-jump-target="controlBand">Control</button>
+      <button type="button" class="nav-chip" data-jump-target="diagnosticsBand">Diagnostics</button>
+    </div>
+    <div class="deck-tools">
+      <button type="button" class="secondary" id="expandAllBands">Expand all</button>
+      <button type="button" class="secondary" id="collapseAllBands">Collapse all</button>
+      <button type="button" class="danger" id="resetUiPrefs">Reset saved UI</button>
+    </div>
+  </section>
+
+  <section class="dashboard-band band-overview span-12" id="overviewBand" data-nav-label="Overview">
     <div class="band-header">
       <div class="band-step">01</div>
       <div class="band-headline">
@@ -648,7 +801,7 @@
     </div>
   </section>
 
-  <section class="dashboard-band band-other span-12">
+  <section class="dashboard-band band-other span-12" id="otherBand" data-nav-label="Other Views">
     <div class="band-header">
       <div class="band-step">02</div>
       <div class="band-headline">
@@ -752,12 +905,23 @@
       <label class="toolbar-field" for="keyword"><span class="small"><span class="bi-stack"><span class="bi-line">關鍵字過濾</span><span class="bi-line">Keyword filter</span></span></span><input id="keyword" placeholder="tool_call / error / config" /></label>
       <button id="refreshNow"><span class="bi-stack"><span class="bi-line">立即刷新</span><span class="bi-line">Refresh now</span></span></button>
     </div>
+    <div class="stream-meta">
+      <div class="small" id="streamSummaryText"><span class="bi-stack"><span class="bi-line">等待串流事件</span><span class="bi-line">Waiting for stream events</span></span></div>
+      <button id="clearStreamFilters" class="secondary">Clear stream filters</button>
+    </div>
+    <div class="stream-filter-group" id="streamFilterGroup">
+      <button type="button" class="filter-chip is-active" data-stream-type="assistant"><span>Assistant</span><span class="filter-chip-count" data-stream-count-for="assistant">0</span></button>
+      <button type="button" class="filter-chip is-active" data-stream-type="tool_call"><span>Tool Call</span><span class="filter-chip-count" data-stream-count-for="tool_call">0</span></button>
+      <button type="button" class="filter-chip is-active" data-stream-type="tool_result"><span>Tool Result</span><span class="filter-chip-count" data-stream-count-for="tool_result">0</span></button>
+      <button type="button" class="filter-chip is-active" data-stream-type="verifier"><span>Verifier</span><span class="filter-chip-count" data-stream-count-for="verifier">0</span></button>
+      <button type="button" class="filter-chip is-active" data-stream-type="system"><span>System</span><span class="filter-chip-count" data-stream-count-for="system">0</span></button>
+    </div>
     <div class="stream" id="streamBox"><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></div>
   </section>
     </div>
   </section>
 
-  <section class="dashboard-band band-control span-12">
+  <section class="dashboard-band band-control span-12" id="controlBand" data-nav-label="Control">
     <div class="band-header">
       <div class="band-step">03</div>
       <div class="band-headline">
@@ -882,7 +1046,7 @@
   </section>
     </div>
   </section>
-  <section class="dashboard-band band-diagnostics span-12">
+  <section class="dashboard-band band-diagnostics span-12" id="diagnosticsBand" data-nav-label="Diagnostics">
     <div class="band-header">
       <div class="band-step">04</div>
       <div class="band-headline">
@@ -974,6 +1138,38 @@ let samplingParamRenderSignature = '';
 let samplingSelectionOverride = null;
 let samplingSelectionContextKey = '';
 const BAND_COLLAPSE_KEY = 'ael_dashboard_collapsed_bands_v1';
+const UI_PREFS_KEY = 'ael_dashboard_ui_prefs_v1';
+const STREAM_TYPES = ['assistant', 'tool_call', 'tool_result', 'verifier', 'system'];
+const PERSISTED_INPUT_IDS = new Set([
+  'singleSeed',
+  'suiteRuns',
+  'suiteSeedStart',
+  'controlConfig',
+  'taskType',
+  'evolutionMode',
+  'relayerScanMaxCandidates',
+  'relayerScanMaxWorkers',
+  'relayerScanOutputDir',
+  'relayerScanResume',
+  'relayerScanSkipCompleted',
+  'heatMapStartLayerMin',
+  'heatMapEndLayerMax',
+  'heatMapMinBlockLen',
+  'heatMapMaxBlockLen',
+  'heatMapRepeatCount',
+  'heatMapProbeATaskType',
+  'heatMapProbeASeeds',
+  'heatMapProbeBTaskType',
+  'heatMapProbeBSeeds',
+  'heatMapTopK',
+  'heatMapVerifyRuns',
+  'heatMapVerifyEnabled'
+]);
+let streamTypeFilters = new Set(STREAM_TYPES);
+let latestStreamLines = [];
+let lastSuccessfulRefreshMs = null;
+let dataConnectionState = 'idle';
+let activeJumpTarget = 'overviewBand';
 
 async function fetchJSON(url){
   const res = await fetch(url + '?t=' + Date.now());
@@ -1018,6 +1214,235 @@ function loadCollapsedBands(){
 
 function saveCollapsedBands(state){
   localStorage.setItem(BAND_COLLAPSE_KEY, JSON.stringify(state || {}));
+}
+
+function loadUIPreferences(){
+  try{
+    return JSON.parse(localStorage.getItem(UI_PREFS_KEY) || '{}');
+  }catch{
+    return {};
+  }
+}
+
+function saveUIPreferences(preferences){
+  localStorage.setItem(UI_PREFS_KEY, JSON.stringify(preferences || {}));
+}
+
+function updateUIPreferences(patch){
+  const next = { ...loadUIPreferences(), ...(patch || {}) };
+  saveUIPreferences(next);
+  return next;
+}
+
+function readUIPreference(key, fallback=null){
+  const preferences = loadUIPreferences();
+  return preferences[key] ?? fallback;
+}
+
+function hasSelectableOption(select, value){
+  if(!select || value === null || value === undefined || value === ''){
+    return false;
+  }
+  return [...select.options].some(option => option.value === value);
+}
+
+function restorePersistedFieldValue(id, fallback=null){
+  const element = document.getElementById(id);
+  if(!element){
+    return;
+  }
+  const value = readUIPreference(id, fallback);
+  if(value === null || value === undefined){
+    return;
+  }
+  if(element.type === 'checkbox'){
+    element.checked = Boolean(value);
+    return;
+  }
+  if(element.tagName === 'SELECT' && !hasSelectableOption(element, value)){
+    return;
+  }
+  element.value = String(value);
+}
+
+function restorePersistedFieldValues(ids){
+  (ids || []).forEach(id => restorePersistedFieldValue(id));
+}
+
+function persistFieldValue(id){
+  const element = document.getElementById(id);
+  if(!element){
+    return;
+  }
+  const value = element.type === 'checkbox' ? Boolean(element.checked) : element.value;
+  updateUIPreferences({ [id]: value });
+}
+
+function setStatusPill(id, text, toneClass=''){
+  const element = document.getElementById(id);
+  if(!element){
+    return;
+  }
+  element.textContent = text;
+  element.className = `status-pill ${toneClass}`.trim();
+}
+
+function syncFreshnessPill(){
+  if(dataConnectionState === 'error'){
+    setStatusPill('freshnessPill', 'Offline', 'bad');
+    return;
+  }
+  if(!lastSuccessfulRefreshMs){
+    setStatusPill('freshnessPill', 'Awaiting refresh', 'warn');
+    return;
+  }
+  const ageSeconds = Math.max(0, Math.round((Date.now() - lastSuccessfulRefreshMs) / 1000));
+  if(ageSeconds <= 5){
+    setStatusPill('freshnessPill', `Fresh ${ageSeconds}s`, 'ok');
+    return;
+  }
+  if(ageSeconds <= 12){
+    setStatusPill('freshnessPill', `Sync ${ageSeconds}s`, 'warn');
+    return;
+  }
+  setStatusPill('freshnessPill', `Stale ${ageSeconds}s`, 'bad');
+}
+
+function setAllBandsCollapsed(collapsed){
+  const state = {};
+  document.querySelectorAll('.dashboard-band').forEach((band, index) => {
+    const key = band.dataset.bandId || `band-${index + 1}`;
+    band.dataset.bandId = key;
+    state[key] = Boolean(collapsed);
+  });
+  saveCollapsedBands(state);
+  applyBandCollapseState();
+}
+
+function scrollToTarget(targetId){
+  const target = document.getElementById(targetId);
+  if(target){
+    target.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+}
+
+function setActiveJumpTarget(targetId){
+  activeJumpTarget = targetId || activeJumpTarget;
+  document.querySelectorAll('[data-jump-target]').forEach(button => {
+    button.classList.toggle('is-active', button.dataset.jumpTarget === activeJumpTarget);
+  });
+}
+
+function setupCommandDeck(){
+  document.querySelectorAll('[data-jump-target]').forEach(button => {
+    button.addEventListener('click', () => {
+      const targetId = button.dataset.jumpTarget;
+      setActiveJumpTarget(targetId);
+      scrollToTarget(targetId);
+    });
+  });
+
+  document.getElementById('expandAllBands')?.addEventListener('click', () => setAllBandsCollapsed(false));
+  document.getElementById('collapseAllBands')?.addEventListener('click', () => setAllBandsCollapsed(true));
+  document.getElementById('resetUiPrefs')?.addEventListener('click', () => {
+    localStorage.removeItem(UI_PREFS_KEY);
+    location.reload();
+  });
+
+  if('IntersectionObserver' in window){
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if(visible?.target?.id){
+        setActiveJumpTarget(visible.target.id);
+      }
+    }, {
+      threshold:[0.2, 0.45, 0.7],
+      rootMargin:'-18% 0px -52% 0px'
+    });
+    ['overviewBand', 'otherBand', 'streamPanel', 'controlBand', 'diagnosticsBand'].forEach(id => {
+      const target = document.getElementById(id);
+      if(target){
+        observer.observe(target);
+      }
+    });
+  }
+}
+
+function syncStreamTypeChips(){
+  document.querySelectorAll('[data-stream-type]').forEach(button => {
+    button.classList.toggle('is-active', streamTypeFilters.has(button.dataset.streamType));
+  });
+}
+
+function loadStreamTypePreferences(){
+  const savedTypes = readUIPreference('streamTypes', STREAM_TYPES);
+  if(Array.isArray(savedTypes) && savedTypes.length){
+    streamTypeFilters = new Set(savedTypes.filter(type => STREAM_TYPES.includes(type)));
+  } else {
+    streamTypeFilters = new Set(STREAM_TYPES);
+  }
+  syncStreamTypeChips();
+}
+
+function toggleStreamType(type){
+  const next = new Set(streamTypeFilters);
+  if(next.has(type)){
+    next.delete(type);
+  } else {
+    next.add(type);
+  }
+  if(!next.size){
+    STREAM_TYPES.forEach(item => next.add(item));
+  }
+  streamTypeFilters = next;
+  updateUIPreferences({ streamTypes:[...streamTypeFilters] });
+  syncStreamTypeChips();
+  renderStream(latestStreamLines);
+}
+
+function clearStreamFilters(){
+  document.getElementById('keyword').value = '';
+  document.getElementById('onlyTools').checked = false;
+  streamTypeFilters = new Set(STREAM_TYPES);
+  updateUIPreferences({
+    keyword:'',
+    onlyTools:false,
+    streamTypes:[...streamTypeFilters]
+  });
+  syncStreamTypeChips();
+  renderStream(latestStreamLines);
+}
+
+function updateStreamSummary(totalRows, visibleRows, typeCounts, latestSeq=null){
+  const breakdown = STREAM_TYPES
+    .map(type => `${type.replace('_', ' ')}=${typeCounts[type] ?? 0}`)
+    .join(' | ');
+  setBiHTML(
+    'streamSummaryText',
+    `顯示 ${visibleRows}/${totalRows} 筆事件 | 最新 ${latestSeq || '-'} | ${breakdown}`,
+    `Showing ${visibleRows}/${totalRows} events | latest ${latestSeq || '-'} | ${breakdown}`
+  );
+  setStatusPill('streamSummaryPill', visibleRows ? `Stream ${visibleRows}/${totalRows}` : 'Stream idle', visibleRows ? 'ok' : 'warn');
+  STREAM_TYPES.forEach(type => {
+    const badge = document.querySelector(`[data-stream-count-for="${type}"]`);
+    if(badge){
+      badge.textContent = String(typeCounts[type] ?? 0);
+    }
+  });
+}
+
+function restoreInitialUIPreferences(){
+  autoScroll = readUIPreference('autoScroll', true) !== false;
+  restorePersistedFieldValues([
+    'keyword',
+    'onlyTools',
+    'singleSeed',
+    'suiteRuns',
+    'suiteSeedStart'
+  ]);
+  loadStreamTypePreferences();
 }
 
 function applyBandCollapseState(){
@@ -1122,7 +1547,7 @@ function evolutionModeCopy(value, fallbackLabel=null){
   return sameBi(value || '-');
 }
 
-function statusCopy(value){
+/* function statusCopy(value){
   const text = value === null || value === undefined || value === '' ? '-' : String(value);
   const lower = text.toLowerCase();
   if(text === '-') return sameBi('-');
@@ -1148,9 +1573,73 @@ function statusCopy(value){
   return { zh:text, en:text };
 }
 
-function boolCopy(value){
+*/
+
+/* function statusCopy(value){
+  const text = value === null || value === undefined || value === '' ? '-' : String(value);
+  const lower = text.toLowerCase();
+  if(text === '-') return sameBi('-');
+  if(lower === 'idle') return { zh:'閒置', en:'Idle' };
+  if(lower === 'completed') return { zh:'已完成', en:'Completed' };
+  if(lower === 'stopped') return { zh:'已停止', en:'Stopped' };
+  if(lower === 'rejected') return { zh:'已拒絕', en:'Rejected' };
+  if(lower === 'accepted') return { zh:'已採用', en:'Accepted' };
+  if(lower === 'launching') return { zh:'啟動中', en:'Launching' };
+  if(lower === 'running') return { zh:'執行中', en:'Running' };
+  if(lower === 'candidate') return { zh:'候選中', en:'Candidate' };
+  if(lower === 'passed') return { zh:'通過', en:'Passed' };
+  if(lower === 'failed') return { zh:'失敗', en:'Failed' };
+  if(lower === 'running_relayer_scan') return { zh:'執行中：Relayer 掃描', en:'Running: Relayer Scan' };
+  if(lower === 'running_nightly') return { zh:'執行中：Nightly 演化', en:'Running: Nightly Evolution' };
+  if(lower === 'stopped_by_user') return { zh:'使用者停止', en:'Stopped by user' };
+  if(lower.startsWith('exit ')) return { zh:`結束碼 ${text.slice(5)}`, en:text };
+  if(lower.startsWith('stopped (')) return { zh:`已停止 ${text.slice(8)}`, en:text };
+  if(lower.startsWith('running ')){
+    const kind = kindCopy(lower.slice(8).trim());
+    return { zh:`執行中：${kind.zh}`, en:`Running: ${kind.en}` };
+  }
+  return { zh:text, en:text };
+}
+
+*/
+
+function statusCopy(value){
+  const text = value === null || value === undefined || value === '' ? '-' : String(value);
+  const lower = text.toLowerCase();
+  if(text === '-') return sameBi('-');
+  if(lower === 'idle') return { zh:'Idle', en:'Idle' };
+  if(lower === 'completed') return { zh:'Completed', en:'Completed' };
+  if(lower === 'stopped') return { zh:'Stopped', en:'Stopped' };
+  if(lower === 'rejected') return { zh:'Rejected', en:'Rejected' };
+  if(lower === 'accepted') return { zh:'Accepted', en:'Accepted' };
+  if(lower === 'launching') return { zh:'Launching', en:'Launching' };
+  if(lower === 'running') return { zh:'Running', en:'Running' };
+  if(lower === 'candidate') return { zh:'Candidate', en:'Candidate' };
+  if(lower === 'passed') return { zh:'Passed', en:'Passed' };
+  if(lower === 'failed') return { zh:'Failed', en:'Failed' };
+  if(lower === 'running_relayer_scan') return { zh:'Running: Relayer Scan', en:'Running: Relayer Scan' };
+  if(lower === 'running_nightly') return { zh:'Running: Nightly Evolution', en:'Running: Nightly Evolution' };
+  if(lower === 'stopped_by_user') return { zh:'Stopped by user', en:'Stopped by user' };
+  if(lower.startsWith('exit ')) return { zh:`Exit ${text.slice(5)}`, en:text };
+  if(lower.startsWith('stopped (')) return { zh:`Stopped ${text.slice(8)}`, en:text };
+  if(lower.startsWith('running ')){
+    const kind = kindCopy(lower.slice(8).trim());
+    return { zh:`Running: ${kind.en}`, en:`Running: ${kind.en}` };
+  }
+  return { zh:text, en:text };
+}
+
+/* function boolCopy(value){
   if(value === true) return { zh:'是', en:'True' };
   if(value === false) return { zh:'否', en:'False' };
+  return sameBi(stringifyBool(value));
+}
+
+*/
+
+function boolCopy(value){
+  if(value === true) return { zh:'True', en:'True' };
+  if(value === false) return { zh:'False', en:'False' };
   return sameBi(stringifyBool(value));
 }
 
@@ -1382,7 +1871,7 @@ function getConfigSummaryForRun(control, run){
   )) || getSelectedConfigSummary(control);
 }
 
-function getHeatMapEstimateBreakdown(control, context){
+/* function getHeatMapEstimateBreakdown(control, context){
   const run = context?.current || context?.lastResult || null;
   const configSummary = getConfigSummaryForRun(control, run);
   const plan = run?.heat_map_plan || configSummary?.heat_map_plan || null;
@@ -1443,6 +1932,68 @@ function getHeatMapEstimateBreakdown(control, context){
     formulaEn,
     detailZh,
     detailEn
+  };
+}
+
+*/
+
+function getHeatMapEstimateBreakdown(control, context){
+  const run = context?.current || context?.lastResult || null;
+  const configSummary = getConfigSummaryForRun(control, run);
+  const plan = run?.heat_map_plan || configSummary?.heat_map_plan || null;
+  if(!plan){
+    return null;
+  }
+
+  const caseCount = finiteNumber(configSummary?.regression_case_count);
+  const cellCount = finiteNumber(plan.cell_count);
+  const probeEvalCount = finiteNumber(plan.probe_eval_count);
+  const topK = finiteNumber(getCommandArgValue(run?.command, '--heat-map-top-k')) ?? finiteNumber(plan.top_k);
+  if(caseCount === null || cellCount === null || probeEvalCount === null || topK === null){
+    return null;
+  }
+
+  const variantCount = cellCount + 1;
+  const verifySettings = configSummary?.heat_map_settings?.verify || {};
+  const verifyRuns = finiteNumber(getCommandArgValue(run?.command, '--heat-map-verify-runs')) ?? finiteNumber(verifySettings.candidate_runs_per_config);
+  const verifyTopK = finiteNumber(verifySettings.top_k) ?? topK;
+  const verifyDisabledByCommand = Array.isArray(run?.command) && run.command.includes('--disable-heat-map-verify');
+  const verifyEnabled = !verifyDisabledByCommand && verifySettings.enabled !== false;
+
+  const basePerVariant = probeEvalCount + caseCount;
+  const baseTotal = variantCount * basePerVariant;
+  const verifyTargetCount = verifyEnabled && verifyRuns !== null
+    ? Math.min(verifyTopK, topK) + 1
+    : 0;
+  const verifyPerTarget = verifyEnabled && verifyRuns !== null
+    ? verifyRuns + caseCount
+    : 0;
+  const verifyTotal = verifyEnabled && verifyRuns !== null
+    ? verifyTargetCount * verifyPerTarget
+    : 0;
+  const computedTotal = baseTotal + verifyTotal;
+  const actualTotal = finiteNumber(firstPresent(context?.progressSnapshot?.target, run?.estimated_total_evals));
+  const displayTotal = actualTotal ?? computedTotal;
+  const formula = verifyEnabled && verifyRuns !== null
+    ? `${formatCount(displayTotal)} = ${formatCount(variantCount)} x (${formatCount(probeEvalCount)} + ${formatCount(caseCount)}) + ${formatCount(verifyTargetCount)} x (${formatCount(verifyRuns)} + ${formatCount(caseCount)})`
+    : `${formatCount(displayTotal)} = ${formatCount(variantCount)} x (${formatCount(probeEvalCount)} + ${formatCount(caseCount)})`;
+  const detail = verifyEnabled && verifyRuns !== null
+    ? `variants=${formatCount(variantCount)} (${formatCount(cellCount)} cells + baseline) | probes=${formatCount(probeEvalCount)} | regression=${formatCount(caseCount)} | verify=${formatCount(verifyTargetCount)} x (${formatCount(verifyRuns)} + ${formatCount(caseCount)})`
+    : `variants=${formatCount(variantCount)} (${formatCount(cellCount)} cells + baseline) | probes=${formatCount(probeEvalCount)} | regression=${formatCount(caseCount)} | verify=off`;
+
+  return {
+    displayTotal,
+    cellCount,
+    variantCount,
+    probeEvalCount,
+    caseCount,
+    verifyEnabled,
+    verifyRuns,
+    verifyTargetCount,
+    formulaZh: formula,
+    formulaEn: formula,
+    detailZh: detail,
+    detailEn: detail
   };
 }
 
@@ -1533,7 +2084,7 @@ function setPanelFocus(id, focused){
   }
 }
 
-function renderModeOverview(context){
+/* function renderModeOverview(context){
   const sourceLabels = {
     active: { zh:'來源: 目前執行', en:'Source: active run' },
     last_result: { zh:'來源: 最近結果', en:'Source: last result' },
@@ -1669,7 +2220,51 @@ function renderModeOverview(context){
   setBiHTML('overviewResultDetailText', `摘要: ${resultDetail}`, `Summary: ${resultDetail}`, 'small');
 }
 
-function applyDashboardMode(context){
+*/
+
+function renderModeOverview(context){
+  const sourceLabels = {
+    active: { zh:'Source: active run', en:'Source: active run' },
+    last_result: { zh:'Source: last result', en:'Source: last result' },
+    live_status: { zh:'Source: live status', en:'Source: live status' },
+    nightly_history: { zh:'Source: nightly history', en:'Source: nightly history' },
+    relayer_history: { zh:'Source: relayer history', en:'Source: relayer history' },
+    default: { zh:'Source: waiting for data', en:'Source: waiting for data' }
+  };
+  const sourceCopy = sourceLabels[context?.source] || sourceLabels.default;
+  const modeTitle = kindCopy(context?.kind, context?.evolutionMode);
+  const progressSnapshot = context?.progressSnapshot || null;
+  const elapsedText = formatDurationCompact(progressSnapshot?.elapsedSec);
+  const etaText = getProgressEtaText(progressSnapshot);
+  const progressText = context?.progressText || getProgressSummaryText(progressSnapshot, '-');
+  const settingsSummary = context?.current?.config_name || context?.lastResult?.config_name || context?.status?.config_id || '-';
+  const settingsDetail = [
+    `mode=${context?.view || context?.kind || 'default'}`,
+    `evolution=${context?.evolutionMode || '-'}`,
+    `task_type=${firstPresent(context?.current?.task_type, context?.lastResult?.task_type, context?.status?.task_type, '-')}`,
+    `benchmark=${firstPresent(context?.status?.task_id, context?.lastResult?.task_id, '-')}`
+  ].join(' | ');
+  const resultLabel = statusCopy(firstPresent(context?.status?.status, context?.lastResult?.status, context?.kind || 'idle'));
+  const resultTone = tone(firstPresent(context?.status?.status, context?.lastResult?.status, ''));
+  const resultDetail = [
+    `score=${formatMetric(firstPresent(context?.status?.score, context?.lastResult?.score))}`,
+    `fitness=${formatMetric(firstPresent(context?.status?.fitness, context?.lastResult?.fitness))}`,
+    `elapsed=${elapsedText}`,
+    `eta=${etaText}`
+  ].join(' | ');
+
+  setModeBadge(modeTitle.en || modeTitle.zh || 'Idle', modeTitle.en || modeTitle.zh || 'Idle', context?.active ? 'accent-2' : '');
+  setBiHTML('overviewModeTitleText', modeTitle.zh, modeTitle.en);
+  setBiHTML('overviewModeSourceText', sourceCopy.zh, sourceCopy.en, 'small');
+  setBiHTML('overviewSettingsText', settingsSummary, settingsSummary);
+  setBiHTML('overviewSettingsDetailText', `Details: ${settingsDetail}`, `Details: ${settingsDetail}`, 'small');
+  setBiHTML('overviewProgressText', progressText, progressText);
+  setBiHTML('overviewProgressDetailText', `Tracking: elapsed=${elapsedText} | eta=${etaText}`, `Tracking: elapsed=${elapsedText} | eta=${etaText}`, 'small');
+  setBiHTML('overviewResultText', resultLabel.zh, resultLabel.en, resultTone || '');
+  setBiHTML('overviewResultDetailText', `Summary: ${resultDetail}`, `Summary: ${resultDetail}`, 'small');
+}
+
+/* function applyDashboardMode(context){
   const otherPanels = ['archPanel', 'testPanel', 'baselinePanel', 'configPanel', 'parameterPanel', 'scorePanel', 'rollbackPanel', 'nightlyPanel', 'heatMapPanel', 'relayerScanPanel', 'streamPanel'];
   const diagnosticsPanels = ['diagnosticsSummaryPanel', 'lineagePanel', 'failurePanel', 'tracePanel'];
   otherPanels.forEach(id => {
@@ -1759,6 +2354,55 @@ function applyDashboardMode(context){
       zh:'Relayer 診斷會集中顯示 verification、artifact、candidate lineage、failure 與 trace，方便回頭查 synthetic ranking 跟真實驗證是否一致。',
       en:'Relayer diagnostics focus on verification, artifacts, candidate lineage, failure, and trace so you can compare synthetic ranking against real verification.'
     };
+  }
+
+  setBiHTML('overviewBandCopy', overviewCopy.zh, overviewCopy.en, 'band-copy');
+  setBiHTML('otherBandCopy', otherCopy.zh, otherCopy.en, 'band-copy');
+  setBiHTML('diagnosticsBandCopy', diagnosticsCopy.zh, diagnosticsCopy.en, 'band-copy');
+}
+
+*/
+
+function applyDashboardMode(context){
+  const otherPanels = ['archPanel', 'testPanel', 'baselinePanel', 'configPanel', 'parameterPanel', 'scorePanel', 'rollbackPanel', 'nightlyPanel', 'heatMapPanel', 'relayerScanPanel', 'streamPanel'];
+  const diagnosticsPanels = ['diagnosticsSummaryPanel', 'lineagePanel', 'failurePanel', 'tracePanel'];
+
+  otherPanels.forEach(id => {
+    setPanelVisibility(id, true);
+    setPanelFocus(id, false);
+  });
+  diagnosticsPanels.forEach(id => {
+    setPanelVisibility(id, true);
+    setPanelFocus(id, false);
+  });
+
+  const overviewCopy = {
+    zh:'Review the current run, progress, and recent result before drilling into details.',
+    en:'Review the current run, progress, and recent result before drilling into details.'
+  };
+  const otherCopy = {
+    zh:'History, score movement, heat-map output, and stream diagnostics stay grouped here.',
+    en:'History, score movement, heat-map output, and stream diagnostics stay grouped here.'
+  };
+  const diagnosticsCopy = {
+    zh:'Verification, lineage, failures, and replay data remain together for faster debugging.',
+    en:'Verification, lineage, failures, and replay data remain together for faster debugging.'
+  };
+
+  if(context?.view === 'nightly_heat_map'){
+    setPanelFocus('heatMapPanel', true);
+    setPanelFocus('nightlyPanel', true);
+    setPanelFocus('diagnosticsSummaryPanel', true);
+  } else if(context?.view === 'relayer_scan'){
+    setPanelFocus('relayerScanPanel', true);
+    setPanelFocus('diagnosticsSummaryPanel', true);
+    setPanelFocus('tracePanel', true);
+  } else if(context?.view === 'suite'){
+    setPanelFocus('scorePanel', true);
+    setPanelFocus('streamPanel', true);
+  } else if(context?.view === 'single'){
+    setPanelFocus('streamPanel', true);
+    setPanelFocus('tracePanel', true);
   }
 
   setBiHTML('overviewBandCopy', overviewCopy.zh, overviewCopy.en, 'band-copy');
@@ -1964,7 +2608,7 @@ function drawLineChart(canvas, items){
   ctx.fillRect(padL + 110, 8, 12, 3);
 }
 
-function renderBaseline(hist){
+/* function renderBaseline(hist){
   const items = hist?.history || [];
   const latest = items[items.length - 1];
   if(latest){
@@ -2157,14 +2801,27 @@ function renderStream(lines){
   const box = document.getElementById('streamBox');
   const keyword = document.getElementById('keyword').value.trim().toLowerCase();
   const onlyTools = document.getElementById('onlyTools').checked;
+  const selectedTypes = streamTypeFilters.size ? streamTypeFilters : new Set(STREAM_TYPES);
 
-  const rows = lines
+  const parsedRows = lines
     .map(line => {
       try { return JSON.parse(line); } catch { return null; }
     })
-    .filter(Boolean)
+    .filter(Boolean);
+
+  const typeCounts = Object.fromEntries(STREAM_TYPES.map(type => [type, 0]));
+  parsedRows.forEach(item => {
+    const normalizedType = STREAM_TYPES.includes(item.type) ? item.type : 'system';
+    typeCounts[normalizedType] = (typeCounts[normalizedType] || 0) + 1;
+  });
+
+  const rows = parsedRows
     .filter(item => !onlyTools || ['tool_call','tool_result'].includes(item.type))
+    .filter(item => selectedTypes.has(STREAM_TYPES.includes(item.type) ? item.type : 'system'))
     .filter(item => !keyword || JSON.stringify(item).toLowerCase().includes(keyword));
+
+  const latestSeq = rows.length ? (rows[rows.length - 1]?.event_seq ?? '-') : (parsedRows[parsedRows.length - 1]?.event_seq ?? '-');
+  updateStreamSummary(parsedRows.length, rows.length, typeCounts, latestSeq);
 
   if(!rows.length){
     box.innerHTML = biHTML('尚無符合條件的資料', 'No matching events');
@@ -2217,7 +2874,156 @@ function formatControlCommand(command){
   return '-';
 }
 
-function renderDiagnostics(diagnostics, context, parameterHistory){
+*/
+
+function renderBaseline(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    const baselineStatus = statusCopy(latest.status || '-');
+    setText('baselineConfigText', latest.config_id || '-');
+    setText('baselineFitnessText', latest.fitness ?? '-', 'accent');
+    setBiHTML('baselineStatusText', baselineStatus.zh, baselineStatus.en, tone(latest.status));
+    setText('baselineTimeText', latest.ts || '-');
+  }
+  renderList(
+    'baselineList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.config_id || '-'} | ${item.status || '-'} | fitness=${item.fitness ?? '-'}`,
+    { zh:'No baseline history yet', en:'No baseline history yet' }
+  );
+}
+
+function renderRollback(hist){
+  const items = hist?.history || [];
+  renderList(
+    'rollbackList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.reason || '-'} | ${stringifyBool(item.success)} | baseline=${stringifyBool(item.baseline_restored)}`,
+    { zh:'No rollback events yet', en:'No rollback events yet' }
+  );
+}
+
+function renderNightly(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    const statusLabel = statusCopy(latest.status || '-');
+    setBiHTML('nightlyStatusText', statusLabel.zh, statusLabel.en, tone(latest.status));
+    setBiHTML('nightlyFitnessText', `Fitness: ${latest.fitness ?? '-'}`, `Fitness: ${latest.fitness ?? '-'}`);
+    setText('nightlySuiteText', latest.suite_id || '-');
+    setBiHTML(
+      'nightlyRegressionText',
+      `Regression: ${latest.regression_pass_rate ?? '-'} | Stability: ${latest.stability_score ?? '-'}`,
+      `Regression: ${latest.regression_pass_rate ?? '-'} | Stability: ${latest.stability_score ?? '-'}`
+    );
+  }
+  renderList(
+    'nightlyList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.evolution_mode || '-'} | ${item.status || '-'} | fitness=${item.fitness ?? '-'} | C=${item.suite_score_c ?? '-'} | B=${item.suite_score_b ?? '-'} | reasons=${(item.gate_reasons || []).join(',') || 'none'}`,
+    { zh:'No nightly history yet', en:'No nightly history yet' }
+  );
+}
+
+function renderHeatMap(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    setText('heatMapSuiteText', latest.suite_id || '-');
+    setBiHTML(
+      'heatMapAxesText',
+      `Axes: ${latest.y_label || latest.y_axis || '-'} x ${latest.x_label || latest.x_axis || '-'}`,
+      `Axes: ${latest.y_label || latest.y_axis || '-'} x ${latest.x_label || latest.x_axis || '-'}`
+    );
+    setText('heatMapBestText', latest.best_cell?.config_id || latest.selected_config_id || '-', 'accent');
+    setBiHTML(
+      'heatMapDeltaText',
+      `Best delta score: ${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | Improved cells: ${latest.improved_cell_count ?? '-'} | verify=${latest.verification?.winner?.config_id || '-'}`,
+      `Best delta score: ${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | Improved cells: ${latest.improved_cell_count ?? '-'} | verify=${latest.verification?.winner?.config_id || '-'}`
+    );
+  }
+  renderList(
+    'heatMapList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.suite_id || '-'} | axes=${item.y_axis || '-'} x ${item.x_axis || '-'} | best=${item.best_cell?.config_id || item.selected_config_id || '-'} | dC=${item.best_delta_suite_score ?? item.best_cell?.delta_suite_score ?? '-'} | verify=${item.verification?.winner?.config_id || '-'}`,
+    { zh:'No heat-map history yet', en:'No heat-map history yet' }
+  );
+}
+
+function renderConfigHistory(hist){
+  const items = hist?.history || [];
+  renderList(
+    'configList',
+    items.slice(-8).reverse(),
+    item => `${item.ts || '-'} | ${item.event || '-'} | ${item.config_id || '-'} | ${item.mutation_profile || '-'} | ${item.fitness ?? '-'}`,
+    { zh:'No config lifecycle history yet', en:'No config lifecycle history yet' }
+  );
+}
+
+function renderParameterHistory(hist){
+  const items = hist?.history || [];
+  renderList(
+    'parameterList',
+    items.slice(-8).reverse(),
+    item => `${item.ts || '-'} | round=${item.round_index ?? '-'} | ${item.parameter_name || item.mutation_profile || '-'} | ${item.parameter_before ?? '-'} -> ${item.parameter_after ?? '-'} | fitness=${item.fitness ?? '-'} | improved=${stringifyBool(item.improved)}`,
+    { zh:'No parameter history yet', en:'No parameter history yet' }
+  );
+}
+
+function renderRelayerScanHistory(hist){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  if(latest){
+    const verifiedWinner = latest.verified_winner_config_id || '-';
+    const baselineStatus = latest.baseline_status || 'synthetic_only';
+    setText('relayerScanRunText', latest.run_id || '-', 'accent');
+    setBiHTML(
+      'relayerScanBestText',
+      `Best candidate: ${latest.best_config_id || '-'} | verified winner: ${verifiedWinner} | baseline: ${baselineStatus}`,
+      `Best candidate: ${latest.best_config_id || '-'} | verified winner: ${verifiedWinner} | baseline: ${baselineStatus}`
+    );
+    const noteText = latest.notes || `synthetic=${latest.best_config_id || '-'} | verify=${verifiedWinner}`;
+    setBiHTML(
+      'relayerScanNoteText',
+      `Notes: ${noteText}`,
+      `Notes: ${noteText}`,
+      latest.verified_winner_config_id ? 'accent' : 'warn'
+    );
+  } else {
+    setText('relayerScanRunText', '-');
+    setBiHTML('relayerScanBestText', 'Best candidate: -', 'Best candidate: -');
+    setBiHTML('relayerScanNoteText', 'Notes: -', 'Notes: -');
+  }
+  renderList(
+    'relayerScanList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.run_id || '-'} | best=${item.best_config_id || '-'} | dC=${item.best_delta_suite_score ?? '-'} | synthetic`,
+    { zh:'No relayer scan history yet', en:'No relayer scan history yet' }
+  );
+}
+
+function renderDiagnosticsLegacy(diagnostics){
+  const relayer = diagnostics?.latest_relayer_scan || null;
+  if(relayer){
+    const verification = relayer.verification || {};
+    const baselineDecision = relayer.baseline_decision || {};
+    setText('relayerVerifyStatusText', baselineDecision.status || relayer.resume_phase || '-', baselineDecision.promoted ? 'ok' : 'warn');
+    setBiHTML(
+      'relayerVerifyWinnerText',
+      `winner=${verification.winner?.config_id || baselineDecision.winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || '-'}`,
+      `winner=${verification.winner?.config_id || baselineDecision.winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || '-'}`
+    );
+    setText('relayerVerifyPathText', relayer.output_dir || '-', 'accent-2');
+    setBiHTML(
+      'relayerCellsText',
+      `cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`,
+      `cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`
+    );
+  }
+}
+
+/* function renderDiagnostics(diagnostics, context, parameterHistory){
   const latestParameter = latestHistoryItem(parameterHistory);
   const latestNightly = context?.latestNightly || null;
   const latestHeatMap = context?.latestHeatMap || null;
@@ -2435,6 +3241,130 @@ function renderDiagnostics(diagnostics, context, parameterHistory){
   );
 }
 
+*/
+
+function renderDiagnostics(diagnostics, context, parameterHistory){
+  const latestParameter = latestHistoryItem(parameterHistory);
+  const latestRelayerHistory = context?.latestRelayer || null;
+  const relayer = diagnostics?.latest_relayer_scan || latestRelayerHistory || null;
+  const status = context?.status || {};
+  const current = context?.current || null;
+  const activeStatus = firstPresent(status?.status, context?.active ? 'running' : null, '-');
+  const activeProgress = context?.progressText || '-';
+
+  let title = { zh:'Mode Diagnostics Summary', en:'Mode Diagnostics Summary' };
+  let primaryLabel = { zh:'Latest result', en:'Latest result' };
+  let secondaryLabel = { zh:'Key settings', en:'Key settings' };
+  let statusText = statusCopy('-');
+  let statusTone = '';
+  let detailPrimary = { zh:'Summary: -', en:'Summary: -' };
+  let detailSecondary = { zh:'Details: -', en:'Details: -' };
+  let pathText = '-';
+  let artifactItems = [];
+  let artifactFormatter = item => item;
+  let artifactEmpty = { zh:'No diagnostics summary yet', en:'No diagnostics summary yet' };
+
+  if(context?.view === 'relayer_scan'){
+    title = { zh:'Relayer Verification And Artifacts', en:'Relayer Verification And Artifacts' };
+    primaryLabel = { zh:'Verification result', en:'Verification result' };
+    secondaryLabel = { zh:'Artifact paths', en:'Artifact paths' };
+    if(context?.active){
+      statusText = statusCopy(activeStatus);
+      statusTone = tone(activeStatus) || 'warn';
+      detailPrimary = {
+        zh:`live progress=${activeProgress} | runtime=${firstPresent(current?.relayer_scan_runtime_mode, current?.relayer_mode, status?.relayer_mode, '-')}`,
+        en:`live progress=${activeProgress} | runtime=${firstPresent(current?.relayer_scan_runtime_mode, current?.relayer_mode, status?.relayer_mode, '-')}`
+      };
+      pathText = firstPresent(current?.output_dir, current?.resume_output_dir, '-');
+      detailSecondary = {
+        zh:`candidates=${firstPresent(current?.candidate_count, current?.max_candidates, '-')} | workers=${firstPresent(current?.max_workers, '-')} | seed_start=${firstPresent(current?.seed_start, '-')}`,
+        en:`candidates=${firstPresent(current?.candidate_count, current?.max_candidates, '-')} | workers=${firstPresent(current?.max_workers, '-')} | seed_start=${firstPresent(current?.seed_start, '-')}`
+      };
+      artifactItems = [
+        `status=${activeStatus}`,
+        `progress=${activeProgress}`,
+        `resume=${stringifyBool(firstPresent(current?.resume, false))}`,
+        `skip_completed=${stringifyBool(firstPresent(current?.skip_completed, false))}`
+      ];
+    } else if(relayer){
+      const verification = relayer.verification || {};
+      const baselineDecision = relayer.baseline_decision || {};
+      const rawStatus = baselineDecision.status || relayer.baseline_status || relayer.resume_phase || '-';
+      statusText = statusCopy(rawStatus);
+      statusTone = tone(rawStatus);
+      detailPrimary = {
+        zh:`winner=${verification.winner?.config_id || baselineDecision.winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || '-'}`,
+        en:`winner=${verification.winner?.config_id || baselineDecision.winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || '-'}`
+      };
+      pathText = relayer.output_dir || '-';
+      detailSecondary = {
+        zh:`cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`,
+        en:`cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`
+      };
+      artifactItems = relayer.top_candidates || [];
+      artifactFormatter = item => `${item.config_id || '-'} | score=${item.suite_score_c ?? '-'} | dC=${item.delta_suite_score ?? '-'} | layers=${item.x_value ?? '-'}-${item.y_value ?? '-'} | repeat=${item.repeat_count ?? '-'}`;
+      artifactEmpty = { zh:'No relayer artifact details yet', en:'No relayer artifact details yet' };
+    }
+  } else {
+    const rawStatus = firstPresent(status?.status, context?.lastResult?.status, '-');
+    statusText = statusCopy(rawStatus);
+    statusTone = tone(rawStatus);
+    detailPrimary = {
+      zh:`progress=${activeProgress} | parameter=${latestParameter?.parameter_name || latestParameter?.mutation_profile || '-'}`,
+      en:`progress=${activeProgress} | parameter=${latestParameter?.parameter_name || latestParameter?.mutation_profile || '-'}`
+    };
+    detailSecondary = {
+      zh:`config=${firstPresent(current?.config_name, context?.lastResult?.config_name, status?.config_id, '-')} | mode=${context?.view || context?.kind || '-'}`,
+      en:`config=${firstPresent(current?.config_name, context?.lastResult?.config_name, status?.config_id, '-')} | mode=${context?.view || context?.kind || '-'}`
+    };
+    artifactItems = (diagnostics?.trace?.entries || []).slice(0, 6).map(item => `${item.ts || '-'} | ${item.run_id || '-'} | ${(item.tool_sequence || []).join(' -> ') || '-'} | err=${item.last_error || '-'}`);
+    artifactEmpty = { zh:'No trace diagnostics yet', en:'No trace diagnostics yet' };
+  }
+
+  setBiHTML('diagnosticsSummaryTitle', title.zh, title.en, '');
+  setBiHTML('diagnosticsPrimaryLabel', primaryLabel.zh, primaryLabel.en, 'label');
+  setBiHTML('diagnosticsSecondaryLabel', secondaryLabel.zh, secondaryLabel.en, 'label');
+  setBiHTML('relayerVerifyStatusText', statusText.zh, statusText.en, statusTone || '');
+  setBiHTML('relayerVerifyWinnerText', detailPrimary.zh, detailPrimary.en, statusTone === 'ok' ? 'small accent' : 'small');
+  setText('relayerVerifyPathText', pathText, pathText !== '-' ? 'accent-2' : '');
+  setBiHTML('relayerCellsText', detailSecondary.zh, detailSecondary.en, 'small');
+
+  renderList(
+    'relayerArtifactList',
+    artifactItems,
+    item => artifactFormatter(item),
+    artifactEmpty
+  );
+
+  renderList(
+    'lineageList',
+    diagnostics?.lineage || [],
+    item => `${item.ts || '-'} | ${item.event || '-'} | ${item.reference_config_id || '-'} -> ${item.config_id || '-'} | ${item.mutation_target || item.mutation_profile || '-'} | fitness=${item.fitness ?? '-'} | baseline=${item.baseline_status || '-'}`,
+    { zh:'No lineage yet', en:'No lineage yet' }
+  );
+  renderList(
+    'failureClusterList',
+    diagnostics?.failure?.clusters || [],
+    item => `${item.cluster_id || '-'} | failed=${item.failed_count ?? 0}/${item.count ?? 0} | next=${(item.counterfactuals || [])[0] || '-'}`,
+    { zh:'No failure clusters yet', en:'No failure clusters yet' }
+  );
+
+  const liveTrace = diagnostics?.trace?.live || {};
+  const topNames = (liveTrace.top_names || []).map(item => `${item.name}:${item.count}`).join(', ') || '-';
+  setBiHTML(
+    'liveTraceText',
+    `events=${liveTrace.event_count ?? 0} | seq=${liveTrace.latest_event_seq ?? '-'} | replay=${liveTrace.latest_replay_key || '-'}`,
+    `events=${liveTrace.event_count ?? 0} | seq=${liveTrace.latest_event_seq ?? '-'} | replay=${liveTrace.latest_replay_key || '-'}`
+  );
+  setBiHTML('traceReplayHintText', `top=${topNames}`, `top=${topNames}`);
+  renderList(
+    'traceDiagList',
+    diagnostics?.trace?.entries || [],
+    item => `${item.ts || '-'} | ${item.run_id || '-'} | ${(item.tool_sequence || []).join(' -> ') || '-'} | relayer=${item.relayer_mode || '-'} | err=${item.last_error || '-'}`,
+    { zh:'No trace diagnostics yet', en:'No trace diagnostics yet' }
+  );
+}
+
 function syncControlConfigOptions(configs, defaultConfig){
   const select = document.getElementById('controlConfig');
   const signature = JSON.stringify([configs || [], defaultConfig || null]);
@@ -2443,6 +3373,7 @@ function syncControlConfigOptions(configs, defaultConfig){
   }
 
   const previousValue = select.value;
+  const savedValue = readUIPreference('controlConfig', null);
   select.innerHTML = '';
   (configs || []).forEach(item => {
     const option = document.createElement('option');
@@ -2454,10 +3385,13 @@ function syncControlConfigOptions(configs, defaultConfig){
 
   if(previousValue && [...select.options].some(option => option.value === previousValue)){
     select.value = previousValue;
+  } else if(savedValue && [...select.options].some(option => option.value === savedValue)){
+    select.value = savedValue;
   } else if(defaultConfig && [...select.options].some(option => option.value === defaultConfig)){
     select.value = defaultConfig;
   }
 
+  persistFieldValue('controlConfig');
   controlConfigSignature = signature;
 }
 
@@ -2469,6 +3403,7 @@ function syncTaskTypeOptions(taskTypes, defaultTaskType){
   }
 
   const previousValue = select.value;
+  const savedValue = readUIPreference('taskType', null);
   select.innerHTML = '';
   (taskTypes || []).forEach(item => {
     const option = document.createElement('option');
@@ -2480,10 +3415,13 @@ function syncTaskTypeOptions(taskTypes, defaultTaskType){
 
   if(previousValue && [...select.options].some(option => option.value === previousValue)){
     select.value = previousValue;
+  } else if(savedValue && [...select.options].some(option => option.value === savedValue)){
+    select.value = savedValue;
   } else if(defaultTaskType && [...select.options].some(option => option.value === defaultTaskType)){
     select.value = defaultTaskType;
   }
 
+  persistFieldValue('taskType');
   taskTypeSignature = signature;
 }
 
@@ -2525,6 +3463,13 @@ function ensureRelayerAdvancedControls(){
       `
     );
   }
+  restorePersistedFieldValues([
+    'relayerScanMaxCandidates',
+    'relayerScanMaxWorkers',
+    'relayerScanOutputDir',
+    'relayerScanResume',
+    'relayerScanSkipCompleted'
+  ]);
   relayerAdvancedControlsReady = true;
 }
 
@@ -2561,6 +3506,8 @@ function renderRelayerEditor(control){
 
   updateRelayerEditorSummary(control);
   return;
+}
+  /*
 
   const requestedMaxCandidates = document.getElementById('relayerScanMaxCandidates').value || '-';
   const requestedMaxWorkers = document.getElementById('relayerScanMaxWorkers')?.value || '1';
@@ -2599,6 +3546,8 @@ function renderRelayerEditor(control){
   );
 }
 
+*/
+
 function syncEvolutionModeOptions(modes, defaultMode){
   const select = document.getElementById('evolutionMode');
   const signature = JSON.stringify([modes || [], defaultMode || null]);
@@ -2607,6 +3556,7 @@ function syncEvolutionModeOptions(modes, defaultMode){
   }
 
   const previousValue = select.value;
+  const savedValue = readUIPreference('evolutionMode', null);
   select.innerHTML = '';
   (modes || []).forEach(item => {
     const option = document.createElement('option');
@@ -2618,10 +3568,13 @@ function syncEvolutionModeOptions(modes, defaultMode){
 
   if(previousValue && [...select.options].some(option => option.value === previousValue)){
     select.value = previousValue;
+  } else if(savedValue && [...select.options].some(option => option.value === savedValue)){
+    select.value = savedValue;
   } else if(defaultMode && [...select.options].some(option => option.value === defaultMode)){
     select.value = defaultMode;
   }
 
+  persistFieldValue('evolutionMode');
   evolutionModeSignature = signature;
 }
 
@@ -2629,7 +3582,7 @@ function getSelectedSamplingParameters(){
   return [...document.querySelectorAll('#samplingParamList input[type="checkbox"]:checked')].map(input => input.value);
 }
 
-function renderSamplingParameters(control){
+/* function renderSamplingParameters(control){
   const list = document.getElementById('samplingParamList');
   const config = getSelectedConfigSummary(control);
   const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
@@ -2704,7 +3657,9 @@ function renderSamplingParameters(control){
   );
 }
 
-function renderLocalAi(localAi){
+*/
+
+/* function renderLocalAi(localAi){
   const list = document.getElementById('localAiList');
   const items = localAi?.items || [];
   list.innerHTML = '';
@@ -2745,7 +3700,46 @@ function renderLocalAi(localAi){
   );
 }
 
-function updateEvolutionModeControlVisibility(control){
+*/
+
+function renderLocalAi(localAi){
+  const list = document.getElementById('localAiList');
+  const items = localAi?.items || [];
+  list.innerHTML = '';
+
+  if(!items.length){
+    list.innerHTML = `<li>${biHTML('No common local AI or model services detected', 'No common local AI or model services detected')}</li>`;
+    setBiHTML('localAiSummaryText', 'No common local AI detected', 'No common local AI detected');
+    return;
+  }
+
+  items.forEach(item => {
+    const li = document.createElement('li');
+    const parts = [item.label || 'AI', item.status || 'detected'];
+    if(item.pid){
+      parts.push(`PID ${item.pid}`);
+    }
+    if(item.endpoint){
+      parts.push(item.endpoint);
+    }
+    if(Array.isArray(item.models) && item.models.length){
+      parts.push(`models=${item.models.slice(0, 3).join(', ')}`);
+    }
+    li.textContent = parts.join(' | ');
+    list.appendChild(li);
+  });
+
+  const reachable = items.filter(item => item.reachable !== false).length;
+  const count = items.length;
+  setBiHTML(
+    'localAiSummaryText',
+    `${count} detected, ${reachable} API reachable`,
+    `${count} detected, ${reachable} API reachable`,
+    reachable > 0 ? 'accent' : null
+  );
+}
+
+/* function updateEvolutionModeControlVisibility(control){
   const evolutionMode = document.getElementById('evolutionMode')?.value || 'model_params';
   const samplingSection = document.getElementById('samplingParamSection');
   const heatMapSection = document.getElementById('heatMapEditor');
@@ -2803,7 +3797,64 @@ function updateEvolutionModeControlVisibility(control){
   );
 }
 
-function renderControlPanel(control, status){
+*/
+
+function updateEvolutionModeControlVisibility(control){
+  const evolutionMode = document.getElementById('evolutionMode')?.value || 'model_params';
+  const samplingSection = document.getElementById('samplingParamSection');
+  const heatMapSection = document.getElementById('heatMapEditor');
+  const relayerSection = document.getElementById('relayerEditor');
+  const hintBox = document.getElementById('evolutionModeHint');
+  const selectedConfig = getSelectedConfigSummary(control);
+  const relayerReady = Boolean(selectedConfig?.relayer?.scan_supported);
+
+  if(samplingSection){
+    samplingSection.style.display = evolutionMode === 'model_params' ? '' : 'none';
+  }
+  if(heatMapSection){
+    heatMapSection.style.display = evolutionMode === 'heat_map' ? '' : 'none';
+  }
+  if(relayerSection && evolutionMode === 'heat_map'){
+    relayerSection.style.display = 'none';
+  }
+
+  if(!hintBox){
+    return;
+  }
+
+  hintBox.style.display = '';
+  if(evolutionMode === 'model_params'){
+    setBiHTML(
+      'evolutionModeHintText',
+      'Showing model-parameter controls only; heat-map-specific fields are hidden.',
+      'Showing model-parameter controls only; heat-map-specific fields are hidden.',
+      'accent'
+    );
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    setBiHTML(
+      'evolutionModeHintText',
+      'Showing heat-map brain-scan controls only; model sampling and relayer controls are hidden.',
+      'Showing heat-map brain-scan controls only; model sampling and relayer controls are hidden.',
+      'accent'
+    );
+    return;
+  }
+
+  const message = relayerReady
+    ? 'This mode has no extra nightly fields; use the Relayer Scan section below for relayer controls.'
+    : 'This mode currently has no extra nightly form fields.';
+  setBiHTML(
+    'evolutionModeHintText',
+    message,
+    message,
+    'warn'
+  );
+}
+
+/* function renderControlPanel(control, status){
   latestControlState = control;
   syncControlConfigOptions(control?.configs, control?.default_config);
   syncTaskTypeOptions(control?.task_types, control?.default_task_type);
@@ -2891,6 +3942,77 @@ function renderControlPanel(control, status){
   document.getElementById('stopRunBtn').disabled = controlBusy || !active;
 }
 
+*/
+
+function renderControlPanel(control, status){
+  latestControlState = control;
+  syncControlConfigOptions(control?.configs, control?.default_config);
+  syncTaskTypeOptions(control?.task_types, control?.default_task_type);
+  const selectedConfig = getSelectedConfigSummary(control);
+  syncEvolutionModeOptions(control?.evolution_modes, selectedConfig?.default_evolution_mode || control?.default_evolution_mode);
+  renderLocalAi(control?.local_ai);
+  renderSamplingParameters(control);
+  renderHeatMapEditor(control);
+  renderRelayerEditor(control);
+  updateEvolutionModeControlVisibility(control);
+
+  const active = Boolean(control?.active);
+  const current = control?.current || null;
+  const lastResult = control?.last_result || null;
+  const activeKind = current?.kind || '';
+  const currentKindCopy = kindCopy(current?.kind, current?.evolution_mode);
+  const controlStateCopy = active
+    ? { zh:`Running: ${currentKindCopy.en}`, en:`Running: ${currentKindCopy.en}` }
+    : { zh:'Idle', en:'Idle' };
+  const lastResultCopy = lastResult?.stopped_by_user
+    ? { zh:'Stopped', en:'Stopped' }
+    : statusCopy(typeof lastResult?.returncode === 'number' ? (lastResult.returncode === 0 ? 'completed' : `exit ${lastResult.returncode}`) : (lastResult?.status || '-'));
+
+  setBiHTML('controlStateText', controlStateCopy.zh, controlStateCopy.en, active ? 'warn' : '');
+  setText('controlPidText', active ? current?.pid ?? '-' : '-');
+  setText('controlConfigActiveText', current?.config_name || lastResult?.config_name || '-');
+  setBiHTML('controlLastText', lastResultCopy.zh || '-', lastResultCopy.en || '-', tone(lastResultCopy.en || ''));
+  setText('controlCommandText', current ? formatControlCommand(current.command) : (lastResult ? formatControlCommand(lastResult.command) : '-'));
+  setText('controlLogText', current?.log_path || lastResult?.log_path || '-');
+
+  const controlProgressSnapshot = getProgressSnapshot(active ? activeKind : (lastResult?.kind || ''), current, lastResult, status || {});
+  let progressText = getProgressSummaryText(controlProgressSnapshot);
+  if(progressText !== '-'){
+    progressText = `${progressText} | ETA ${getProgressEtaText(controlProgressSnapshot)}`;
+  } else if(active && status?.progress_text){
+    progressText = status.progress_text;
+  } else if(active && status?.suite_progress_text){
+    progressText = status.suite_progress_text;
+  } else if(lastResult?.progress_text){
+    progressText = lastResult.progress_text;
+  } else if(lastResult?.suite_progress_text){
+    progressText = lastResult.suite_progress_text;
+  } else if(lastResult?.kind === 'single'){
+    progressText = '1/1 (100.0%) | ETA 0s';
+  }
+  setText('controlProgressText', progressText, active && activeKind !== 'single' ? 'accent-2' : '');
+
+  let notice = 'Launch a single run, suite, nightly evolution, or relayer scan here; stop terminates the active background process.';
+  let noticeTone = '';
+  if(active && current){
+    notice = `Currently running ${currentKindCopy.en}, PID ${current.pid}.`;
+    noticeTone = 'warn';
+  } else if(controlBusy){
+    notice = 'Sending control command...';
+    noticeTone = 'warn';
+  } else if(control?.message){
+    notice = control.message;
+  }
+  setBiHTML('controlMessageText', notice, notice, noticeTone || null);
+
+  const relayerScanReady = Boolean(selectedConfig?.relayer?.scan_supported);
+  document.getElementById('startSingleBtn').disabled = controlBusy || active;
+  document.getElementById('startSuiteBtn').disabled = controlBusy || active;
+  document.getElementById('startNightlyBtn').disabled = controlBusy || active;
+  document.getElementById('startRelayerScanBtn').disabled = controlBusy || active || !relayerScanReady;
+  document.getElementById('stopRunBtn').disabled = controlBusy || !active;
+}
+
 async function refreshAll(){
   try{
     const [status, score, arch, test, baseline, rollback, nightly, heatMap, relayerScanHistory, configHistory, parameterHistory, streamText, control] = await Promise.all([
@@ -2908,9 +4030,16 @@ async function refreshAll(){
       fetchText(DATA.liveStream).catch(() => ''),
       fetchJSON(CONTROL.state).catch(() => null)
     ]);
+    lastSuccessfulRefreshMs = Date.now();
+    dataConnectionState = 'ready';
+    syncFreshnessPill();
 
     const dashboardContext = resolveDashboardContext(control, status, nightly, heatMap, relayerScanHistory);
     if(status) renderStatus(status);
+    if(!status){
+      const syncedAt = new Date(lastSuccessfulRefreshMs).toLocaleString();
+      setBiHTML('lastUpdated', `最後同步：${syncedAt}`, `Last sync: ${syncedAt}`);
+    }
     if(control) renderControlPanel(control, status);
     renderModeOverview(dashboardContext);
     applyDashboardMode(dashboardContext);
@@ -2937,10 +4066,16 @@ async function refreshAll(){
     scoreChartState = getCurrentRoundScoreItems(score, status);
     drawLineChart(document.getElementById('scoreCanvas'), scoreChartState);
 
-    renderStream(streamText.split(/\r?\n/).filter(Boolean));
-    setBiHTML('dataState', '資料來源已就緒', 'Data source ready');
+    latestStreamLines = streamText.split(/\r?\n/).filter(Boolean);
+    renderStream(latestStreamLines);
+    const readyFeedCount = [status, score, arch, test, baseline, rollback, nightly, heatMap, relayerScanHistory, configHistory, parameterHistory, streamText, control]
+      .filter(item => item !== null && item !== undefined)
+      .length;
+    setBiHTML('dataState', `資料來源已同步 ${readyFeedCount}/13 份 feed`, `Data source synced ${readyFeedCount}/13 feeds`);
   }catch(error){
     console.error(error);
+    dataConnectionState = 'error';
+    syncFreshnessPill();
     setBiHTML('dataState', '資料來源尚未就緒', 'Data source not ready');
   }
 }
@@ -3075,10 +4210,24 @@ function ensureHeatMapEditorControls(container){
       node.addEventListener('input', updateHeatMapEditorSummary);
     }
   });
+  restorePersistedFieldValues([
+    'heatMapStartLayerMin',
+    'heatMapEndLayerMax',
+    'heatMapMinBlockLen',
+    'heatMapMaxBlockLen',
+    'heatMapRepeatCount',
+    'heatMapProbeATaskType',
+    'heatMapProbeASeeds',
+    'heatMapProbeBTaskType',
+    'heatMapProbeBSeeds',
+    'heatMapTopK',
+    'heatMapVerifyRuns',
+    'heatMapVerifyEnabled'
+  ]);
   container.dataset.editorReady = 'true';
 }
 
-function updateHeatMapEditorSummary(){
+/* function updateHeatMapEditorSummary(){
   const startLayerMin = document.getElementById('heatMapStartLayerMin')?.value || '-';
   const endLayerMax = document.getElementById('heatMapEndLayerMax')?.value || '-';
   const minBlockLen = document.getElementById('heatMapMinBlockLen')?.value || '-';
@@ -3099,7 +4248,26 @@ function updateHeatMapEditorSummary(){
   );
 }
 
-function renderHeatMapEditor(control){
+*/
+
+function updateHeatMapEditorSummary(){
+  const startLayerMin = document.getElementById('heatMapStartLayerMin')?.value || '-';
+  const endLayerMax = document.getElementById('heatMapEndLayerMax')?.value || '-';
+  const minBlockLen = document.getElementById('heatMapMinBlockLen')?.value || '-';
+  const maxBlockLen = document.getElementById('heatMapMaxBlockLen')?.value || '-';
+  const repeatCount = document.getElementById('heatMapRepeatCount')?.value || '-';
+  const probeATaskType = document.getElementById('heatMapProbeATaskType')?.value || '-';
+  const probeASeeds = document.getElementById('heatMapProbeASeeds')?.value || '-';
+  const probeBTaskType = document.getElementById('heatMapProbeBTaskType')?.value || '-';
+  const probeBSeeds = document.getElementById('heatMapProbeBSeeds')?.value || '-';
+  const topK = document.getElementById('heatMapTopK')?.value || '-';
+  const verifyRuns = document.getElementById('heatMapVerifyRuns')?.value || '-';
+  const verifyEnabled = Boolean(document.getElementById('heatMapVerifyEnabled')?.checked);
+  const summary = `Layer window i=${startLayerMin}..${endLayerMax} | block=${minBlockLen}-${maxBlockLen} | repeat=${repeatCount} | A=${probeATaskType} [${probeASeeds}] | B=${probeBTaskType} [${probeBSeeds}] | top-k=${topK} | verify=${verifyEnabled ? 'on' : 'off'} | runs=${verifyRuns}`;
+  setBiHTML('heatMapEditorSummaryText', summary, summary, 'accent');
+}
+
+/* function renderHeatMapEditor(control){
   const container = document.getElementById('heatMapEditor');
   const config = getSelectedConfigSummary(control);
   const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
@@ -3138,6 +4306,78 @@ function renderHeatMapEditor(control){
     document.getElementById('heatMapVerifyEnabled').checked = verifySettings.enabled !== false;
     heatMapEditorSignature = signature;
   }
+  restorePersistedFieldValues([
+    'heatMapStartLayerMin',
+    'heatMapEndLayerMax',
+    'heatMapMinBlockLen',
+    'heatMapMaxBlockLen',
+    'heatMapRepeatCount',
+    'heatMapProbeATaskType',
+    'heatMapProbeASeeds',
+    'heatMapProbeBTaskType',
+    'heatMapProbeBSeeds',
+    'heatMapTopK',
+    'heatMapVerifyRuns',
+    'heatMapVerifyEnabled'
+  ]);
+  updateHeatMapEditorSummary();
+}
+
+*/
+
+function renderHeatMapEditor(control){
+  const container = document.getElementById('heatMapEditor');
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  const visible = evolutionMode === 'heat_map';
+  container.style.display = visible ? '' : 'none';
+  if(!visible){
+    return;
+  }
+
+  ensureHeatMapEditorControls(container);
+
+  if(!config){
+    setBiHTML('heatMapEditorSummaryText', 'Select a config first', 'Select a config first');
+    return;
+  }
+
+  const taskTypes = config.heat_map_task_types || control?.heat_map_task_types || [];
+  const settings = config.heat_map_settings || {};
+  const scan = settings.scan || {};
+  const probeA = settings.probe_a || {};
+  const probeB = settings.probe_b || {};
+  const verifySettings = settings.verify || {};
+  const signature = JSON.stringify([config.relative_path || config.name, taskTypes, settings]);
+  if(signature !== heatMapEditorSignature){
+    document.getElementById('heatMapStartLayerMin').value = scan.start_layer_min ?? config.heat_map_plan?.scan?.start_layer_min ?? '';
+    document.getElementById('heatMapEndLayerMax').value = scan.end_layer_max ?? config.heat_map_plan?.scan?.end_layer_max ?? '';
+    document.getElementById('heatMapMinBlockLen').value = scan.min_block_len ?? config.heat_map_plan?.scan?.min_block_len ?? '';
+    document.getElementById('heatMapMaxBlockLen').value = scan.max_block_len ?? config.heat_map_plan?.scan?.max_block_len ?? '';
+    document.getElementById('heatMapRepeatCount').value = scan.repeat_count ?? config.heat_map_plan?.repeat_count ?? '';
+    syncSelectOptions('heatMapProbeATaskType', taskTypes, probeA.task_type || config.heat_map_plan?.probe_a?.task_type);
+    syncSelectOptions('heatMapProbeBTaskType', taskTypes, probeB.task_type || config.heat_map_plan?.probe_b?.task_type);
+    document.getElementById('heatMapProbeASeeds').value = (probeA.seeds || config.heat_map_plan?.probe_a?.seeds || []).join(',');
+    document.getElementById('heatMapProbeBSeeds').value = (probeB.seeds || config.heat_map_plan?.probe_b?.seeds || []).join(',');
+    document.getElementById('heatMapTopK').value = settings.top_k ?? config.heat_map_plan?.top_k ?? '';
+    document.getElementById('heatMapVerifyRuns').value = verifySettings.candidate_runs_per_config ?? '';
+    document.getElementById('heatMapVerifyEnabled').checked = verifySettings.enabled !== false;
+    heatMapEditorSignature = signature;
+  }
+  restorePersistedFieldValues([
+    'heatMapStartLayerMin',
+    'heatMapEndLayerMax',
+    'heatMapMinBlockLen',
+    'heatMapMaxBlockLen',
+    'heatMapRepeatCount',
+    'heatMapProbeATaskType',
+    'heatMapProbeASeeds',
+    'heatMapProbeBTaskType',
+    'heatMapProbeBSeeds',
+    'heatMapTopK',
+    'heatMapVerifyRuns',
+    'heatMapVerifyEnabled'
+  ]);
   updateHeatMapEditorSummary();
 }
 
@@ -3168,7 +4408,7 @@ function getPreferredSamplingSelection(config, evolutionMode){
   return (config?.selected_sampling_parameters || []).map(item => String(item));
 }
 
-function updateSamplingParameterSummary(control){
+/* function updateSamplingParameterSummary(control){
   const config = getSelectedConfigSummary(control);
   const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
   if(!config){
@@ -3214,7 +4454,42 @@ function updateSamplingParameterSummary(control){
   );
 }
 
-function updateRelayerEditorSummary(control){
+*/
+
+function updateSamplingParameterSummary(control){
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  if(!config){
+    setBiHTML('samplingParamSummaryText', 'No config selected', 'No config selected');
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    const plan = config.heat_map_plan || {};
+    const summary = `Heat map: ${plan.y_label || 'Start Layer'} ${plan.y_values?.length || 0} cells x ${plan.x_label || 'End Layer'} ${plan.x_values?.length || 0} cells`;
+    setBiHTML('samplingParamSummaryText', summary, summary, 'accent');
+    return;
+  }
+
+  if(evolutionMode !== 'model_params'){
+    const summary = `Mode: ${evolutionMode}`;
+    setBiHTML('samplingParamSummaryText', summary, summary);
+    return;
+  }
+
+  const available = config.sampling_parameters || [];
+  const selected = getSelectedSamplingParameters();
+  const provider = config.sampling_provider || '-';
+  const selectedText = selected.length ? selected.join(', ') : '-';
+  setBiHTML(
+    'samplingParamSummaryText',
+    `Provider: ${provider}, selected ${selected.length}/${available.length}, params=${selectedText}`,
+    `Provider: ${provider}, selected ${selected.length}/${available.length}, params=${selectedText}`,
+    selected.length ? 'accent' : null
+  );
+}
+
+/* function updateRelayerEditorSummary(control){
   const config = getSelectedConfigSummary(control);
   if(!config){
     setBiHTML('relayerEditorSummaryText', '請先選擇設定', 'Select a config first');
@@ -3261,7 +4536,7 @@ function updateRelayerEditorSummary(control){
   );
 }
 
-function renderSamplingParameters(control){
+/* function renderSamplingParameters(control){
   const list = document.getElementById('samplingParamList');
   const config = getSelectedConfigSummary(control);
   const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
@@ -3411,7 +4686,94 @@ function renderSamplingParameters(control){
   );
 }
 
-function renderHeatMap(hist, context=null, control=null){
+*/
+
+function renderSamplingParameters(control){
+  const list = document.getElementById('samplingParamList');
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  const renderSignature = JSON.stringify([
+    config?.relative_path || config?.name || null,
+    evolutionMode,
+    config?.sampling_provider || null,
+    config?.sampling_parameters || [],
+    config?.selected_sampling_parameters || [],
+    config?.heat_map_plan || null
+  ]);
+  const preferredSelected = config ? getPreferredSamplingSelection(config, evolutionMode) : [];
+  const shouldRebuild = renderSignature !== samplingParamRenderSignature;
+
+  if(!config){
+    samplingParamRenderSignature = '';
+    samplingSelectionContextKey = '';
+    samplingSelectionOverride = null;
+    list.innerHTML = `<div class="small">${biHTML('Select a config first', 'Select a config first')}</div>`;
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    if(shouldRebuild){
+      const plan = config.heat_map_plan;
+      if(plan){
+        list.innerHTML = `<div class="small">${biHTML(
+          `RYS heat map scans Start Layer (i) / End Layer (j) across ${plan.cell_count || 0} cells`,
+          `RYS heat map scans Start Layer (i) / End Layer (j) across ${plan.cell_count || 0} cells`
+        )}</div>`;
+      } else {
+        list.innerHTML = `<div class="small">${biHTML('This config does not expose a heat-map brain-scan plan yet', 'This config does not expose a heat-map brain-scan plan yet')}</div>`;
+      }
+      samplingParamRenderSignature = renderSignature;
+    }
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  if(evolutionMode !== 'model_params'){
+    if(shouldRebuild){
+      list.innerHTML = `<div class="small">${biHTML('Architecture mode does not use sampling parameter checkboxes', 'Architecture mode does not use sampling parameter checkboxes')}</div>`;
+      samplingParamRenderSignature = renderSignature;
+    }
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  const provider = config.sampling_provider;
+  const available = config.sampling_parameters || [];
+  if(!provider || !available.length){
+    if(shouldRebuild){
+      list.innerHTML = `<div class="small">${biHTML('This config has no editable sampling parameters', 'This config has no editable sampling parameters')}</div>`;
+      samplingParamRenderSignature = renderSignature;
+    }
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  if(shouldRebuild){
+    list.innerHTML = '';
+    const selectedSet = new Set(preferredSelected);
+    available.forEach(item => {
+      const value = String(item.id ?? item.value ?? item.name);
+      const id = `samplingParam__${value}`;
+      const wrapper = document.createElement('label');
+      wrapper.className = 'check-item';
+      wrapper.setAttribute('for', id);
+      wrapper.innerHTML = `
+        <input id="${escapeHtml(id)}" type="checkbox" value="${escapeHtml(value)}" ${selectedSet.has(value) ? 'checked' : ''} />
+        <span class="check-copy">
+          <strong>${escapeHtml(item.label || value)}</strong>
+          <span class="small">${escapeHtml(item.description || '')}</span>
+        </span>
+      `;
+      list.appendChild(wrapper);
+    });
+    samplingParamRenderSignature = renderSignature;
+  }
+
+  updateSamplingParameterSummary(control);
+}
+
+/* function renderHeatMap(hist, context=null, control=null){
   const items = hist?.history || [];
   const latest = items[items.length - 1];
   const liveHeatMap = context?.active && context?.view === 'nightly_heat_map' ? context.current : null;
@@ -3464,6 +4826,49 @@ function renderHeatMap(hist, context=null, control=null){
     items.slice(-6).reverse(),
     item => `${item.ts || '-'} | ${item.suite_id || '-'} | best=${item.best_cell?.config_id || item.selected_config_id || '-'} | Δcombined=${item.best_delta_suite_score ?? item.best_cell?.delta_suite_score ?? '-'} | A=${item.probe_a?.task_type || '-'} | B=${item.probe_b?.task_type || '-'} | verify=${item.verification?.winner?.config_id || '-'}`,
     { zh:'尚未有 heat_map 紀錄', en:'No heat-map history yet' }
+  );
+}
+
+*/
+
+function updateRelayerEditorSummary(control){
+  const config = getSelectedConfigSummary(control);
+  const relayer = config?.relayer || {};
+  const requestedMaxCandidates = document.getElementById('relayerScanMaxCandidates')?.value || '-';
+  const requestedMaxWorkers = document.getElementById('relayerScanMaxWorkers')?.value || '1';
+  const requestedOutputDir = document.getElementById('relayerScanOutputDir')?.value || '-';
+  const resumeRequested = Boolean(document.getElementById('relayerScanResume')?.checked);
+  const skipCompleted = Boolean(document.getElementById('relayerScanSkipCompleted')?.checked);
+  const runtimeModes = (relayer.runtime_supported_modes || []).join(', ') || '-';
+  const latestRelayer = control?.diagnostics?.latest_relayer_scan || null;
+
+  if(relayer.scan_supported){
+    setBiHTML(
+      'relayerEditorSummaryText',
+      `mode=${relayer.mode || '-'} | verify=${relayer.scan_runtime_mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates} | workers=${requestedMaxWorkers} | resume=${resumeRequested ? 'on' : 'off'} | skip=${skipCompleted ? 'on' : 'off'} | output=${requestedOutputDir}`,
+      `mode=${relayer.mode || '-'} | verify=${relayer.scan_runtime_mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates} | workers=${requestedMaxWorkers} | resume=${resumeRequested ? 'on' : 'off'} | skip=${skipCompleted ? 'on' : 'off'} | output=${requestedOutputDir}`,
+      'accent'
+    );
+    setBiHTML(
+      'relayerCapabilityText',
+      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | verify capable=${relayer.verification_capable ? 'yes' : 'no'} | latest=${latestRelayer?.output_dir || '-'}`,
+      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | verify capable=${relayer.verification_capable ? 'yes' : 'no'} | latest=${latestRelayer?.output_dir || '-'}`,
+      relayer.verification_capable ? 'accent' : 'warn'
+    );
+    return;
+  }
+
+  setBiHTML(
+    'relayerEditorSummaryText',
+    `Relayer scan not ready: ${relayer.scan_error || relayer.num_layers_error || 'unknown error'}`,
+    `Relayer scan not ready: ${relayer.scan_error || relayer.num_layers_error || 'unknown error'}`,
+    'bad'
+  );
+  setBiHTML(
+    'relayerCapabilityText',
+    `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
+    `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
+    'warn'
   );
 }
 
@@ -3535,6 +4940,7 @@ function syncScrollButton(){
 
 document.getElementById('toggleScroll').addEventListener('click', () => {
   autoScroll = !autoScroll;
+  updateUIPreferences({ autoScroll });
   syncScrollButton();
 });
 document.getElementById('startSingleBtn').addEventListener('click', () => {
@@ -3568,6 +4974,7 @@ document.getElementById('stopRunBtn').addEventListener('click', () => {
   });
 });
 document.getElementById('controlConfig').addEventListener('change', () => {
+  persistFieldValue('controlConfig');
   heatMapEditorSignature = '';
   samplingParamRenderSignature = '';
   samplingSelectionContextKey = '';
@@ -3577,7 +4984,11 @@ document.getElementById('controlConfig').addEventListener('change', () => {
   renderRelayerEditor(latestControlState);
   updateEvolutionModeControlVisibility(latestControlState);
 });
+document.getElementById('taskType').addEventListener('change', () => {
+  persistFieldValue('taskType');
+});
 document.getElementById('evolutionMode').addEventListener('change', () => {
+  persistFieldValue('evolutionMode');
   heatMapEditorSignature = '';
   samplingParamRenderSignature = '';
   samplingSelectionContextKey = '';
@@ -3597,12 +5008,40 @@ document.getElementById('samplingParamList').addEventListener('change', () => {
   updateSamplingParameterSummary(latestControlState);
 });
 document.getElementById('refreshNow').addEventListener('click', refreshAll);
-document.getElementById('keyword').addEventListener('input', refreshAll);
-document.getElementById('onlyTools').addEventListener('change', refreshAll);
+document.getElementById('keyword').addEventListener('input', () => {
+  persistFieldValue('keyword');
+  renderStream(latestStreamLines);
+});
+document.getElementById('onlyTools').addEventListener('change', () => {
+  persistFieldValue('onlyTools');
+  renderStream(latestStreamLines);
+});
+document.getElementById('clearStreamFilters').addEventListener('click', clearStreamFilters);
+document.getElementById('streamFilterGroup').addEventListener('click', event => {
+  const button = event.target.closest('[data-stream-type]');
+  if(!button){
+    return;
+  }
+  toggleStreamType(button.dataset.streamType);
+});
+document.addEventListener('change', event => {
+  const targetId = event.target?.id;
+  if(PERSISTED_INPUT_IDS.has(targetId)){
+    persistFieldValue(targetId);
+  }
+}, true);
+document.addEventListener('input', event => {
+  const targetId = event.target?.id;
+  if(PERSISTED_INPUT_IDS.has(targetId) && event.target?.type !== 'checkbox'){
+    persistFieldValue(targetId);
+  }
+}, true);
 window.addEventListener('resize', () => drawLineChart(document.getElementById('scoreCanvas'), scoreChartState));
 
 ensureRelayerAdvancedControls();
+restoreInitialUIPreferences();
 setupBandCollapsibles();
+setupCommandDeck();
 ['relayerScanMaxWorkers','relayerScanOutputDir','relayerScanResume','relayerScanSkipCompleted'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     updateRelayerEditorSummary(latestControlState);
@@ -3613,8 +5052,10 @@ setupBandCollapsibles();
 });
 
 syncScrollButton();
+syncFreshnessPill();
 refreshAll();
 setInterval(refreshAll, 3000);
+setInterval(syncFreshnessPill, 1000);
 </script>
 </body>
 </html>

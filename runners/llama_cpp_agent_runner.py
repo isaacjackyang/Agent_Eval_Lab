@@ -10,7 +10,11 @@ from typing import Any
 from evolution.mutator import effective_agent_architecture, normalize_sampling_provider
 from evolution.relayer_plan import relayer_supported_modes_for_runner, resolve_relayer_runtime_context
 from runners.base import BaseRunner, RunnerResult
-from runners.relayer_runtime_bridge import invoke_external_relayer_runtime
+from runners.relayer_runtime_bridge import (
+    extract_runtime_backend_effects,
+    invoke_external_relayer_runtime,
+    summarize_runtime_backend_effects,
+)
 from runners.search_helpers import search_file
 
 
@@ -75,6 +79,7 @@ class LlamaCppAgentRunner(BaseRunner):
         last_search_matches: list[dict[str, Any]] = []
         recovery_used = False
         relayer_runtime_backend: dict[str, Any] | None = None
+        relayer_runtime_effects: dict[str, Any] = {}
         status_context = {
             "run_kind": context.get("run_kind"),
             "suite_id": context.get("suite_id"),
@@ -153,14 +158,6 @@ class LlamaCppAgentRunner(BaseRunner):
                 }
             )
 
-        emit(
-            "system",
-            (
-                f"Using llama.cpp model={model} base_url={base_url} temperature={temperature} top_p={top_p} "
-                f"provider={provider} architecture={architecture.get('variant')}"
-            ),
-            name="llama_cpp",
-        )
         if relayer_context["enabled"]:
             emit("system", relayer_context["message"], name="relayer")
         if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
@@ -176,6 +173,33 @@ class LlamaCppAgentRunner(BaseRunner):
                 f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
                 name="relayer_runtime",
             )
+            relayer_runtime_effects = extract_runtime_backend_effects(relayer_runtime_backend)
+            if relayer_runtime_effects:
+                self._apply_runtime_prompt_effects(messages, relayer_runtime_effects.get("prompt"))
+                llama_effects = relayer_runtime_effects.get("llama_cpp")
+                if isinstance(llama_effects, dict):
+                    base_url = str(llama_effects.get("base_url", base_url))
+                    model = str(llama_effects.get("model", model))
+                    runtime_sampling = llama_effects.get("sampling_options")
+                    if isinstance(runtime_sampling, dict):
+                        sampling_options.update(runtime_sampling)
+                        temperature = float(sampling_options.get("temperature", 0.0))
+                        top_p = float(sampling_options.get("top_p", 1.0))
+                summary = summarize_runtime_backend_effects(relayer_runtime_effects)
+                if summary:
+                    emit(
+                        "system",
+                        f"Applied relayer runtime effects: {summary}.",
+                        name="relayer_runtime_effects",
+                    )
+        emit(
+            "system",
+            (
+                f"Using llama.cpp model={model} base_url={base_url} temperature={temperature} top_p={top_p} "
+                f"provider={provider} architecture={architecture.get('variant')}"
+            ),
+            name="llama_cpp",
+        )
         write_status()
 
         final_output = ""
@@ -374,8 +398,39 @@ class LlamaCppAgentRunner(BaseRunner):
                 "task_category": task_category,
                 "relayer": relayer_context,
                 "relayer_runtime_backend": relayer_runtime_backend,
+                "relayer_runtime_effects": relayer_runtime_effects,
             },
         )
+
+    def _apply_runtime_prompt_effects(
+        self,
+        messages: list[dict[str, str]],
+        prompt_effects: dict[str, Any] | None,
+    ) -> None:
+        if not isinstance(prompt_effects, dict):
+            return
+        if messages:
+            system_message = messages[0]
+            if system_message.get("role") == "system":
+                prefix = str(prompt_effects.get("system_prefix") or "").strip()
+                suffix = str(prompt_effects.get("system_suffix") or "").strip()
+                content = str(system_message.get("content") or "")
+                if prefix:
+                    content = f"{prefix}\n{content}"
+                if suffix:
+                    content = f"{content}\n{suffix}"
+                system_message["content"] = content
+        if len(messages) > 1:
+            user_message = messages[1]
+            if user_message.get("role") == "user":
+                prefix = str(prompt_effects.get("user_prefix") or "").strip()
+                suffix = str(prompt_effects.get("user_suffix") or "").strip()
+                content = str(user_message.get("content") or "")
+                if prefix:
+                    content = f"{prefix}\n{content}"
+                if suffix:
+                    content = f"{content}\n{suffix}"
+                user_message["content"] = content
 
     def _build_system_prompt(
         self,

@@ -26,6 +26,9 @@ class _StubLlamaCppAgentRunner(LlamaCppAgentRunner):
         super().__init__(*args, **kwargs)
         self.scripted_outputs = list(scripted_outputs or [])
         self.seen_base_urls: list[str] = []
+        self.seen_models: list[str] = []
+        self.seen_messages: list[list[dict[str, str]]] = []
+        self.seen_sampling_options: list[dict[str, object]] = []
 
     def _chat(
         self,
@@ -38,6 +41,9 @@ class _StubLlamaCppAgentRunner(LlamaCppAgentRunner):
         timeout_sec: int,
     ) -> dict[str, object]:
         self.seen_base_urls.append(base_url)
+        self.seen_models.append(model)
+        self.seen_messages.append([dict(item) for item in messages])
+        self.seen_sampling_options.append(dict(sampling_options))
         next_output = self.scripted_outputs.pop(0)
         return {
             "assistant_text": next_output,
@@ -66,6 +72,19 @@ class LlamaCppAgentRunnerRuntimePatchTests(unittest.TestCase):
             expected.write_text("canonical file", encoding="utf-8")
 
             relayer_stub = Path(__file__).resolve().parents[1] / "scripts" / "fixtures" / "relayer_runtime_stub.py"
+            runtime_effects = {
+                "prompt": {
+                    "user_suffix": "RUNTIME_PATCH_USER_SUFFIX",
+                },
+                "llama_cpp": {
+                    "base_url": "http://127.0.0.1:9091/v1",
+                    "model": "patched-runtime-model.gguf",
+                    "sampling_options": {
+                        "temperature": 0.25,
+                        "top_p": 0.75,
+                    },
+                },
+            }
             runner = _StubLlamaCppAgentRunner(
                 max_steps=2,
                 runner_config={
@@ -89,6 +108,9 @@ class LlamaCppAgentRunnerRuntimePatchTests(unittest.TestCase):
                         "runtime_backend": {
                             "command": [sys.executable, str(relayer_stub)],
                             "timeout_sec": 30,
+                            "extra_env": {
+                                "AEL_STUB_RUNTIME_EFFECTS_JSON": json.dumps(runtime_effects, ensure_ascii=False),
+                            },
                         },
                     },
                 },
@@ -121,14 +143,23 @@ class LlamaCppAgentRunnerRuntimePatchTests(unittest.TestCase):
             )
 
             self.assertEqual(result.final_output, str(expected.resolve()))
-            self.assertEqual(runner.seen_base_urls, ["http://127.0.0.1:8080/v1"])
+            self.assertEqual(runner.seen_base_urls, ["http://127.0.0.1:9091/v1"])
+            self.assertEqual(runner.seen_models, ["patched-runtime-model.gguf"])
+            self.assertAlmostEqual(float(runner.seen_sampling_options[0]["temperature"]), 0.25)
+            self.assertAlmostEqual(float(runner.seen_sampling_options[0]["top_p"]), 0.75)
+            self.assertTrue(runner.seen_messages[0][1]["content"].endswith("RUNTIME_PATCH_USER_SUFFIX"))
             self.assertTrue(result.metadata["relayer"]["applied"])
             backend = result.metadata["relayer_runtime_backend"]
             self.assertIsNotNone(backend)
             self.assertTrue(backend["result"]["ok"])
             self.assertTrue(Path(backend["manifest_path"]).exists())
             self.assertTrue(Path(backend["result"]["sidecar_path"]).exists())
+            self.assertEqual(
+                result.metadata["relayer_runtime_effects"]["llama_cpp"]["base_url"],
+                "http://127.0.0.1:9091/v1",
+            )
             self.assertTrue(any(item.get("name") == "relayer_runtime" for item in writer.events))
+            self.assertTrue(any(item.get("name") == "relayer_runtime_effects" for item in writer.events))
 
 
 if __name__ == "__main__":

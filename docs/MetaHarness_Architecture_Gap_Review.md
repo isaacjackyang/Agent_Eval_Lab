@@ -129,20 +129,20 @@
 - trace schema 對齊 OpenClaw event
 - 端到端 smoke tests
 
-### Gap F: Relayering 目前只有規劃層與 mock execution
+### Gap F: Relayering still lacks a true forward-path backend
 
-repo 現在已有：
+Current repo status:
 
-- `RelayerConfig / RelayerPlan`
-- 掃描配置產生器
-- mock layer runner，可驗證 `execution_order`
-- synthetic relayer scan pipeline，可輸出 aggregated CSV / heatmap / top-k
-- 現有 runner 的 honest guard：`runtime_patch` 未實作時會直接報錯
+- `RelayerConfig / RelayerPlan` and the relayer scan candidate generator are implemented.
+- `run_relayer_scan.py` can now score the full `(i, j)` grid with RYS-style `probe_a / probe_b / combined` deltas when the config is runnable.
+- `mock_layer_stack` remains available as the cheap fallback for smoke tests and `execution_order` validation.
+- `runtime_patch` bridge artifacts and top-k verification are already wired into baseline / rollback / history.
+- External relayer backends can now return limited runtime effects that are applied to llama.cpp / OpenClaw request paths (prompt / request / env overrides), so the bridge is no longer metadata-only.
 
-但仍缺：
+Remaining gap:
 
-- 真正改到模型 forward path 的 backend
-- relayering 對 llama.cpp / OpenClaw 實際推理結果的端到端驗證
+- A true forward-path relayer backend for llama.cpp / OpenClaw is still not complete.
+- Current `runtime_patch` support can now inject request-level effects, but it is still bridge / stub based rather than a native model-layer patch implementation.
 
 ## 建議的優先順序
 

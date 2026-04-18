@@ -11,9 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from evolution.heat_map_verifier import estimate_relayer_scan_total_evals
 from evolution.relayer_plan import summarize_relayer_config
-from evolution.relayer_scan import run_relayer_scan
+from evolution.relayer_scan import estimate_relayer_scan_total_evals, run_relayer_scan
 from storage.history_writer import ensure_report_files
 from storage.live_writer import LiveWriter
 
@@ -69,7 +68,12 @@ def main() -> None:
     candidate_target = int(relayer_summary.get("scan_candidate_count") or 0)
     if args.max_candidates is not None:
         candidate_target = min(candidate_target, int(args.max_candidates))
-    progress_target_total = estimate_relayer_scan_total_evals(config, candidate_target, seed_start=args.seed_start) or candidate_target
+    progress_target_total = estimate_relayer_scan_total_evals(
+        config,
+        candidate_target,
+        seed_start=args.seed_start,
+        base_config_path=config_path,
+    ) or candidate_target
     started = time.perf_counter()
 
     def write_status(status: str, *, progress_current: int, progress_target: int, current_candidate: str | None = None, best_config_id: str | None = None, baseline_score: float | None = None) -> None:

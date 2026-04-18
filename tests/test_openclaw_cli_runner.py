@@ -75,6 +75,16 @@ class OpenClawCliRunnerTests(unittest.TestCase):
             repo_root = Path(__file__).resolve().parents[1]
             openclaw_stub = repo_root / "scripts" / "fixtures" / "openclaw_cli_stub.py"
             relayer_stub = repo_root / "scripts" / "fixtures" / "relayer_runtime_stub.py"
+            runtime_effects = {
+                "prompt": {
+                    "task_suffix": "RUNTIME_PATCH_TASK_SUFFIX",
+                },
+                "openclaw": {
+                    "env": {
+                        "AEL_RUNTIME_PATCH_MARK": "runtime-patch-active",
+                    },
+                },
+            }
             runner = OpenClawCliRunner(
                 max_steps=4,
                 runner_config={
@@ -101,6 +111,9 @@ class OpenClawCliRunnerTests(unittest.TestCase):
                         "runtime_backend": {
                             "command": [sys.executable, str(relayer_stub)],
                             "timeout_sec": 30,
+                            "extra_env": {
+                                "AEL_STUB_RUNTIME_EFFECTS_JSON": json.dumps(runtime_effects, ensure_ascii=False),
+                            },
                         },
                     },
                 },
@@ -130,12 +143,21 @@ class OpenClawCliRunnerTests(unittest.TestCase):
             self.assertEqual(backend["result"]["runtime_label"], "openclaw_cli")
             self.assertTrue(Path(backend["manifest_path"]).exists())
             self.assertTrue(Path(backend["result"]["sidecar_path"]).exists())
+            self.assertEqual(
+                result.metadata["relayer_runtime_effects"]["openclaw"]["env"]["AEL_RUNTIME_PATCH_MARK"],
+                "runtime-patch-active",
+            )
             self.assertTrue(any(item.get("name") == "relayer_runtime" for item in writer.events))
+            self.assertTrue(any(item.get("name") == "relayer_runtime_effects" for item in writer.events))
 
             runtime_metadata = result.metadata["runtime"]
             self.assertTrue(Path(runtime_metadata["runtime_report_path"]).exists())
             self.assertTrue(Path(runtime_metadata["command_history_path"]).exists())
             self.assertTrue(result.metadata["cleanup"]["success"])
+
+            raw_payload = json.loads(result.metadata["raw_stdout"])
+            self.assertEqual(raw_payload["runtime_patch_env"]["AEL_RUNTIME_PATCH_MARK"], "runtime-patch-active")
+            self.assertTrue(raw_payload["received_prompt"].endswith("RUNTIME_PATCH_TASK_SUFFIX"))
 
     def test_run_supports_math_reasoning_with_stubbed_openclaw(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

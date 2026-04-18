@@ -394,12 +394,17 @@ def build_relayer_scan_candidates(base_config: dict[str, Any]) -> list[dict[str,
         )
         candidate["relayer_scan_runtime_mode"] = scan_runtime_mode
         candidate["heat_map_coordinates"] = {
-            "x_axis": "relayer.start_layer",
-            "x_label": "Start Layer",
-            "x_value": relayer_config.start_layer,
-            "y_axis": "relayer.end_layer",
-            "y_label": "End Layer",
-            "y_value": relayer_config.end_layer,
+            "x_axis": "relayer.end_layer",
+            "x_label": "End Layer (j)",
+            "x_value": relayer_config.end_layer,
+            "y_axis": "relayer.start_layer",
+            "y_label": "Start Layer (i)",
+            "y_value": relayer_config.start_layer,
+            "start_layer": relayer_config.start_layer,
+            "end_layer": relayer_config.end_layer,
+            "repeat_count": relayer_config.repeat_count,
+            "block_len": relayer_config.block_len,
+            "extra_layers": relayer_config.block_len * relayer_config.repeat_count,
         }
         candidates.append(candidate)
     return candidates

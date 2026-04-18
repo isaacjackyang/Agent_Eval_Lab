@@ -106,6 +106,7 @@
       "min_block_len": 1,
       "max_block_len": 8,
       "repeat_count": 1,
+      "scoring_mode": "heat_map_probes",
       "runtime_mode": "runtime_patch",
       "verify": {
         "enabled": true,

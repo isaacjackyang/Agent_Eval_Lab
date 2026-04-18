@@ -11,6 +11,7 @@ This project is inspired by David Noel Ng, and the RYS article is here: https://
 - `start_serve_dashboard.cmd` now starts the dashboard in the background, opens the browser automatically, and returns immediately so the CMD window can close.
 - `stop_serve_dashboard.cmd` stops that background dashboard service.
 - Background dashboard management lives in `scripts/dashboard_service.py`, with PID/log files stored in `runs/control/`.
+- Relayer scan now supports RYS-style full-grid probe scoring. Runnable configs default to `relayer.scan.scoring_mode = "heat_map_probes"`; `mock` remains available as the cheap synthetic fallback.
 
 本專案是一個本機 agent evaluation harness，現在的主線用途是：
 
@@ -161,11 +162,14 @@ python scripts/verify.py --suite-id nightly_20260417_120000 --candidate-runs 8
 python scripts/preview_relayer_scan.py --config configs/experiments/local_llama_cpp_agent.json --limit 10
 ```
 
-### 執行 relayer synthetic scan
+### Run relayer scan
 
 ```powershell
 python scripts/run_relayer_scan.py --config configs/experiments/local_llama_cpp_agent.json --max-candidates 64
 ```
+Default runnable configs use `relayer.scan.scoring_mode = "heat_map_probes"`, which evaluates the full `(Start Layer (i), End Layer (j))` grid with `probe_a / probe_b / combined` deltas.
+
+Set `relayer.scan.scoring_mode = "mock"` when you want the older cheap synthetic smoke-test path via `mock_layer_stack`.
 
 ### 驗證 relayer runtime bridge 協定
 
@@ -183,7 +187,7 @@ python scripts/run_relayer_scan.py --config configs/experiments/local_llama_cpp_
 }
 ```
 
-這會讓 runner 寫出 `runs/relayer_runtime/<run_id>/manifest.json`、`stdout.txt`、`stderr.txt`、`result.json` 與 `stub_runtime_applied.json`，用來驗證 bridge handoff 是否正常；它不是實際模型 forward-path patch。
+這會讓 runner 寫出 `runs/relayer_runtime/<run_id>/manifest.json`、`stdout.txt`、`stderr.txt`、`result.json` 與 `stub_runtime_applied.json`，並且可選擇把 backend 回傳的 `runtime_effects` 套進 llama.cpp / OpenClaw request path；它仍不是實際模型 forward-path patch。
 
 ### Dashboard
 
@@ -230,7 +234,7 @@ stop_serve_dashboard.cmd
 - `reports/heat_maps/<suite_id>/README.md`（先看哪裡、座標解釋、結果解讀）
 - `reports/heat_maps/<suite_id>/verification.json`
 - `reports/relayer_scans/<run_id>/aggregated.csv`
-- `reports/relayer_scans/<run_id>/heatmap.png`
+- `reports/relayer_scans/<run_id>/artifacts/heatmap.png`
 - `reports/relayer_scans/<run_id>/README.md`（精華摘要與閱讀順序）
 
 ## 目前 nightly 會動到的參數
@@ -251,15 +255,15 @@ stop_serve_dashboard.cmd
 
 - repo 現在已有 `RelayerConfig / RelayerPlan / scanner / mock relayer runner` 骨架，可驗證 `execution_order`
 - `scripts/preview_relayer_scan.py` 可預覽 `(start_layer, end_layer)` 掃描配置與對應 `execution_order`
-- `scripts/run_relayer_scan.py` 可用 `mock_layer_stack` backend 跑 synthetic scan，輸出 aggregated CSV / heatmap / top-k
+- `scripts/run_relayer_scan.py` 現在支援兩條 scoring path：`heat_map_probes` 會跑完整 `(Start Layer (i), End Layer (j))` RYS-style probe heatmap；`mock` 則保留 `mock_layer_stack` 的便宜 synthetic smoke-test 路徑
 - 現有 `llama_cpp_agent / openclaw_cli / session_mock` runner 若偵測到 `relayer.enabled=true`，會把 relayer plan 寫進 metadata，並明確標示是否真的套用
 - 目前預設 `relayer.mode=metadata_only`
 - `session_mock` 已支援 `mock_layer_stack`，會真的執行 layer trace 驗證 `execution_order`
-- `llama_cpp_agent / openclaw_cli` 若設定 `relayer.runtime_backend.command`，現在可進入 `runtime_patch` bridge 路徑，並寫出 manifest / stdout / stderr / result artifact
-- repo 內建 `scripts/fixtures/relayer_runtime_stub.py` 可驗證 bridge 協定與 runner handoff，但它不是實際模型 patch backend
+- `llama_cpp_agent / openclaw_cli` 若設定 `relayer.runtime_backend.command`，現在可進入 `runtime_patch` bridge 路徑，寫出 manifest / stdout / stderr / result artifact，並把 backend 回傳的 prompt / request / env overrides 套進 runner
+- repo 內建 `scripts/fixtures/relayer_runtime_stub.py` 可驗證 bridge 協定、runner handoff 與 runtime effect 注入，但它不是實際模型 patch backend
 - 若把 `relayer.mode` 設成 `runtime_patch`、但沒有設定 `relayer.runtime_backend.command`，runner 仍會直接報錯，避免產出假的 relayer 結果
-- `run_relayer_scan.py` 的分數來自 `mock_relayer_probe`，用途是驗證掃描/runner/store/heatmap plumbing，不是模型能力 benchmark
-- 也就是說：真正的模型 forward-path relayering backend 仍未完成，但 planner / scanner / mock execution / bridge protocol / guard / synthetic scan pipeline 已補上
+- `run_relayer_scan.py` 在 `mock` 模式下仍使用 `mock_relayer_probe`，用途是驗證掃描/runner/store/heatmap plumbing，不是模型能力 benchmark
+- 也就是說：目前真正缺的是模型 forward-path relayering backend，不是 heatmap 掃描、artifact pipeline 或 top-k verification 流程
 
 ## 限制與現況
 
@@ -290,14 +294,14 @@ Agent_Eval_Lab/
 └─ dashboard.html
 ```
 
-## Relayer Update (2026-04-17)
+## Relayer Update (2026-04-18)
 
-- `scripts/run_relayer_scan.py` 現在不是只有 synthetic ranking。流程已變成：
-  1. 用 `mock_layer_stack` 做 relayer cell 掃描與排序
-  2. 對 top-k candidate 走真實 Layer C evaluation / regression verification
-  3. 套用 baseline gate，將通過的 relayer candidate 納入 `baseline_history / rollback_events / config_history`
-- relayer scan candidate 會依 `relayer.scan.runtime_mode` 解析成真正的 runtime mode；在目前提供的 experiment config 裡，預設是 `runtime_patch`，並透過 `scripts/fixtures/relayer_runtime_stub.py` 驗證 bridge handoff。
-- 這條線已完成 P0 所需的 verifier / gate / adoption loop；但若要量到「模型能力真的因 relayering 改變」，仍需要真正的模型 forward-path backend，而不只是 stub。
+- `scripts/run_relayer_scan.py` 現在支援兩種模式：
+  1. `heat_map_probes`：對完整 relayer cell grid 跑 `probe_a / probe_b / combined` delta，對齊 README 第一行引用的 RYS-style heatmap 方法
+  2. `mock`：保留 `mock_layer_stack` synthetic ranking，專門用來做 smoke test 與 plumbing 驗證
+  3. top-k candidate 仍會走真實 Layer C evaluation / regression verification，再套用 baseline gate，寫入 `baseline_history / rollback_events / config_history`
+- relayer scan candidate 仍會依 `relayer.scan.runtime_mode` 解析成真正的 runtime mode；目前 runnable experiment config 預設 `relayer.scan.scoring_mode = "heat_map_probes"`，而 `runtime_patch` 已可透過 `scripts/fixtures/relayer_runtime_stub.py` 驗證 bridge handoff 與 runtime effect 注入。
+- 這條線已完成 heatmap generation、artifact plumbing、verifier / gate / adoption loop，以及 runtime backend effect plumbing；剩下的 relayer gap 是真正的模型 forward-path backend，而不只是 stub。
 
 ### New Relayer Outputs
 
