@@ -13,6 +13,7 @@ for candidate in (ROOT, SCRIPTS_DIR):
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
 
+from evolution.mutator import resolve_heat_map_plan
 from run_single import execute_single_run
 from scoring.aggregation import compute_fitness, compute_stability_score, compute_suite_score
 
@@ -32,6 +33,141 @@ def summarize_results(results: list[dict[str, Any]]) -> dict[str, Any]:
         "honesty_score": compute_suite_score(honesty_scores),
         "rollback_safety_score": compute_suite_score(rollback_scores),
         "run_ids": [item["run_id"] for item in results],
+    }
+
+
+def evaluate_heat_map_candidate_config(
+    *,
+    config_path: Path,
+    config: dict[str, Any],
+    suite_id: str,
+    regression_suite: dict[str, Any],
+    progress_offset: int,
+    progress_target: int,
+    candidate_case_prefix: str | None = None,
+    append_candidate_score_history: bool = False,
+    append_regression_score_history: bool = False,
+) -> dict[str, Any]:
+    candidate_case_prefix = candidate_case_prefix or config["config_id"]
+    heat_map_plan = resolve_heat_map_plan(config)
+    probe_specs = [heat_map_plan["probe_a"], heat_map_plan["probe_b"]]
+
+    candidate_results: list[dict[str, Any]] = []
+    probe_results: dict[str, list[dict[str, Any]]] = {probe["id"]: [] for probe in probe_specs}
+    probe_cursor = 0
+
+    for probe in probe_specs:
+        for index, seed in enumerate(probe["seeds"], start=1):
+            result = execute_single_run(
+                config_path=config_path,
+                seed=int(seed),
+                task_type=str(probe["task_type"]),
+                append_score_history=append_candidate_score_history,
+                append_baseline_history=False,
+                append_rollback_history=False,
+                manage_baseline=False,
+                reset_stream=False,
+                run_kind="heat_map_probe",
+                suite_id=suite_id,
+                case_id=f"{candidate_case_prefix}__{probe['id']}__{index:02d}",
+                progress_current=progress_offset + probe_cursor + 1,
+                progress_target=progress_target,
+            )
+            result["heat_map_probe"] = {
+                "id": probe["id"],
+                "label": probe["label"],
+                "task_type": probe["task_type"],
+                "seed": int(seed),
+            }
+            candidate_results.append(result)
+            probe_results[probe["id"]].append(result)
+            probe_cursor += 1
+
+    regression_results = []
+    for case in regression_suite["cases"]:
+        progress_index = progress_offset + probe_cursor + len(regression_results) + 1
+        regression_results.append(
+            execute_single_run(
+                config_path=config_path,
+                seed=case["seed"],
+                append_score_history=append_regression_score_history,
+                append_baseline_history=False,
+                append_rollback_history=False,
+                manage_baseline=False,
+                reset_stream=False,
+                run_kind="heat_map_regression",
+                suite_id=suite_id,
+                case_id=f"{candidate_case_prefix}__{case['case_id']}",
+                progress_current=progress_index,
+                progress_target=progress_target,
+            )
+        )
+
+    probe_summaries: dict[str, dict[str, Any]] = {}
+    for probe in probe_specs:
+        probe_summary = summarize_results(probe_results[probe["id"]])
+        probe_summary["id"] = probe["id"]
+        probe_summary["label"] = probe["label"]
+        probe_summary["task_type"] = probe["task_type"]
+        probe_summary["seeds"] = list(probe["seeds"])
+        probe_summaries[probe["id"]] = probe_summary
+
+    candidate_summary = summarize_results(candidate_results)
+    combined_probe_score = compute_suite_score([summary["suite_score"] for summary in probe_summaries.values()])
+    candidate_summary["suite_score"] = combined_probe_score
+    candidate_summary["combined_probe_score"] = combined_probe_score
+    candidate_summary["probe_summaries"] = probe_summaries
+    candidate_summary["probe_count"] = len(probe_summaries)
+
+    regression_summary = summarize_results(regression_results)
+    suite_score_a = float(config.get("layer_a_proxy_score", 1.0))
+    fitness = compute_fitness(
+        suite_score_c=candidate_summary["suite_score"],
+        suite_score_b=regression_summary["suite_score"],
+        suite_score_a=suite_score_a,
+        stability_score=candidate_summary["stability_score"],
+        rollback_safety_score=candidate_summary["rollback_safety_score"],
+    )
+
+    notes = (
+        f"RYS-style heat-map candidate {config['config_id']} measured on "
+        f"{probe_specs[0]['label']} + {probe_specs[1]['label']} probes."
+    )
+    payload = {
+        "config_id": config["config_id"],
+        "selected_at": datetime.now().isoformat(timespec="seconds"),
+        "fitness": fitness,
+        "suite_score_c": candidate_summary["suite_score"],
+        "suite_score_b": regression_summary["suite_score"],
+        "suite_score_a": suite_score_a,
+        "stability_score": candidate_summary["stability_score"],
+        "rollback_safety_score": candidate_summary["rollback_safety_score"],
+        "regression_pass_rate": regression_summary["pass_rate"],
+        "honesty_score": candidate_summary["honesty_score"],
+        "run_id": suite_id,
+        "notes": notes,
+        "source_config_path": str(config_path.resolve()),
+        "config_body": config,
+    }
+
+    return {
+        "config": config,
+        "config_path": str(config_path.resolve()),
+        "mutation_profile": config.get("mutation_profile", "unknown"),
+        "mutation_notes": config.get("mutation_notes", ""),
+        "mutation_strategy": config.get("mutation_strategy", "heat_map_scan"),
+        "parameter_name": config.get("mutation_target"),
+        "parameter_before": config.get("mutation_before"),
+        "parameter_after": config.get("mutation_after"),
+        "parameter_snapshot": config.get("parameter_snapshot"),
+        "fitness": fitness,
+        "candidate_summary": candidate_summary,
+        "regression_summary": regression_summary,
+        "suite_score_a": suite_score_a,
+        "candidate_payload": payload,
+        "candidate_runs": candidate_results,
+        "regression_runs": regression_results,
+        "probe_runs": probe_results,
     }
 
 

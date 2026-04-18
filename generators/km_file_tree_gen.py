@@ -6,19 +6,19 @@ from pathlib import Path
 
 DOC_PROFILES = [
     {
-        "doc_type": "部署說明",
+        "doc_type": "Deployment",
         "slug": "deployment",
         "target_names": ["deployment_note.md", "deploy_runbook.md"],
         "noise_names": ["deployment_draft.md", "deployment_archive.md"],
     },
     {
-        "doc_type": "交接清單",
+        "doc_type": "Handoff",
         "slug": "handoff",
         "target_names": ["handoff_checklist.md", "handoff_packet.md"],
         "noise_names": ["handoff_notes.md", "handoff_archive.md"],
     },
     {
-        "doc_type": "維運手冊",
+        "doc_type": "Operations",
         "slug": "operations",
         "target_names": ["operations_runbook.md", "ops_manual.md"],
         "noise_names": ["operations_old.md", "ops_draft.md"],
@@ -114,7 +114,10 @@ def generate_task(run_id: str, workspace_root: Path, seed: int | None = None, ta
         "category": "file_retrieval",
         "task_type": profile["slug"],
         "task_type_requested": normalized_task_type,
-        "prompt": f"找出專案 {project_name} 的 {profile['doc_type']}，並只顯示檔案位置。",
+        "prompt": (
+            f"Find the canonical {profile['doc_type'].lower()} document for project {project_name}. "
+            "Return the absolute path to the correct file."
+        ),
         "project_name": project_name,
         "doc_type": profile["doc_type"],
         "doc_slug": profile["slug"],

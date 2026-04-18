@@ -50,9 +50,27 @@ def _slugify(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", value).strip("_") or "candidate"
 
 
+def resolve_relayer_model_name(config: dict[str, Any]) -> str:
+    for raw_value in (
+        config.get("llama_cpp", {}).get("model"),
+        config.get("openclaw", {}).get("model"),
+        config.get("config_id"),
+        "model",
+    ):
+        value = str(raw_value or "").strip()
+        if value:
+            return value
+    return "model"
+
+
 def _relayer_section(config: dict[str, Any]) -> dict[str, Any]:
     section = config.get("relayer", {})
     return section if isinstance(section, dict) else {}
+
+
+def _normalize_relayer_mode(value: Any, *, default: str = "metadata_only") -> str:
+    mode = str(value or default).strip().lower()
+    return mode or default
 
 
 def relayer_runtime_backend_enabled(config: dict[str, Any]) -> bool:
@@ -182,6 +200,34 @@ def resolve_relayer_scan_settings(config: dict[str, Any]) -> RelayerScanSettings
     return settings
 
 
+def resolve_relayer_scan_runtime_mode(config: dict[str, Any]) -> str:
+    section = _relayer_section(config)
+    scan = section.get("scan", {})
+    if not isinstance(scan, dict):
+        scan = {}
+
+    runner_name = str(config.get("runner") or "").strip().lower() or None
+    supported_modes = relayer_supported_modes_for_runner(runner_name, config=config)
+    explicit_mode = scan.get("runtime_mode")
+    if explicit_mode not in (None, ""):
+        mode = _normalize_relayer_mode(explicit_mode)
+        if mode not in SUPPORTED_RELAYER_MODES:
+            raise ValueError(f"Unsupported relayer.scan.runtime_mode: {mode}")
+        if mode != "metadata_only" and mode not in supported_modes:
+            supported_text = ", ".join(supported_modes)
+            raise RuntimeError(
+                f"relayer.scan.runtime_mode={mode} requires a runtime backend, but {runner_name or 'runner'} "
+                f"supports only {supported_text}."
+            )
+        return mode
+
+    if "runtime_patch" in supported_modes:
+        return "runtime_patch"
+    if "mock_layer_stack" in supported_modes:
+        return "mock_layer_stack"
+    return _normalize_relayer_mode(section.get("mode", "metadata_only"))
+
+
 def generate_relayer_configs(settings: RelayerScanSettings) -> Iterator[RelayerConfig]:
     for start_layer in range(settings.start_layer_min, settings.end_layer_max + 1):
         for end_layer in range(start_layer, settings.end_layer_max + 1):
@@ -233,6 +279,30 @@ def summarize_relayer_config(config: dict[str, Any]) -> dict[str, Any]:
     except Exception as exc:
         scan_error = str(exc)
 
+    scan_runtime_mode: str | None = None
+    scan_runtime_mode_error: str | None = None
+    try:
+        scan_runtime_mode = resolve_relayer_scan_runtime_mode(config)
+    except Exception as exc:
+        scan_runtime_mode_error = str(exc)
+
+    verification_capable = scan_runtime_mode in {"runtime_patch", "mock_layer_stack"}
+    if scan_runtime_mode_error:
+        scan_note = (
+            "Synthetic relayer scan can rank cells with mock_layer_stack, but verification backend resolution failed: "
+            f"{scan_runtime_mode_error}"
+        )
+    elif verification_capable:
+        scan_note = (
+            "Synthetic relayer scan ranks cells with mock_layer_stack; top-k verification candidates resolve to "
+            f"mode={scan_runtime_mode}."
+        )
+    else:
+        scan_note = (
+            "Synthetic relayer scan ranks cells with mock_layer_stack; top-k verification candidates currently "
+            f"resolve to mode={scan_runtime_mode or 'metadata_only'}, so no runtime relayer effect will be applied."
+        )
+
     return {
         "configured": bool(section),
         "enabled": bool(section.get("enabled", False)),
@@ -248,7 +318,10 @@ def summarize_relayer_config(config: dict[str, Any]) -> dict[str, Any]:
         "scan_candidate_count": scan_candidate_total,
         "scan_error": scan_error,
         "scan_backend": "mock_layer_stack",
-        "scan_note": "Synthetic relayer scan currently runs on mock_layer_stack, not a real model forward path.",
+        "scan_runtime_mode": scan_runtime_mode,
+        "scan_runtime_mode_error": scan_runtime_mode_error,
+        "verification_capable": verification_capable,
+        "scan_note": scan_note,
         "external_runtime_bridge": relayer_runtime_backend_enabled(config),
         "scan_settings": (
             {
@@ -265,7 +338,12 @@ def summarize_relayer_config(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def apply_relayer_config(base_config: dict[str, Any], relayer_config: RelayerConfig) -> dict[str, Any]:
+def apply_relayer_config(
+    base_config: dict[str, Any],
+    relayer_config: RelayerConfig,
+    *,
+    mode_override: str | None = None,
+) -> dict[str, Any]:
     config = copy.deepcopy(base_config)
     section = _relayer_section(config)
     num_layers = resolve_relayer_num_layers(config)
@@ -280,6 +358,8 @@ def apply_relayer_config(base_config: dict[str, Any], relayer_config: RelayerCon
             "repeat_count": relayer_config.repeat_count,
         }
     )
+    if mode_override:
+        section["mode"] = _normalize_relayer_mode(mode_override)
     config["relayer"] = section
     config["relayer_plan"] = {
         "num_layers": num_layers,
@@ -291,14 +371,11 @@ def apply_relayer_config(base_config: dict[str, Any], relayer_config: RelayerCon
 
 def build_relayer_scan_candidates(base_config: dict[str, Any]) -> list[dict[str, Any]]:
     settings = resolve_relayer_scan_settings(base_config)
-    model_name = (
-        str(base_config.get("llama_cpp", {}).get("model"))
-        or str(base_config.get("openclaw", {}).get("model"))
-        or str(base_config.get("config_id", "model"))
-    )
+    scan_runtime_mode = resolve_relayer_scan_runtime_mode(base_config)
+    model_name = resolve_relayer_model_name(base_config)
     candidates: list[dict[str, Any]] = []
     for relayer_config in generate_relayer_configs(settings):
-        candidate = apply_relayer_config(base_config, relayer_config)
+        candidate = apply_relayer_config(base_config, relayer_config, mode_override=scan_runtime_mode)
         candidate["config_id"] = relayer_config_id(model_name, relayer_config)
         candidate["mutation_profile"] = candidate["config_id"]
         candidate["mutation_strategy"] = "relayer_scan"
@@ -308,11 +385,14 @@ def build_relayer_scan_candidates(base_config: dict[str, Any]) -> list[dict[str,
             "start_layer": relayer_config.start_layer,
             "end_layer": relayer_config.end_layer,
             "repeat_count": relayer_config.repeat_count,
+            "mode": scan_runtime_mode,
         }
         candidate["mutation_notes"] = (
             f"Relayer scan cell start_layer={relayer_config.start_layer}, "
-            f"end_layer={relayer_config.end_layer}, repeat_count={relayer_config.repeat_count}."
+            f"end_layer={relayer_config.end_layer}, repeat_count={relayer_config.repeat_count}, "
+            f"mode={scan_runtime_mode}."
         )
+        candidate["relayer_scan_runtime_mode"] = scan_runtime_mode
         candidate["heat_map_coordinates"] = {
             "x_axis": "relayer.start_layer",
             "x_label": "Start Layer",

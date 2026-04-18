@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from generators.km_file_tree_gen import TASK_TYPE_CHOICES, generate_task
+from diagnostics.run_diagnostics import build_failure_diagnostic, build_trace_diagnostic
+from generators.task_dispatch import TASK_TYPE_CHOICES, build_task_and_benchmark
 from rollback.baseline_manager import load_baseline, maybe_promote_baseline
 from rollback.workspace_restore import restore_workspace
 from runners.factory import build_runner
@@ -20,7 +21,7 @@ from scoring.metrics import compute_stotal
 from storage.db import init_db, insert_run_summary
 from storage.history_writer import append_history_entry, ensure_report_files, seed_static_histories, write_json
 from storage.live_writer import LiveWriter
-from verifiers.km_dynamic_verifier import verify_task
+from verifiers.task_dispatch import verify_task
 
 
 def _load_json(path: Path) -> dict:
@@ -111,8 +112,6 @@ def execute_single_run(
 ) -> dict:
     config_path = config_path or ROOT / "configs" / "experiments" / "default_mvp.json"
     config = _load_json(config_path)
-    benchmark = _load_json(ROOT / "benchmarks" / "layer_c" / "km_dynamic_retrieval_01.json")
-
     now = datetime.now()
     timestamp = now.isoformat(timespec="seconds")
     run_id = now.strftime("run_%Y%m%d_%H%M%S_%f")
@@ -133,7 +132,13 @@ def execute_single_run(
     ensure_report_files(reports_dir)
     seed_static_histories(reports_dir, timestamp)
 
-    selected_task_type = str(task_type or "auto").strip().lower() or "auto"
+    task, benchmark = build_task_and_benchmark(
+        run_id=run_id,
+        workspace_root=workspace_root,
+        seed=seed,
+        task_type=task_type,
+    )
+    selected_task_type = task["task_type"]
     writer.write_status(
         _build_status_payload(
             run_id=run_id,
@@ -159,12 +164,11 @@ def execute_single_run(
         )
     )
 
-    task = generate_task(run_id=run_id, workspace_root=workspace_root, seed=seed, task_type=task_type)
     snapshot = create_snapshot(workspace_root, snapshot_dir)
     writer.append_event(
         {
             "type": "system",
-            "text": f"Sandbox workspace 已準備，snapshot 共 {snapshot['file_count']} 個檔案。",
+            "text": f"Sandbox workspace snapshot captured with {snapshot['file_count']} files.",
             "name": "sandbox",
             "run_kind": run_kind,
         }
@@ -197,7 +201,7 @@ def execute_single_run(
     writer.append_event(
         {
             "type": "verifier",
-            "name": "km_dynamic_verifier",
+            "name": benchmark.get("verifier", {}).get("entry", "task_verifier"),
             "text": f"passed={verifier_result['passed']} score={verifier_result['score']} tags={','.join(verifier_result['failure_tags']) or 'none'}",
             "run_kind": run_kind,
         }
@@ -366,6 +370,13 @@ def execute_single_run(
         },
         "baseline": baseline_change,
     }
+    summary["diagnostics"] = {
+        "failure": build_failure_diagnostic(summary),
+        "trace": build_trace_diagnostic(summary),
+    }
+
+    append_history_entry(reports_dir / "failure_clusters.json", summary["diagnostics"]["failure"])
+    append_history_entry(reports_dir / "trace_analysis_history.json", summary["diagnostics"]["trace"])
 
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     write_json(artifacts_dir / f"{run_id}.json", summary)

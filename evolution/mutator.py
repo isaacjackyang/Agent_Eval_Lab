@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from evolution.relayer_plan import resolve_relayer_scan_runtime_mode, resolve_relayer_scan_settings
+
 
 DEFAULT_AGENT_ARCHITECTURE: dict[str, Any] = {
     "variant": "baseline",
@@ -234,31 +236,44 @@ ARCHITECTURE_MUTATION_PRESETS: list[dict[str, Any]] = [
     },
 ]
 
-HEAT_MAP_DIMENSION_CATALOG: dict[str, dict[str, Any]] = {
-    "agent_architecture.prompt_style": {
-        "label": "Prompt Style",
-        "path": ("agent_architecture", "prompt_style"),
-        "choices": ("strict_json", "planner", "recall"),
+HEAT_MAP_SCAN_FIELD_OPTIONS: list[dict[str, Any]] = [
+    {
+        "value": "relayer.end_layer",
+        "label": "End Layer (j)",
+        "description": "RYS x-axis: the end layer of the duplicated block.",
     },
-    "agent_architecture.query_policy": {
-        "label": "Query Policy",
-        "path": ("agent_architecture", "query_policy"),
-        "choices": ("focused_only", "focused_then_broad", "broad_then_focused"),
+    {
+        "value": "relayer.start_layer",
+        "label": "Start Layer (i)",
+        "description": "RYS y-axis: the start layer of the duplicated block.",
     },
-    "agent_architecture.recovery_policy": {
-        "label": "Recovery Policy",
-        "path": ("agent_architecture", "recovery_policy"),
-        "choices": ("none", "ranked", "signal_boost"),
+    {
+        "value": "relayer.repeat_count",
+        "label": "Repeat Count",
+        "description": "How many extra traversals of the duplicated block are applied.",
     },
-    "agent_architecture.search_result_limit": {
-        "label": "Search Result Limit",
-        "path": ("agent_architecture", "search_result_limit"),
-        "choices": (4, 5, 6, 8),
-    },
+]
+
+HEAT_MAP_TASK_TYPE_OPTIONS: list[dict[str, str]] = [
+    {"value": "deployment", "label": "Deployment"},
+    {"value": "handoff", "label": "Handoff"},
+    {"value": "operations", "label": "Operations"},
+    {"value": "math", "label": "Math Calculation"},
+]
+
+DEFAULT_HEAT_MAP_PROBE_A = {
+    "id": "probe_a",
+    "label": "Deployment Probe",
+    "task_type": "deployment",
+    "seeds": [1101, 1103, 1105, 1107],
 }
 
-DEFAULT_HEAT_MAP_X_AXIS = "agent_architecture.search_result_limit"
-DEFAULT_HEAT_MAP_Y_AXIS = "agent_architecture.query_policy"
+DEFAULT_HEAT_MAP_PROBE_B = {
+    "id": "probe_b",
+    "label": "Handoff Probe",
+    "task_type": "handoff",
+    "seeds": [2101, 2103, 2105, 2107],
+}
 
 
 def normalize_weights(weights: dict) -> dict:
@@ -327,16 +342,48 @@ def supports_architecture_evolution(config: dict[str, Any]) -> bool:
 
 
 def heat_map_dimension_options() -> list[dict[str, Any]]:
-    options: list[dict[str, Any]] = []
-    for dimension_id, spec in HEAT_MAP_DIMENSION_CATALOG.items():
-        options.append(
-            {
-                "value": dimension_id,
-                "label": spec["label"],
-                "choices": list(spec["choices"]),
-            }
-        )
-    return options
+    return copy.deepcopy(HEAT_MAP_SCAN_FIELD_OPTIONS)
+
+
+def heat_map_task_type_options() -> list[dict[str, str]]:
+    return copy.deepcopy(HEAT_MAP_TASK_TYPE_OPTIONS)
+
+
+def _normalize_heat_map_seed_values(raw_values: Any, *, fallback: list[int]) -> list[int]:
+    if raw_values is None:
+        return list(fallback)
+    if not isinstance(raw_values, list):
+        raise ValueError("Heat-map probe seeds must be a JSON list.")
+
+    seeds: list[int] = []
+    for item in raw_values:
+        value = int(item)
+        if value not in seeds:
+            seeds.append(value)
+    if not seeds:
+        raise ValueError("Heat-map probe seeds cannot be empty.")
+    return seeds
+
+
+def _normalize_heat_map_task_type(raw_value: Any, *, default: str) -> str:
+    task_type = str(raw_value or default).strip().lower() or default
+    valid = {item["value"] for item in HEAT_MAP_TASK_TYPE_OPTIONS}
+    if task_type not in valid:
+        raise ValueError(f"Unsupported heat-map probe task type: {task_type}")
+    return task_type
+
+
+def _resolve_heat_map_probe(heat_map_cfg: dict[str, Any], *, key: str, fallback: dict[str, Any]) -> dict[str, Any]:
+    raw_probe = heat_map_cfg.get(key, {})
+    if not isinstance(raw_probe, dict):
+        raw_probe = {}
+    task_type = _normalize_heat_map_task_type(raw_probe.get("task_type"), default=str(fallback["task_type"]))
+    return {
+        "id": str(raw_probe.get("id") or fallback["id"]),
+        "label": str(raw_probe.get("label") or fallback["label"]),
+        "task_type": task_type,
+        "seeds": _normalize_heat_map_seed_values(raw_probe.get("seeds"), fallback=list(fallback["seeds"])),
+    }
 
 
 def apply_heat_map_overrides(
@@ -348,6 +395,15 @@ def apply_heat_map_overrides(
     y_values: list[Any] | None = None,
     top_k: int | None = None,
     verify_overrides: dict[str, Any] | None = None,
+    start_layer_min: int | None = None,
+    end_layer_max: int | None = None,
+    min_block_len: int | None = None,
+    max_block_len: int | None = None,
+    repeat_count: int | None = None,
+    probe_a_task_type: str | None = None,
+    probe_a_seeds: list[int] | None = None,
+    probe_b_task_type: str | None = None,
+    probe_b_seeds: list[int] | None = None,
 ) -> dict[str, Any]:
     config = copy.deepcopy(base_config)
     nightly_cfg = config.setdefault("nightly", {})
@@ -360,6 +416,8 @@ def apply_heat_map_overrides(
         heat_map_cfg = {}
     nightly_cfg["heat_map"] = heat_map_cfg
 
+    # Legacy fields are still accepted so older configs do not crash, but
+    # RYS-style heat-map scans now use relayer start/end windows plus probe sets.
     if x_axis:
         heat_map_cfg["x_axis"] = str(x_axis).strip()
     if y_axis:
@@ -370,6 +428,42 @@ def apply_heat_map_overrides(
         heat_map_cfg["y_values"] = list(y_values)
     if top_k is not None:
         heat_map_cfg["top_k"] = int(top_k)
+
+    scan_cfg = heat_map_cfg.get("scan", {})
+    if not isinstance(scan_cfg, dict):
+        scan_cfg = {}
+    if start_layer_min is not None:
+        scan_cfg["start_layer_min"] = int(start_layer_min)
+    if end_layer_max is not None:
+        scan_cfg["end_layer_max"] = int(end_layer_max)
+    if min_block_len is not None:
+        scan_cfg["min_block_len"] = int(min_block_len)
+    if max_block_len is not None:
+        scan_cfg["max_block_len"] = int(max_block_len)
+    if repeat_count is not None:
+        scan_cfg["repeat_count"] = int(repeat_count)
+    if scan_cfg:
+        heat_map_cfg["scan"] = scan_cfg
+
+    if probe_a_task_type is not None or probe_a_seeds is not None:
+        probe_a_cfg = heat_map_cfg.get("probe_a", {})
+        if not isinstance(probe_a_cfg, dict):
+            probe_a_cfg = {}
+        if probe_a_task_type is not None:
+            probe_a_cfg["task_type"] = str(probe_a_task_type).strip().lower()
+        if probe_a_seeds is not None:
+            probe_a_cfg["seeds"] = [int(item) for item in probe_a_seeds]
+        heat_map_cfg["probe_a"] = probe_a_cfg
+
+    if probe_b_task_type is not None or probe_b_seeds is not None:
+        probe_b_cfg = heat_map_cfg.get("probe_b", {})
+        if not isinstance(probe_b_cfg, dict):
+            probe_b_cfg = {}
+        if probe_b_task_type is not None:
+            probe_b_cfg["task_type"] = str(probe_b_task_type).strip().lower()
+        if probe_b_seeds is not None:
+            probe_b_cfg["seeds"] = [int(item) for item in probe_b_seeds]
+        heat_map_cfg["probe_b"] = probe_b_cfg
 
     if verify_overrides:
         verify_cfg = heat_map_cfg.get("verify", {})
@@ -422,114 +516,116 @@ def selected_sampling_parameters_for_config(config: dict[str, Any]) -> list[str]
     return available
 
 
-def _heat_map_dimension_spec(dimension_id: str) -> dict[str, Any]:
-    spec = HEAT_MAP_DIMENSION_CATALOG.get(dimension_id)
-    if spec is None:
-        raise ValueError(f"Unsupported heat-map axis: {dimension_id}")
-    return spec
-
-
-def _normalize_heat_map_values(raw_values: Any, spec: dict[str, Any], *, axis_name: str) -> list[Any]:
-    default_values = list(spec["choices"])
-    if raw_values is None:
-        return default_values
-    if not isinstance(raw_values, list):
-        raise ValueError(f"Heat-map {axis_name} values must be a JSON list.")
-
-    lookup = {str(choice).strip(): choice for choice in default_values}
-    normalized: list[Any] = []
-    for item in raw_values:
-        key = str(item).strip()
-        if key not in lookup:
-            raise ValueError(f"Unsupported heat-map value for {axis_name}: {item}")
-        value = lookup[key]
-        if value not in normalized:
-            normalized.append(value)
-    if not normalized:
-        raise ValueError(f"Heat-map {axis_name} values cannot be empty.")
-    return normalized
-
-
-def _heat_map_value_for_path(config: dict[str, Any], path: tuple[str, ...]) -> Any:
-    if path and path[0] == "agent_architecture":
-        architecture = effective_agent_architecture(config)
-        if len(path) == 2:
-            return architecture.get(path[1])
-    return _get_nested(config, path)
-
-
 def resolve_heat_map_plan(base_config: dict[str, Any]) -> dict[str, Any]:
     nightly_cfg = base_config.get("nightly", {})
     heat_map_cfg = nightly_cfg.get("heat_map", {})
     if not isinstance(heat_map_cfg, dict):
         heat_map_cfg = {}
+    scan_cfg = heat_map_cfg.get("scan", {})
+    if not isinstance(scan_cfg, dict):
+        scan_cfg = {}
 
-    x_axis = str(heat_map_cfg.get("x_axis", DEFAULT_HEAT_MAP_X_AXIS)).strip() or DEFAULT_HEAT_MAP_X_AXIS
-    y_axis = str(heat_map_cfg.get("y_axis", DEFAULT_HEAT_MAP_Y_AXIS)).strip() or DEFAULT_HEAT_MAP_Y_AXIS
-    if x_axis == y_axis:
-        raise ValueError("Heat-map x_axis and y_axis must be different.")
+    relayer_scan_settings = resolve_relayer_scan_settings(base_config)
+    start_layer_min = int(scan_cfg.get("start_layer_min", relayer_scan_settings.start_layer_min))
+    end_layer_max = int(scan_cfg.get("end_layer_max", relayer_scan_settings.end_layer_max))
+    min_block_len = int(scan_cfg.get("min_block_len", relayer_scan_settings.min_block_len))
+    raw_max_block_len = scan_cfg.get("max_block_len", relayer_scan_settings.max_block_len)
+    max_block_len = int(raw_max_block_len) if raw_max_block_len not in (None, "") else None
+    repeat_count = int(scan_cfg.get("repeat_count", relayer_scan_settings.repeat_count))
 
-    x_spec = _heat_map_dimension_spec(x_axis)
-    y_spec = _heat_map_dimension_spec(y_axis)
-    x_values = _normalize_heat_map_values(heat_map_cfg.get("x_values"), x_spec, axis_name="x_axis")
-    y_values = _normalize_heat_map_values(heat_map_cfg.get("y_values"), y_spec, axis_name="y_axis")
+    if start_layer_min < 0:
+        raise ValueError("Heat-map start_layer_min must be >= 0.")
+    if end_layer_max < start_layer_min:
+        raise ValueError("Heat-map end_layer_max must be >= start_layer_min.")
+    if end_layer_max >= relayer_scan_settings.num_layers:
+        raise ValueError("Heat-map end_layer_max must be < relayer.num_layers.")
+    if min_block_len < 1:
+        raise ValueError("Heat-map min_block_len must be >= 1.")
+    if max_block_len is not None and max_block_len < min_block_len:
+        raise ValueError("Heat-map max_block_len must be >= min_block_len.")
+    if repeat_count < 1:
+        raise ValueError("Heat-map repeat_count must be >= 1.")
 
-    baseline_x = _heat_map_value_for_path(base_config, x_spec["path"])
-    baseline_y = _heat_map_value_for_path(base_config, y_spec["path"])
-    if baseline_x is None:
-        baseline_x = x_values[0]
-    if baseline_y is None:
-        baseline_y = y_values[0]
+    probe_a = _resolve_heat_map_probe(heat_map_cfg, key="probe_a", fallback=DEFAULT_HEAT_MAP_PROBE_A)
+    probe_b = _resolve_heat_map_probe(heat_map_cfg, key="probe_b", fallback=DEFAULT_HEAT_MAP_PROBE_B)
 
-    cell_count = len(x_values) * len(y_values)
-    top_k = int(heat_map_cfg.get("top_k", min(5, cell_count)))
-    top_k = max(1, min(top_k, cell_count))
+    valid_cells = 0
+    for start_layer in range(start_layer_min, end_layer_max + 1):
+        for end_layer in range(start_layer, end_layer_max + 1):
+            block_len = end_layer - start_layer + 1
+            if block_len < min_block_len:
+                continue
+            if max_block_len is not None and block_len > max_block_len:
+                continue
+            valid_cells += 1
+
+    top_k = int(heat_map_cfg.get("top_k", min(5, valid_cells or 1)))
+    top_k = max(1, min(top_k, max(1, valid_cells)))
+    runtime_mode = resolve_relayer_scan_runtime_mode(base_config)
+    x_values = list(range(start_layer_min, end_layer_max + 1))
+    y_values = list(range(start_layer_min, end_layer_max + 1))
 
     return {
-        "x_axis": x_axis,
-        "x_label": x_spec["label"],
-        "x_path": x_spec["path"],
+        "heat_map_type": "rys_brain_scan",
+        "x_axis": "relayer.end_layer",
+        "x_label": "End Layer (j)",
         "x_values": x_values,
-        "y_axis": y_axis,
-        "y_label": y_spec["label"],
-        "y_path": y_spec["path"],
+        "y_axis": "relayer.start_layer",
+        "y_label": "Start Layer (i)",
         "y_values": y_values,
-        "cell_count": cell_count,
+        "cell_count": valid_cells,
         "top_k": top_k,
+        "num_layers": relayer_scan_settings.num_layers,
+        "repeat_count": repeat_count,
+        "runtime_mode": runtime_mode,
+        "scan": {
+            "start_layer_min": start_layer_min,
+            "end_layer_max": end_layer_max,
+            "min_block_len": min_block_len,
+            "max_block_len": max_block_len,
+            "repeat_count": repeat_count,
+        },
+        "probe_a": probe_a,
+        "probe_b": probe_b,
+        "probe_eval_count": len(probe_a["seeds"]) + len(probe_b["seeds"]),
         "baseline_coordinate": {
-            "x_axis": x_axis,
-            "x_label": x_spec["label"],
-            "x_value": baseline_x,
-            "y_axis": y_axis,
-            "y_label": y_spec["label"],
-            "y_value": baseline_y,
+            "x_axis": "relayer.end_layer",
+            "x_label": "End Layer (j)",
+            "x_value": None,
+            "y_axis": "relayer.start_layer",
+            "y_label": "Start Layer (i)",
+            "y_value": None,
         },
     }
 
 
 def build_heat_map_candidates(base_config: dict[str, Any]) -> list[dict[str, Any]]:
     plan = resolve_heat_map_plan(base_config)
-    baseline_x = plan["baseline_coordinate"]["x_value"]
-    baseline_y = plan["baseline_coordinate"]["y_value"]
-
     candidates: list[dict[str, Any]] = []
-    for y_value in plan["y_values"]:
-        for x_value in plan["x_values"]:
-            if x_value == baseline_x and y_value == baseline_y:
+    scan = plan["scan"]
+    for start_layer in range(scan["start_layer_min"], scan["end_layer_max"] + 1):
+        for end_layer in range(start_layer, scan["end_layer_max"] + 1):
+            block_len = end_layer - start_layer + 1
+            if block_len < scan["min_block_len"]:
+                continue
+            if scan["max_block_len"] is not None and block_len > scan["max_block_len"]:
                 continue
 
-            changes: dict[str, Any] = {}
-            _set_nested(changes, plan["x_path"], x_value)
-            _set_nested(changes, plan["y_path"], y_value)
-
-            suffix = (
-                "heat_map__"
-                f"{_slugify(plan['y_axis'])}_{_slugify(str(y_value))}__"
-                f"{_slugify(plan['x_axis'])}_{_slugify(str(x_value))}"
-            )
+            repeat_count = int(plan["repeat_count"])
+            extra_layers = block_len * repeat_count
+            changes = {
+                "relayer": {
+                    "enabled": True,
+                    "mode": plan["runtime_mode"],
+                    "start_layer": start_layer,
+                    "end_layer": end_layer,
+                    "repeat_count": repeat_count,
+                }
+            }
+            suffix = f"heat_map__s{start_layer}_e{end_layer}_r{repeat_count}"
             notes = (
-                f"Heat-map scan cell with {plan['y_label']}={y_value} "
-                f"and {plan['x_label']}={x_value}."
+                f"RYS-style brain-scan cell with Start Layer (i)={start_layer}, "
+                f"End Layer (j)={end_layer}, repeat_count={repeat_count}, block_len={block_len}."
             )
             preview = build_candidate_variant(
                 base_config=base_config,
@@ -544,23 +640,32 @@ def build_heat_map_candidates(base_config: dict[str, Any]) -> list[dict[str, Any
                 notes=notes,
                 extra_metadata={
                     "mutation_strategy": "heat_map_scan",
-                    "mutation_target": f"{plan['y_axis']} x {plan['x_axis']}",
+                    "mutation_target": "relayer.start_layer x relayer.end_layer",
                     "mutation_before": {
-                        plan["x_axis"]: baseline_x,
-                        plan["y_axis"]: baseline_y,
+                        "relayer.enabled": False,
+                        "relayer.start_layer": base_config.get("relayer", {}).get("start_layer"),
+                        "relayer.end_layer": base_config.get("relayer", {}).get("end_layer"),
+                        "relayer.repeat_count": base_config.get("relayer", {}).get("repeat_count"),
                     },
                     "mutation_after": {
-                        plan["x_axis"]: x_value,
-                        plan["y_axis"]: y_value,
+                        "relayer.enabled": True,
+                        "relayer.start_layer": start_layer,
+                        "relayer.end_layer": end_layer,
+                        "relayer.repeat_count": repeat_count,
                     },
                     "parameter_snapshot": parameter_snapshot(preview),
                     "heat_map_coordinates": {
                         "x_axis": plan["x_axis"],
                         "x_label": plan["x_label"],
-                        "x_value": x_value,
+                        "x_value": end_layer,
                         "y_axis": plan["y_axis"],
                         "y_label": plan["y_label"],
-                        "y_value": y_value,
+                        "y_value": start_layer,
+                        "start_layer": start_layer,
+                        "end_layer": end_layer,
+                        "repeat_count": repeat_count,
+                        "block_len": block_len,
+                        "extra_layers": extra_layers,
                     },
                 },
             )
@@ -607,6 +712,11 @@ def parameter_snapshot(config: dict[str, Any]) -> dict[str, Any]:
         "agent_architecture.query_policy": architecture.get("query_policy"),
         "agent_architecture.recovery_policy": architecture.get("recovery_policy"),
         "agent_architecture.search_result_limit": architecture.get("search_result_limit"),
+        "relayer.enabled": config.get("relayer", {}).get("enabled"),
+        "relayer.mode": config.get("relayer", {}).get("mode"),
+        "relayer.start_layer": config.get("relayer", {}).get("start_layer"),
+        "relayer.end_layer": config.get("relayer", {}).get("end_layer"),
+        "relayer.repeat_count": config.get("relayer", {}).get("repeat_count"),
     }
 
 

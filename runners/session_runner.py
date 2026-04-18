@@ -35,12 +35,12 @@ class SessionRunner(BaseRunner):
             payload = {"type": event_type, "text": text, **extra}
             live_writer.append_event(payload)
 
-        def write_status() -> None:
+        def write_status(status: str = "running") -> None:
             elapsed = round(time.perf_counter() - started, 3)
             live_writer.write_status(
                 {
                     "run_id": context["run_id"],
-                    "status": "running",
+                    "status": status,
                     "task_id": task["id"],
                     "config_id": context["config_id"],
                     "runner": self.name,
@@ -82,7 +82,31 @@ class SessionRunner(BaseRunner):
                 ),
                 name="relayer_runtime",
             )
-        emit("assistant", f"收到任務：{task['prompt']}")
+
+        if str(task.get("category", "")).strip().lower() == "math_reasoning":
+            emit("assistant", f"Mock runner solving math task: {task['prompt']}")
+            step_count = 1
+            final_output = str(task.get("expected_output", "")).strip()
+            emit("assistant", final_output, name="final_answer")
+            write_status(status="runner_finished")
+            return RunnerResult(
+                final_output=final_output,
+                step_count=step_count,
+                retries=retries,
+                elapsed_sec=round(time.perf_counter() - started, 3),
+                current_tool=None,
+                last_error=last_error,
+                token_estimate=token_estimate,
+                tool_trace=tool_trace,
+                metadata={
+                    "runner_mode": "mock",
+                    "benchmark_mode": "math_reasoning",
+                    "relayer": relayer_context,
+                    "relayer_runtime": relayer_runtime,
+                },
+            )
+
+        emit("assistant", f"Mock runner handling retrieval task: {task['prompt']}")
         write_status()
 
         broad_query = task["search_hints"]["broad"]
@@ -96,11 +120,11 @@ class SessionRunner(BaseRunner):
                 "tool": "search_file",
                 "args": {"query": broad_query},
                 "result_count": len(broad_matches),
-                "matches": [item["path"] for item in broad_matches[:5]],
+                "matches_preview": [item["path"] for item in broad_matches[:5]],
                 "ok": bool(broad_matches),
             }
         )
-        emit("tool_result", f"search_file 命中 {len(broad_matches)} 筆候選", name="search_file")
+        emit("tool_result", f"search_file returned {len(broad_matches)} candidates", name="search_file")
         write_status()
 
         chosen = pick_best_match(broad_matches, task)
@@ -108,7 +132,7 @@ class SessionRunner(BaseRunner):
 
         if not exact_match:
             retries += 1
-            emit("assistant", "第一次搜尋結果太廣，縮小到專案名稱與文件類型後重試。")
+            emit("assistant", "Broad search was ambiguous. Retrying with the focused query.")
             focused_query = task["search_hints"]["focused"]
             step_count += 1
             current_tool = "search_file"
@@ -120,16 +144,15 @@ class SessionRunner(BaseRunner):
                     "tool": "search_file",
                     "args": {"query": focused_query},
                     "result_count": len(focused_matches),
-                    "matches": [item["path"] for item in focused_matches[:5]],
+                    "matches_preview": [item["path"] for item in focused_matches[:5]],
                     "ok": bool(focused_matches),
                 }
             )
-            emit("tool_result", f"精準搜尋後命中 {len(focused_matches)} 筆候選", name="search_file")
+            emit("tool_result", f"search_file returned {len(focused_matches)} focused candidates", name="search_file")
             write_status()
             chosen = pick_best_match(focused_matches, task)
 
-        final_output = "找不到符合條件的檔案"
-
+        final_output = ""
         if chosen:
             step_count += 1
             current_tool = "open_file_location"
@@ -147,36 +170,17 @@ class SessionRunner(BaseRunner):
             if resolved.exists():
                 final_output = str(resolved)
                 emit("tool_result", final_output, name="open_file_location")
-                emit("assistant", f"任務完成，輸出唯一路徑：{final_output}")
+                emit("assistant", final_output, name="final_path")
             else:
                 last_error = "Selected path no longer exists."
                 emit("tool_result", last_error, name="open_file_location")
-                emit("assistant", "候選路徑在開啟前消失，這次 run 視為失敗。")
         else:
             last_error = "No candidate found."
-            emit("assistant", "搜尋流程結束，但沒有找到可驗證的候選檔案。")
+            emit("assistant", "Mock runner could not find a suitable candidate.")
 
         current_tool = None
         elapsed_sec = round(time.perf_counter() - started, 3)
-        live_writer.write_status(
-            {
-                "run_id": context["run_id"],
-                "status": "runner_finished",
-                "task_id": task["id"],
-                "config_id": context["config_id"],
-                "runner": self.name,
-                "current_tool": current_tool,
-                "last_error": last_error,
-                "step_count": step_count,
-                "max_steps": self.max_steps,
-                "elapsed_sec": elapsed_sec,
-                "updated_at": context["started_at"],
-                "fitness_mode": context["fitness_mode"],
-                "relayer_mode": relayer_context["mode"],
-                "relayer_applied": relayer_context["applied"],
-                "relayer_range": relayer_context.get("range_text"),
-            }
-        )
+        write_status(status="runner_finished")
 
         return RunnerResult(
             final_output=final_output,

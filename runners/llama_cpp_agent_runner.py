@@ -63,6 +63,8 @@ class LlamaCppAgentRunner(BaseRunner):
         search_result_limit = int(architecture.get("search_result_limit", 5))
 
         workspace_root = Path(task["workspace_root"]).resolve()
+        task_category = str(task.get("category", "")).strip().lower()
+        math_mode = task_category == "math_reasoning"
         started = time.perf_counter()
         step_count = 0
         retries = 0
@@ -98,17 +100,21 @@ class LlamaCppAgentRunner(BaseRunner):
                 f"{status_context['progress_current']}/{status_context['progress_target']}"
             )
 
-        system_prompt = self._build_system_prompt(
-            prompt_style=prompt_style,
-            query_policy=query_policy,
-            recovery_policy=recovery_policy,
-            search_result_limit=search_result_limit,
-        )
-        user_prompt = self._build_user_prompt(
-            task=task,
-            workspace_root=workspace_root,
-            query_policy=query_policy,
-        )
+        if math_mode:
+            system_prompt = self._build_math_system_prompt(prompt_style=prompt_style)
+            user_prompt = self._build_math_user_prompt(task=task)
+        else:
+            system_prompt = self._build_system_prompt(
+                prompt_style=prompt_style,
+                query_policy=query_policy,
+                recovery_policy=recovery_policy,
+                search_result_limit=search_result_limit,
+            )
+            user_prompt = self._build_user_prompt(
+                task=task,
+                workspace_root=workspace_root,
+                query_policy=query_policy,
+            )
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -202,7 +208,7 @@ class LlamaCppAgentRunner(BaseRunner):
                 last_error = f"bad_json_output: {exc}"
                 retries += 1
                 emit("system", last_error, name="parser")
-                candidate = self._recover_best_match(task, last_search_matches, policy=recovery_policy)
+                candidate = None if math_mode else self._recover_best_match(task, last_search_matches, policy=recovery_policy)
                 if candidate:
                     recovery_used = True
                     current_tool = "open_file_location"
@@ -234,14 +240,21 @@ class LlamaCppAgentRunner(BaseRunner):
                 messages.append(
                     {
                         "role": "user",
-                        "content": "Your previous answer was invalid. Return one valid JSON object only.",
+                        "content": (
+                            "Your previous answer was invalid. Return one valid JSON object only. "
+                            'For math tasks use {"type":"final","answer":"..."} and do not call tools.'
+                            if math_mode
+                            else "Your previous answer was invalid. Return one valid JSON object only."
+                        ),
                     }
                 )
                 continue
 
             if action.get("type") == "final":
-                final_output = str(action.get("path", "")).strip()
-                emit("assistant", final_output, name="final_path")
+                answer_key = "answer" if math_mode else "path"
+                final_output = str(action.get(answer_key, "")).strip()
+                emit("assistant", final_output, name="final_answer" if math_mode else "final_path")
+                last_error = None
                 current_tool = None
                 break
 
@@ -253,7 +266,24 @@ class LlamaCppAgentRunner(BaseRunner):
                 messages.append(
                     {
                         "role": "user",
-                        "content": "Unsupported JSON shape. Return a tool_call or final object only.",
+                        "content": (
+                            'Unsupported JSON shape. Return {"type":"final","answer":"..."} only.'
+                            if math_mode
+                            else "Unsupported JSON shape. Return a tool_call or final object only."
+                        ),
+                    }
+                )
+                continue
+
+            if math_mode:
+                last_error = "wrong_tool_for_math"
+                retries += 1
+                emit("system", last_error, name="parser")
+                messages.append({"role": "assistant", "content": json.dumps(action, ensure_ascii=False)})
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": 'Tools are disabled for this benchmark. Return {"type":"final","answer":"..."} only.',
                     }
                 )
                 continue
@@ -341,6 +371,7 @@ class LlamaCppAgentRunner(BaseRunner):
                 "recovery_policy_used": recovery_used,
                 "architecture_variant": architecture.get("variant"),
                 "architecture": architecture,
+                "task_category": task_category,
                 "relayer": relayer_context,
                 "relayer_runtime_backend": relayer_runtime_backend,
             },
@@ -448,6 +479,35 @@ class LlamaCppAgentRunner(BaseRunner):
             )
 
         prompt_lines.append("Find the canonical file and return only its absolute path via JSON.")
+        return "\n".join(prompt_lines) + "\n"
+
+    def _build_math_system_prompt(self, *, prompt_style: str) -> str:
+        base_rules = [
+            "You are a math reasoning agent inside Agent Eval Lab.",
+            "Always return exactly one JSON object and nothing else.",
+            'The only valid output is {"type":"final","answer":"..."}',
+            "Do not call tools.",
+            "Do not return explanations or derivations in the final answer.",
+        ]
+        if prompt_style == "planner":
+            base_rules.append("- Plan internally, but output only the final answer JSON.")
+        elif prompt_style == "recall":
+            base_rules.append("- Re-check the final answer before you emit the JSON object.")
+        else:
+            base_rules.append("- Keep the output compact and schema-correct.")
+        return "\n".join(base_rules) + "\n"
+
+    def _build_math_user_prompt(self, *, task: dict[str, Any]) -> str:
+        metadata = task.get("metadata", {}) if isinstance(task.get("metadata"), dict) else {}
+        answer_kind = str(metadata.get("answer_kind", "integer"))
+        prompt_lines = [
+            f"Benchmark family: {metadata.get('family', 'math_reasoning')}",
+            task["prompt"],
+        ]
+        if answer_kind == "ranking":
+            prompt_lines.append('Return format: {"type":"final","answer":"Name1 > Name2 > Name3 > Name4"}')
+        else:
+            prompt_lines.append('Return format: {"type":"final","answer":"INTEGER"}')
         return "\n".join(prompt_lines) + "\n"
 
     def _resolve_base_url(self, cfg: dict[str, Any]) -> str:

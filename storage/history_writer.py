@@ -14,8 +14,11 @@ REPORT_FILES = [
     "heat_map_history.json",
     "heat_map_verification_history.json",
     "relayer_scan_history.json",
+    "relayer_scan_verification_history.json",
     "config_history.json",
     "parameter_history.json",
+    "failure_clusters.json",
+    "trace_analysis_history.json",
 ]
 
 

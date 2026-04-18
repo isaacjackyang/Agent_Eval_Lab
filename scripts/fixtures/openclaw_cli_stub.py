@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import itertools
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -97,13 +99,13 @@ def handle_sandbox() -> None:
 def _parse_prompt(prompt: str) -> tuple[str, str]:
     project_name = ""
     doc_slug = "deployment"
-    if "專案 " in prompt and " 的 " in prompt:
-        project_name = prompt.split("專案 ", 1)[1].split(" 的 ", 1)[0]
-    if "部署" in prompt:
-        doc_slug = "deployment"
-    elif "交接" in prompt:
+    lowered = prompt.lower()
+    project_match = re.search(r"project\s+([A-Za-z]+-\d+)", prompt)
+    if project_match:
+        project_name = project_match.group(1)
+    if "handoff" in lowered:
         doc_slug = "handoff"
-    elif "維運" in prompt or "運維" in prompt:
+    elif "operations" in lowered:
         doc_slug = "operations"
     return project_name, doc_slug
 
@@ -118,14 +120,105 @@ def _find_expected_path(workspace_root: Path) -> str:
     return ""
 
 
+def _is_math_prompt(prompt: str) -> bool:
+    lowered = prompt.lower()
+    return "math and reasoning benchmark" in lowered or '{"type":"final","answer"' in lowered
+
+
+def _solve_math_prompt(prompt: str) -> str:
+    arithmetic_match = re.search(r"Compute the integer value of ([0-9+\-*/ ()]+)\.", prompt)
+    if arithmetic_match:
+        expression = arithmetic_match.group(1)
+        return str(eval(expression, {"__builtins__": {}}, {}))
+
+    warehouse_match = re.search(
+        r"starts with (\d+) crates and each crate holds (\d+) boxes.*ships (\d+) boxes, receives (\d+) new boxes, and then discards (\d+) damaged boxes",
+        prompt,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if warehouse_match:
+        crates, per_crate, shipped, received, discarded = (int(item) for item in warehouse_match.groups())
+        return str(crates * per_crate - shipped + received - discarded)
+
+    sequence_match = re.search(r"The sequence is ([0-9,\s]+)\.", prompt)
+    if sequence_match:
+        values = [int(part.strip()) for part in sequence_match.group(1).split(",") if part.strip()]
+        gaps = [right - left for left, right in zip(values, values[1:])]
+        next_gap = gaps[-1] + (gaps[-1] - gaps[-2])
+        return str(values[-1] + next_gap)
+
+    if "finished a race from first to last" in prompt:
+        clue_lines = []
+        for line in prompt.splitlines():
+            line = line.strip()
+            if re.match(r"^\d+\.\s", line):
+                clue_lines.append(re.sub(r"^\d+\.\s*", "", line))
+        names = sorted(set(re.findall(r"\b[A-Z][a-z]+\b", "\n".join(clue_lines))))
+        candidates = list(itertools.permutations(names))
+        filtered = candidates
+        for clue in clue_lines:
+            filtered = [order for order in filtered if _clue_holds(clue, order)]
+        if len(filtered) == 1:
+            return " > ".join(filtered[0])
+
+    return "0"
+
+
+def _clue_holds(clue: str, order: tuple[str, ...]) -> bool:
+    first_match = re.fullmatch(r"([A-Z][a-z]+) finished first\.", clue)
+    if first_match:
+        return order[0] == first_match.group(1)
+
+    last_match = re.fullmatch(r"([A-Z][a-z]+) finished last\.", clue)
+    if last_match:
+        return order[-1] == last_match.group(1)
+
+    before_match = re.fullmatch(r"([A-Z][a-z]+) finished before ([A-Z][a-z]+)\.", clue)
+    if before_match:
+        left, right = before_match.groups()
+        return order.index(left) < order.index(right)
+
+    immediate_match = re.fullmatch(r"([A-Z][a-z]+) finished immediately before ([A-Z][a-z]+)\.", clue)
+    if immediate_match:
+        left, right = immediate_match.groups()
+        return order.index(left) + 1 == order.index(right)
+
+    between_match = re.fullmatch(r"([A-Z][a-z]+) finished somewhere between ([A-Z][a-z]+) and ([A-Z][a-z]+)\.", clue)
+    if between_match:
+        middle, left, right = between_match.groups()
+        return order.index(left) < order.index(middle) < order.index(right)
+
+    apart_match = re.fullmatch(r"([A-Z][a-z]+) did not finish next to ([A-Z][a-z]+)\.", clue)
+    if apart_match:
+        left, right = apart_match.groups()
+        return abs(order.index(left) - order.index(right)) > 1
+
+    return True
+
+
 def handle_agent() -> None:
     _, config = _load_config()
     agent_id = _extract_flag("--agent")
-    prompt = _extract_flag("-m", "")
+    prompt = _extract_flag("-m", "") or ""
     agent = _extract_agent(config, agent_id)
     workspace_root = Path(agent["workspace"])
 
-    project_name, doc_slug = _parse_prompt(prompt or "")
+    if _is_math_prompt(prompt):
+        answer = _solve_math_prompt(prompt)
+        _print_json(
+            {
+                "ok": True,
+                "answer": answer,
+                "trace": [
+                    {"type": "assistant", "text": "Solving math benchmark directly."},
+                    {"type": "assistant", "text": answer},
+                ],
+                "usage": {"total_tokens": max(24, len(prompt) // 2), "step_count": 1},
+            }
+        )
+        return
+
+    project_name, doc_slug = _parse_prompt(prompt)
     broad_query = doc_slug
     focused_query = f"{project_name} {doc_slug}".strip()
     task_meta = {
@@ -138,7 +231,7 @@ def handle_agent() -> None:
     chosen = pick_best_match(broad_matches, task_meta)
     trace = [
         {"type": "tool_call", "name": "search_file", "args": {"query": broad_query}, "text": f"search_file query={broad_query!r}"},
-        {"type": "tool_result", "name": "search_file", "text": f"search_file 命中 {len(broad_matches)} 筆候選"},
+        {"type": "tool_result", "name": "search_file", "text": f"search_file returned {len(broad_matches)} candidates"},
     ]
 
     if not chosen or Path(chosen["path"]).resolve() != Path(task_meta["expected_output"]).resolve():
@@ -146,9 +239,9 @@ def handle_agent() -> None:
         chosen = pick_best_match(focused_matches, task_meta)
         trace.extend(
             [
-                {"type": "assistant", "text": "第一次搜尋結果太廣，縮小範圍後重試。"},
+                {"type": "assistant", "text": "Broad search was ambiguous. Retrying with the focused query."},
                 {"type": "tool_call", "name": "search_file", "args": {"query": focused_query}, "text": f"search_file query={focused_query!r}"},
-                {"type": "tool_result", "name": "search_file", "text": f"search_file 命中 {len(focused_matches)} 筆候選"},
+                {"type": "tool_result", "name": "search_file", "text": f"search_file returned {len(focused_matches)} focused candidates"},
             ]
         )
 
@@ -173,7 +266,7 @@ def handle_agent() -> None:
             "output_text": final_output,
             "trace": trace,
             "usage": {
-                "total_tokens": max(32, len(prompt or "") + len(final_output)),
+                "total_tokens": max(32, len(prompt) + len(final_output)),
                 "step_count": len([item for item in trace if item["type"] == "tool_call"]),
             },
         }

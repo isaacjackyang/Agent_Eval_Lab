@@ -14,10 +14,12 @@ from evolution.relayer_plan import (
     generate_relayer_configs,
     relayer_config_id,
     relayer_scan_candidate_count,
+    resolve_relayer_model_name,
     resolve_active_relayer_config,
     resolve_active_relayer_plan,
     resolve_relayer_num_layers,
     resolve_relayer_scan_settings,
+    resolve_relayer_scan_runtime_mode,
 )
 
 
@@ -36,17 +38,14 @@ def main() -> None:
 
     config_path = Path(args.config).resolve()
     config = _load_json(config_path)
-    model_name = (
-        str(config.get("llama_cpp", {}).get("model"))
-        or str(config.get("openclaw", {}).get("model"))
-        or str(config.get("config_id", "model"))
-    )
+    model_name = resolve_relayer_model_name(config)
 
     active_config = resolve_active_relayer_config(config)
     active_plan = resolve_active_relayer_plan(config)
     num_layers = resolve_relayer_num_layers(config)
 
     scan_settings = resolve_relayer_scan_settings(config)
+    scan_runtime_mode = resolve_relayer_scan_runtime_mode(config)
     preview_candidates = []
     for index, relayer_config in enumerate(generate_relayer_configs(scan_settings)):
         if index >= max(1, args.limit):
@@ -84,6 +83,7 @@ def main() -> None:
             "min_block_len": scan_settings.min_block_len,
             "max_block_len": scan_settings.max_block_len,
             "repeat_count": scan_settings.repeat_count,
+            "runtime_mode": scan_runtime_mode,
         },
         "total_candidate_count": relayer_scan_candidate_count(config),
         "preview_candidate_count": len(preview_candidates),

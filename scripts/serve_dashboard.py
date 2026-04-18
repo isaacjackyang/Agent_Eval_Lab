@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import subprocess
@@ -21,20 +22,22 @@ CONFIGS_DIR = ROOT / "configs" / "experiments"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from diagnostics.run_diagnostics import summarize_failure_clusters, summarize_trace_entries
 from evolution.mutator import (
     EVOLUTION_MODE_OPTIONS,
     apply_heat_map_overrides,
     heat_map_candidate_count,
     heat_map_dimension_options,
+    heat_map_task_type_options,
     resolve_heat_map_plan,
     sampling_parameters_for_provider,
     sampling_provider_for_config,
     selected_sampling_parameters_for_config,
     supports_architecture_evolution,
 )
-from evolution.heat_map_verifier import resolve_heat_map_verification_settings
+from evolution.heat_map_verifier import estimate_relayer_scan_total_evals, resolve_heat_map_verification_settings
 from evolution.relayer_plan import summarize_relayer_config
-from generators.km_file_tree_gen import TASK_TYPE_OPTIONS
+from generators.task_dispatch import TASK_TYPE_OPTIONS
 
 PROGRESS_KEYS = (
     "task_type",
@@ -46,7 +49,7 @@ PROGRESS_KEYS = (
     "progress_text",
 )
 
-LOCAL_AI_DETECTION_TTL_SEC = 5.0
+LOCAL_AI_DETECTION_TTL_SEC = 30.0
 AI_PROCESS_HINTS = (
     {
         "id": "ollama",
@@ -139,6 +142,46 @@ def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def _windows_no_window_flags() -> int:
+    if os.name != "nt":
+        return 0
+    return getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
+def _run_subprocess(command: list[str], *, timeout: int, check: bool = False) -> subprocess.CompletedProcess[str]:
+    kwargs: dict[str, Any] = {
+        "check": check,
+        "capture_output": True,
+        "text": True,
+        "timeout": timeout,
+    }
+    if os.name == "nt":
+        kwargs["creationflags"] = _windows_no_window_flags()
+    return subprocess.run(command, **kwargs)
+
+
+def _write_pid_file(path: Path | None) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(str(os.getpid()), encoding="utf-8")
+
+
+def _remove_pid_file(path: Path | None) -> None:
+    if path is None or not path.exists():
+        return
+    try:
+        recorded_pid = path.read_text(encoding="utf-8").strip()
+    except Exception:
+        recorded_pid = ""
+    if recorded_pid and recorded_pid != str(os.getpid()):
+        return
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        return
+
+
 class RunController:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -162,12 +205,14 @@ class RunController:
             "relative_path": self._relative_path(path),
             "config_id": path.stem,
             "runner": None,
+            "regression_case_count": None,
             "sampling_provider": None,
             "sampling_parameters": [],
             "selected_sampling_parameters": [],
             "default_evolution_mode": "model_params",
             "architecture_evolution_supported": False,
             "heat_map_dimensions": heat_map_dimension_options(),
+            "heat_map_task_types": heat_map_task_type_options(),
             "heat_map_settings": {},
             "heat_map_plan": None,
             "relayer": summarize_relayer_config({}),
@@ -179,6 +224,14 @@ class RunController:
         if isinstance(payload, dict):
             summary["config_id"] = payload.get("config_id") or summary["config_id"]
             summary["runner"] = payload.get("runner")
+            regression_path_value = payload.get("regression_suite", {}).get("path")
+            if regression_path_value:
+                regression_path = (self.root / str(regression_path_value)).resolve()
+                try:
+                    regression_suite = json.loads(regression_path.read_text(encoding="utf-8"))
+                    summary["regression_case_count"] = len(regression_suite.get("cases", []))
+                except Exception:
+                    summary["regression_case_count"] = None
             provider = sampling_provider_for_config(payload)
             summary["sampling_provider"] = provider
             summary["sampling_parameters"] = sampling_parameters_for_provider(provider)
@@ -188,11 +241,31 @@ class RunController:
             summary["relayer"] = summarize_relayer_config(payload)
             heat_map_cfg = payload.get("nightly", {}).get("heat_map", {})
             if isinstance(heat_map_cfg, dict):
+                scan_cfg = heat_map_cfg.get("scan", {})
+                if not isinstance(scan_cfg, dict):
+                    scan_cfg = {}
+                probe_a_cfg = heat_map_cfg.get("probe_a", {})
+                if not isinstance(probe_a_cfg, dict):
+                    probe_a_cfg = {}
+                probe_b_cfg = heat_map_cfg.get("probe_b", {})
+                if not isinstance(probe_b_cfg, dict):
+                    probe_b_cfg = {}
                 summary["heat_map_settings"] = {
-                    "x_axis": heat_map_cfg.get("x_axis"),
-                    "y_axis": heat_map_cfg.get("y_axis"),
-                    "x_values": heat_map_cfg.get("x_values"),
-                    "y_values": heat_map_cfg.get("y_values"),
+                    "scan": {
+                        "start_layer_min": scan_cfg.get("start_layer_min"),
+                        "end_layer_max": scan_cfg.get("end_layer_max"),
+                        "min_block_len": scan_cfg.get("min_block_len"),
+                        "max_block_len": scan_cfg.get("max_block_len"),
+                        "repeat_count": scan_cfg.get("repeat_count"),
+                    },
+                    "probe_a": {
+                        "task_type": probe_a_cfg.get("task_type"),
+                        "seeds": probe_a_cfg.get("seeds"),
+                    },
+                    "probe_b": {
+                        "task_type": probe_b_cfg.get("task_type"),
+                        "seeds": probe_b_cfg.get("seeds"),
+                    },
                     "top_k": heat_map_cfg.get("top_k"),
                     "verify": heat_map_cfg.get("verify", {}),
                 }
@@ -219,6 +292,141 @@ class RunController:
         data["local_ai"] = self.list_local_ai()
         return data
 
+    def _reports_dir(self) -> Path:
+        default_path = self._default_config_path()
+        if default_path is not None:
+            try:
+                payload = self._load_config_payload(default_path)
+            except Exception:
+                payload = {}
+            reports_dir_value = payload.get("paths", {}).get("reports_dir")
+            if reports_dir_value:
+                return (self.root / str(reports_dir_value)).resolve()
+        return (self.root / "reports").resolve()
+
+    def _load_json_path(self, path: Path) -> dict[str, Any] | None:
+        if not path.exists():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+        return payload if isinstance(payload, dict) else None
+
+    def _load_history_payload(self, file_name: str) -> dict[str, Any]:
+        return self._load_json_path(self._reports_dir() / file_name) or {"history": []}
+
+    def _load_live_stream_rows(self, limit: int = 160) -> list[dict[str, Any]]:
+        if not self.live_stream_path.exists():
+            return []
+        try:
+            lines = [line for line in self.live_stream_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        except Exception:
+            return []
+        rows: list[dict[str, Any]] = []
+        for line in lines[-max(1, limit):]:
+            try:
+                payload = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(payload, dict):
+                rows.append(payload)
+        return rows
+
+    def _latest_relayer_scan_snapshot(self) -> dict[str, Any] | None:
+        relayer_root = self._reports_dir() / "relayer_scans"
+        if not relayer_root.exists():
+            return None
+        manifests: list[tuple[str, Path, dict[str, Any]]] = []
+        for path in relayer_root.glob("*/manifest.json"):
+            payload = self._load_json_path(path)
+            if not payload:
+                continue
+            manifests.append((str(payload.get("created_at") or ""), path.parent, payload))
+        if not manifests:
+            return None
+        manifests.sort(key=lambda item: (item[0], str(item[1])), reverse=True)
+        _created_at, artifact_dir, manifest = manifests[0]
+        summary = self._load_json_path(artifact_dir / "summary.json") or {}
+        resume_state = self._load_json_path(artifact_dir / "resume_state.json") or {}
+        verification = manifest.get("verification") if isinstance(manifest.get("verification"), dict) else {}
+        baseline_decision = manifest.get("baseline_decision") if isinstance(manifest.get("baseline_decision"), dict) else {}
+        return {
+            "run_id": manifest.get("run_id"),
+            "config_id": manifest.get("config_id"),
+            "candidate_count": manifest.get("candidate_count"),
+            "baseline_score": manifest.get("baseline_score"),
+            "output_dir": manifest.get("output_dir"),
+            "cells_dir": manifest.get("cells_dir"),
+            "resume_state_path": manifest.get("resume_state_path"),
+            "resume_phase": resume_state.get("phase"),
+            "completed_candidates": resume_state.get("completed_candidates"),
+            "pending_candidates": resume_state.get("pending_candidates"),
+            "max_workers": manifest.get("max_workers"),
+            "reused_cells": manifest.get("reused_cells"),
+            "top_candidates": summary.get("top_candidates", [])[:5] if isinstance(summary.get("top_candidates"), list) else [],
+            "best_cell": summary.get("best_cell"),
+            "verification": verification,
+            "baseline_decision": baseline_decision,
+        }
+
+    def _lineage_snapshot(self) -> list[dict[str, Any]]:
+        history = self._load_history_payload("config_history.json").get("history", [])
+        entries = [item for item in history if isinstance(item, dict)]
+        entries.sort(key=lambda item: str(item.get("ts") or ""), reverse=True)
+        return [
+            {
+                "ts": item.get("ts"),
+                "suite_id": item.get("suite_id"),
+                "event": item.get("event"),
+                "config_id": item.get("config_id"),
+                "reference_config_id": item.get("reference_config_id"),
+                "mutation_profile": item.get("mutation_profile"),
+                "mutation_target": item.get("mutation_target"),
+                "fitness": item.get("fitness"),
+                "baseline_status": item.get("baseline_status"),
+            }
+            for item in entries[:10]
+        ]
+
+    def _failure_snapshot(self) -> dict[str, Any]:
+        payload = self._load_history_payload("failure_clusters.json")
+        history = payload.get("history", []) if isinstance(payload, dict) else []
+        latest = history[-1] if history else None
+        return {
+            "latest": latest,
+            "clusters": summarize_failure_clusters(payload, limit=6),
+        }
+
+    def _trace_snapshot(self) -> dict[str, Any]:
+        payload = self._load_history_payload("trace_analysis_history.json")
+        live_rows = self._load_live_stream_rows()
+        type_counts = Counter(str(item.get("type") or "system") for item in live_rows)
+        name_counts = Counter(str(item.get("name") or item.get("type") or "event") for item in live_rows)
+        latest_row = live_rows[-1] if live_rows else {}
+        return {
+            "entries": summarize_trace_entries(payload, limit=6),
+            "live": {
+                "event_count": len(live_rows),
+                "latest_event_id": latest_row.get("event_id"),
+                "latest_event_seq": latest_row.get("event_seq"),
+                "latest_replay_key": latest_row.get("replay_key"),
+                "type_counts": dict(type_counts),
+                "top_names": [
+                    {"name": name, "count": count}
+                    for name, count in name_counts.most_common(5)
+                ],
+            },
+        }
+
+    def _diagnostics_snapshot(self) -> dict[str, Any]:
+        return {
+            "latest_relayer_scan": self._latest_relayer_scan_snapshot(),
+            "lineage": self._lineage_snapshot(),
+            "failure": self._failure_snapshot(),
+            "trace": self._trace_snapshot(),
+        }
+
     def _list_processes(self) -> list[dict[str, Any]]:
         if os.name == "nt":
             command = [
@@ -233,13 +441,7 @@ class RunController:
                 ),
             ]
             try:
-                result = subprocess.run(
-                    command,
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                    timeout=8,
-                )
+                result = _run_subprocess(command, timeout=8)
             except Exception:
                 return []
             if result.returncode != 0 or not result.stdout.strip():
@@ -263,13 +465,7 @@ class RunController:
             return processes
 
         try:
-            result = subprocess.run(
-                ["ps", "-axo", "pid=,comm=,args="],
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=8,
-            )
+            result = _run_subprocess(["ps", "-axo", "pid=,comm=,args="], timeout=8)
         except Exception:
             return []
         if result.returncode != 0:
@@ -468,6 +664,7 @@ class RunController:
             "evolution_modes": [dict(item) for item in EVOLUTION_MODE_OPTIONS],
             "default_evolution_mode": "model_params",
             "heat_map_dimensions": heat_map_dimension_options(),
+            "heat_map_task_types": heat_map_task_type_options(),
         }
 
     def _normalize_task_type(self, raw_value: Any) -> str:
@@ -528,6 +725,12 @@ class RunController:
         normalized = [item for item in values if item]
         return normalized or None
 
+    def _normalize_int_list(self, raw_value: Any) -> list[int] | None:
+        values = self._normalize_heat_map_values(raw_value)
+        if values is None:
+            return None
+        return [int(item) for item in values]
+
     def _read_live_status(self) -> dict[str, Any]:
         if not self.live_status_path.exists():
             return {}
@@ -554,16 +757,24 @@ class RunController:
             )
         )
         if evolution_mode == "heat_map":
+            try:
+                plan = resolve_heat_map_plan(config)
+                per_variant_candidate_runs = int(plan.get("probe_eval_count", 0))
+            except Exception:
+                plan = None
+                per_variant_candidate_runs = candidate_runs
             variant_count = heat_map_candidate_count(config) + 1
         else:
             pool_size = int(config.get("nightly", {}).get("candidate_pool_size", 1))
             include_base = bool(config.get("nightly", {}).get("include_base_config", True))
             variant_count = max(pool_size, 1 if include_base else 1)
+            per_variant_candidate_runs = candidate_runs
         case_count = len(regression_suite.get("cases", []))
-        total = variant_count * (candidate_runs + case_count)
+        total = variant_count * (per_variant_candidate_runs + case_count)
         if evolution_mode == "heat_map":
             try:
-                plan = resolve_heat_map_plan(config)
+                if plan is None:
+                    plan = resolve_heat_map_plan(config)
                 verify_settings = resolve_heat_map_verification_settings(
                     config,
                     {
@@ -663,6 +874,7 @@ class RunController:
             "active": bool(current),
             "current": current,
             "last_result": last_result,
+            "diagnostics": self._diagnostics_snapshot(),
         }
         if message:
             data["message"] = message
@@ -736,7 +948,7 @@ class RunController:
         elif kind == "single":
             progress_target = 1
         elif kind == "relayer_scan":
-            progress_target = extras.get("candidate_count")
+            progress_target = extras.get("estimated_total_evals") or extras.get("candidate_count")
         progress_current = 0 if kind in {"suite", "nightly", "relayer_scan"} else 1
         status_payload = {
             "run_id": None,
@@ -834,10 +1046,15 @@ class RunController:
         else:
             sampling_provider = sampling_provider_for_config(config_payload)
 
-        heat_map_x_axis = payload.get("heat_map_x_axis")
-        heat_map_y_axis = payload.get("heat_map_y_axis")
-        heat_map_x_values = self._normalize_heat_map_values(payload.get("heat_map_x_values"))
-        heat_map_y_values = self._normalize_heat_map_values(payload.get("heat_map_y_values"))
+        heat_map_start_layer_min = payload.get("heat_map_start_layer_min")
+        heat_map_end_layer_max = payload.get("heat_map_end_layer_max")
+        heat_map_min_block_len = payload.get("heat_map_min_block_len")
+        heat_map_max_block_len = payload.get("heat_map_max_block_len")
+        heat_map_repeat_count = payload.get("heat_map_repeat_count")
+        heat_map_probe_a_task_type = payload.get("heat_map_probe_a_task_type")
+        heat_map_probe_a_seeds = self._normalize_int_list(payload.get("heat_map_probe_a_seeds"))
+        heat_map_probe_b_task_type = payload.get("heat_map_probe_b_task_type")
+        heat_map_probe_b_seeds = self._normalize_int_list(payload.get("heat_map_probe_b_seeds"))
         heat_map_top_k = payload.get("heat_map_top_k")
         heat_map_verify_enabled = self._normalize_bool(payload.get("heat_map_verify_enabled"))
         heat_map_verify_runs = payload.get("heat_map_verify_runs")
@@ -848,10 +1065,15 @@ class RunController:
         if evolution_mode == "heat_map":
             config_payload = apply_heat_map_overrides(
                 config_payload,
-                x_axis=str(heat_map_x_axis).strip() if heat_map_x_axis else None,
-                y_axis=str(heat_map_y_axis).strip() if heat_map_y_axis else None,
-                x_values=heat_map_x_values,
-                y_values=heat_map_y_values,
+                start_layer_min=int(heat_map_start_layer_min) if heat_map_start_layer_min not in (None, "") else None,
+                end_layer_max=int(heat_map_end_layer_max) if heat_map_end_layer_max not in (None, "") else None,
+                min_block_len=int(heat_map_min_block_len) if heat_map_min_block_len not in (None, "") else None,
+                max_block_len=int(heat_map_max_block_len) if heat_map_max_block_len not in (None, "") else None,
+                repeat_count=int(heat_map_repeat_count) if heat_map_repeat_count not in (None, "") else None,
+                probe_a_task_type=str(heat_map_probe_a_task_type).strip().lower() if heat_map_probe_a_task_type else None,
+                probe_a_seeds=heat_map_probe_a_seeds,
+                probe_b_task_type=str(heat_map_probe_b_task_type).strip().lower() if heat_map_probe_b_task_type else None,
+                probe_b_seeds=heat_map_probe_b_seeds,
                 top_k=int(heat_map_top_k) if heat_map_top_k not in (None, "") else None,
                 verify_overrides=verify_overrides,
             )
@@ -859,14 +1081,24 @@ class RunController:
                 resolved_plan = resolve_heat_map_plan(config_payload)
             except Exception as exc:
                 raise RuntimeError(str(exc)) from exc
-            if heat_map_x_axis:
-                extra_args.extend(["--heat-map-x-axis", str(heat_map_x_axis).strip()])
-            if heat_map_y_axis:
-                extra_args.extend(["--heat-map-y-axis", str(heat_map_y_axis).strip()])
-            if heat_map_x_values:
-                extra_args.extend(["--heat-map-x-values", ",".join(heat_map_x_values)])
-            if heat_map_y_values:
-                extra_args.extend(["--heat-map-y-values", ",".join(heat_map_y_values)])
+            if heat_map_start_layer_min not in (None, ""):
+                extra_args.extend(["--heat-map-start-layer-min", str(int(heat_map_start_layer_min))])
+            if heat_map_end_layer_max not in (None, ""):
+                extra_args.extend(["--heat-map-end-layer-max", str(int(heat_map_end_layer_max))])
+            if heat_map_min_block_len not in (None, ""):
+                extra_args.extend(["--heat-map-min-block-len", str(int(heat_map_min_block_len))])
+            if heat_map_max_block_len not in (None, ""):
+                extra_args.extend(["--heat-map-max-block-len", str(int(heat_map_max_block_len))])
+            if heat_map_repeat_count not in (None, ""):
+                extra_args.extend(["--heat-map-repeat-count", str(int(heat_map_repeat_count))])
+            if heat_map_probe_a_task_type:
+                extra_args.extend(["--heat-map-probe-a-task-type", str(heat_map_probe_a_task_type).strip().lower()])
+            if heat_map_probe_a_seeds:
+                extra_args.extend(["--heat-map-probe-a-seeds", ",".join(str(item) for item in heat_map_probe_a_seeds)])
+            if heat_map_probe_b_task_type:
+                extra_args.extend(["--heat-map-probe-b-task-type", str(heat_map_probe_b_task_type).strip().lower()])
+            if heat_map_probe_b_seeds:
+                extra_args.extend(["--heat-map-probe-b-seeds", ",".join(str(item) for item in heat_map_probe_b_seeds)])
             if heat_map_top_k not in (None, ""):
                 extra_args.extend(["--heat-map-top-k", str(int(heat_map_top_k))])
             if heat_map_verify_enabled is False:
@@ -903,6 +1135,27 @@ class RunController:
         extra_args: list[str] = []
         requested_max_candidates = payload.get("max_candidates")
         candidate_count = relayer_summary.get("scan_candidate_count")
+        seed_start_value = 500
+        max_workers_value = int(payload.get("max_workers", 1) or 1)
+        if max_workers_value < 1:
+            raise RuntimeError("Relayer scan max_workers must be at least 1.")
+        extra_args.extend(["--max-workers", str(max_workers_value)])
+        resume_requested = bool(self._normalize_bool(payload.get("resume")) or False)
+        skip_completed_requested = bool(self._normalize_bool(payload.get("skip_completed")) or False)
+        output_dir_value = payload.get("output_dir")
+        resolved_output_dir: str | None = None
+        if output_dir_value not in (None, ""):
+            raw_path = Path(str(output_dir_value))
+            resolved_output_dir = str(raw_path if raw_path.is_absolute() else (self.root / raw_path).resolve())
+            extra_args.extend(["--output-dir", resolved_output_dir])
+        if resume_requested:
+            extra_args.append("--resume")
+        if skip_completed_requested:
+            extra_args.append("--skip-completed")
+        requested_seed_start = payload.get("seed_start")
+        if requested_seed_start not in (None, ""):
+            seed_start_value = int(requested_seed_start)
+            extra_args.extend(["--seed-start", str(seed_start_value)])
         if requested_max_candidates not in (None, ""):
             max_candidates = int(requested_max_candidates)
             if max_candidates < 1:
@@ -913,13 +1166,28 @@ class RunController:
 
         extras: dict[str, Any] = {
             "candidate_count": candidate_count,
+            "estimated_total_evals": estimate_relayer_scan_total_evals(
+                config_payload,
+                int(candidate_count or 0),
+                seed_start=seed_start_value,
+            )
+            if candidate_count is not None
+            else None,
             "relayer_mode": relayer_summary.get("mode"),
             "relayer_scan_backend": relayer_summary.get("scan_backend"),
+            "relayer_scan_runtime_mode": relayer_summary.get("scan_runtime_mode"),
             "relayer_runtime_patch_supported": relayer_summary.get("runtime_patch_supported"),
+            "relayer_verification_capable": relayer_summary.get("verification_capable"),
             "relayer_scan_note": relayer_summary.get("scan_note"),
+            "seed_start": seed_start_value,
+            "max_workers": max_workers_value,
+            "resume": resume_requested,
+            "skip_completed": skip_completed_requested,
         }
         if requested_max_candidates not in (None, ""):
             extras["max_candidates"] = int(requested_max_candidates)
+        if resolved_output_dir is not None:
+            extras["output_dir"] = resolved_output_dir
 
         with self.lock:
             payload = self._launch_locked(
@@ -940,13 +1208,7 @@ class RunController:
                 pid = self.process.pid
 
                 if os.name == "nt":
-                    subprocess.run(
-                        ["taskkill", "/PID", str(pid), "/T", "/F"],
-                        check=False,
-                        capture_output=True,
-                        text=True,
-                        timeout=20,
-                    )
+                    _run_subprocess(["taskkill", "/PID", str(pid), "/T", "/F"], timeout=20)
                 else:
                     self.process.terminate()
                     try:
@@ -1045,6 +1307,9 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/ping":
+            self._send_json({"ok": True, "ts": now_iso()})
+            return
         if parsed.path == "/api/control":
             self._send_json(self.server.controller.snapshot())
             return
@@ -1090,9 +1355,12 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve the local dashboard over HTTP.")
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--pid-file", default=None)
     args = parser.parse_args()
 
     os.chdir(ROOT)
+    pid_file = Path(args.pid_file).resolve() if args.pid_file else None
+    _write_pid_file(pid_file)
     controller = RunController(ROOT)
     server = DashboardServer(("127.0.0.1", args.port), DashboardHandler, controller)
     print(f"Serving dashboard at http://127.0.0.1:{args.port}/dashboard.html")
@@ -1102,6 +1370,7 @@ def main() -> None:
         pass
     finally:
         server.server_close()
+        _remove_pid_file(pid_file)
 
 
 if __name__ == "__main__":

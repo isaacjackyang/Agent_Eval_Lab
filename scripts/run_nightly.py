@@ -26,7 +26,7 @@ from evolution.mutator import (
     selected_sampling_parameters_for_config,
 )
 from evolution.heat_map_verifier import resolve_heat_map_verification_settings, run_heat_map_verification
-from evolution.nightly_evaluator import evaluate_candidate_config, load_json
+from evolution.nightly_evaluator import evaluate_candidate_config, evaluate_heat_map_candidate_config, load_json
 from rollback.baseline_manager import assess_candidate, load_baseline, write_baseline
 from storage.heat_map_artifacts import build_heat_map_artifacts
 from storage.history_writer import append_history_entry, ensure_report_files, seed_static_histories, write_json
@@ -127,10 +127,23 @@ def _heat_map_cell_entry(
     baseline_result: dict[str, Any],
     coordinates: dict[str, Any],
 ) -> dict[str, Any]:
-    suite_score = result["candidate_summary"]["suite_score"]
-    baseline_suite_score = baseline_result["candidate_summary"]["suite_score"]
+    candidate_summary = result["candidate_summary"]
+    baseline_candidate_summary = baseline_result["candidate_summary"]
+    suite_score = candidate_summary["suite_score"]
+    baseline_suite_score = baseline_candidate_summary["suite_score"]
     fitness = result["fitness"]
     baseline_fitness = baseline_result["fitness"]
+    probe_summaries = candidate_summary.get("probe_summaries", {})
+    baseline_probe_summaries = baseline_candidate_summary.get("probe_summaries", {})
+    probe_a = probe_summaries.get("probe_a", {})
+    probe_b = probe_summaries.get("probe_b", {})
+    baseline_probe_a = baseline_probe_summaries.get("probe_a", {})
+    baseline_probe_b = baseline_probe_summaries.get("probe_b", {})
+    probe_a_score = probe_a.get("suite_score")
+    probe_b_score = probe_b.get("suite_score")
+    baseline_probe_a_score = baseline_probe_a.get("suite_score")
+    baseline_probe_b_score = baseline_probe_b.get("suite_score")
+    combined_delta = round(suite_score - baseline_suite_score, 6)
     return {
         "config_id": result["config"]["config_id"],
         "mutation_profile": result["mutation_profile"],
@@ -145,9 +158,40 @@ def _heat_map_cell_entry(
         "fitness": fitness,
         "regression_pass_rate": result["regression_summary"]["pass_rate"],
         "honesty_score": result["candidate_summary"]["honesty_score"],
-        "delta_suite_score": round(suite_score - baseline_suite_score, 6),
+        "delta_suite_score": combined_delta,
         "delta_fitness": round(fitness - baseline_fitness, 6),
         "improved_vs_baseline": suite_score > baseline_suite_score + 1e-9,
+        "start_layer": coordinates.get("start_layer"),
+        "end_layer": coordinates.get("end_layer"),
+        "repeat_count": coordinates.get("repeat_count"),
+        "block_len": coordinates.get("block_len"),
+        "extra_layers": coordinates.get("extra_layers"),
+        "probe_a": {
+            "id": probe_a.get("id", "probe_a"),
+            "label": probe_a.get("label", "Probe A"),
+            "task_type": probe_a.get("task_type"),
+            "suite_score": probe_a_score,
+            "delta_suite_score": (
+                round(float(probe_a_score) - float(baseline_probe_a_score), 6)
+                if probe_a_score is not None and baseline_probe_a_score is not None
+                else None
+            ),
+        },
+        "probe_b": {
+            "id": probe_b.get("id", "probe_b"),
+            "label": probe_b.get("label", "Probe B"),
+            "task_type": probe_b.get("task_type"),
+            "suite_score": probe_b_score,
+            "delta_suite_score": (
+                round(float(probe_b_score) - float(baseline_probe_b_score), 6)
+                if probe_b_score is not None and baseline_probe_b_score is not None
+                else None
+            ),
+        },
+        "combined": {
+            "suite_score": suite_score,
+            "delta_suite_score": combined_delta,
+        },
     }
 
 
@@ -169,6 +213,11 @@ def _build_heat_map_summary(
             "y_axis": baseline_coordinates["y_axis"],
             "y_label": baseline_coordinates["y_label"],
             "y_value": baseline_coordinates["y_value"],
+            "start_layer": None,
+            "end_layer": None,
+            "repeat_count": 0,
+            "block_len": 0,
+            "extra_layers": 0,
         },
     )
 
@@ -188,6 +237,15 @@ def _build_heat_map_summary(
     for y_value in plan["y_values"]:
         row_cells: list[dict[str, Any]] = []
         for x_value in plan["x_values"]:
+            if int(x_value) < int(y_value):
+                row_cells.append(
+                    {
+                        "x_value": x_value,
+                        "y_value": y_value,
+                        "status": "not_run",
+                    }
+                )
+                continue
             cell = cell_lookup.get((str(x_value), str(y_value)))
             if cell is None:
                 row_cells.append(
@@ -220,7 +278,57 @@ def _build_heat_map_summary(
     )
 
     best_cell = ranked_non_baseline[0] if ranked_non_baseline else baseline_cell
+    channel_ids = ("combined", "probe_a", "probe_b")
+    channel_labels = {
+        "combined": "Combined Delta",
+        "probe_a": plan["probe_a"]["label"],
+        "probe_b": plan["probe_b"]["label"],
+    }
+    channels: dict[str, Any] = {}
+    for channel_id in channel_ids:
+        channel_matrix: list[dict[str, Any]] = []
+        ranked_cells: list[dict[str, Any]] = []
+        for row in matrix_rows:
+            row_channel_cells: list[dict[str, Any]] = []
+            for cell in row["cells"]:
+                if cell.get("status") == "not_run":
+                    row_channel_cells.append({"x_value": cell.get("x_value"), "y_value": cell.get("y_value"), "status": "not_run"})
+                    continue
+                if channel_id == "combined":
+                    delta = cell.get("combined", {}).get("delta_suite_score")
+                    score = cell.get("combined", {}).get("suite_score")
+                else:
+                    delta = cell.get(channel_id, {}).get("delta_suite_score")
+                    score = cell.get(channel_id, {}).get("suite_score")
+                channel_cell = {
+                    "config_id": cell.get("config_id"),
+                    "x_value": cell.get("x_value"),
+                    "y_value": cell.get("y_value"),
+                    "start_layer": cell.get("start_layer"),
+                    "end_layer": cell.get("end_layer"),
+                    "repeat_count": cell.get("repeat_count"),
+                    "block_len": cell.get("block_len"),
+                    "extra_layers": cell.get("extra_layers"),
+                    "suite_score": score,
+                    "delta_suite_score": delta,
+                    "status": "ok",
+                }
+                row_channel_cells.append(channel_cell)
+                ranked_cells.append(channel_cell)
+            channel_matrix.append({"y_value": row["y_value"], "cells": row_channel_cells})
+        ranked_cells = sorted(
+            [cell for cell in ranked_cells if cell.get("config_id")],
+            key=lambda item: (item.get("delta_suite_score") or float("-inf"), item.get("suite_score") or float("-inf")),
+            reverse=True,
+        )
+        channels[channel_id] = {
+            "id": channel_id,
+            "label": channel_labels[channel_id],
+            "matrix": channel_matrix,
+            "best_cell": ranked_cells[0] if ranked_cells else None,
+        }
     return {
+        "heat_map_type": plan["heat_map_type"],
         "x_axis": plan["x_axis"],
         "x_label": plan["x_label"],
         "x_values": plan["x_values"],
@@ -228,11 +336,16 @@ def _build_heat_map_summary(
         "y_label": plan["y_label"],
         "y_values": plan["y_values"],
         "cell_count": plan["cell_count"],
+        "scan": plan["scan"],
+        "repeat_count": plan["repeat_count"],
+        "probe_a": plan["probe_a"],
+        "probe_b": plan["probe_b"],
         "baseline": baseline_cell,
         "best_cell": best_cell,
         "improved_cell_count": sum(1 for cell in ranked_non_baseline if cell["improved_vs_baseline"]),
         "top_candidates": ranked_non_baseline[: plan["top_k"]],
         "matrix": matrix_rows,
+        "channels": channels,
     }
 
 
@@ -250,10 +363,15 @@ def main() -> None:
     parser.add_argument("--seed-start", type=int, default=500)
     parser.add_argument("--evolution-mode", default=None)
     parser.add_argument("--sampling-parameters", default=None)
-    parser.add_argument("--heat-map-x-axis", default=None)
-    parser.add_argument("--heat-map-y-axis", default=None)
-    parser.add_argument("--heat-map-x-values", default=None)
-    parser.add_argument("--heat-map-y-values", default=None)
+    parser.add_argument("--heat-map-start-layer-min", type=int, default=None)
+    parser.add_argument("--heat-map-end-layer-max", type=int, default=None)
+    parser.add_argument("--heat-map-min-block-len", type=int, default=None)
+    parser.add_argument("--heat-map-max-block-len", type=int, default=None)
+    parser.add_argument("--heat-map-repeat-count", type=int, default=None)
+    parser.add_argument("--heat-map-probe-a-task-type", default=None)
+    parser.add_argument("--heat-map-probe-a-seeds", default=None)
+    parser.add_argument("--heat-map-probe-b-task-type", default=None)
+    parser.add_argument("--heat-map-probe-b-seeds", default=None)
     parser.add_argument("--heat-map-top-k", type=int, default=None)
     parser.add_argument("--disable-heat-map-verify", action="store_true")
     parser.add_argument("--heat-map-verify-runs", type=int, default=None)
@@ -274,10 +392,15 @@ def main() -> None:
         }
         base_config = apply_heat_map_overrides(
             base_config,
-            x_axis=args.heat_map_x_axis,
-            y_axis=args.heat_map_y_axis,
-            x_values=_parse_cli_list(args.heat_map_x_values),
-            y_values=_parse_cli_list(args.heat_map_y_values),
+            start_layer_min=args.heat_map_start_layer_min,
+            end_layer_max=args.heat_map_end_layer_max,
+            min_block_len=args.heat_map_min_block_len,
+            max_block_len=args.heat_map_max_block_len,
+            repeat_count=args.heat_map_repeat_count,
+            probe_a_task_type=args.heat_map_probe_a_task_type,
+            probe_a_seeds=[int(item) for item in _parse_cli_list(args.heat_map_probe_a_seeds) or []] or None,
+            probe_b_task_type=args.heat_map_probe_b_task_type,
+            probe_b_seeds=[int(item) for item in _parse_cli_list(args.heat_map_probe_b_seeds) or []] or None,
             top_k=args.heat_map_top_k,
             verify_overrides=verify_overrides,
         )
@@ -319,6 +442,8 @@ def main() -> None:
         planned_rounds = max(configured_rounds, 1)
 
     per_round_evals = candidate_runs_per_config + len(regression_suite["cases"])
+    if evolution_mode == "heat_map" and heat_map_plan is not None:
+        per_round_evals = int(heat_map_plan.get("probe_eval_count", 0)) + len(regression_suite["cases"])
     total_evals = planned_rounds * per_round_evals
     heat_map_verify_evals = 0
     if evolution_mode == "heat_map" and heat_map_plan is not None:
@@ -370,8 +495,9 @@ def main() -> None:
     )
     if evolution_mode == "heat_map" and heat_map_plan is not None:
         start_message = (
-            f"Nightly heat_map_scan started with baseline + {len(heat_map_candidates)} scan cells. "
-            f"Axes={heat_map_plan['y_axis']} x {heat_map_plan['x_axis']}."
+            f"Nightly heat_map_scan started with baseline + {len(heat_map_candidates)} RYS cells. "
+            f"Axes={heat_map_plan['y_label']} x {heat_map_plan['x_label']} | "
+            f"probes={heat_map_plan['probe_a']['task_type']}+{heat_map_plan['probe_b']['task_type']}."
         )
     writer.append_event(
         {
@@ -451,9 +577,10 @@ def main() -> None:
         if evolution_mode == "heat_map" and isinstance(candidate_config.get("heat_map_coordinates"), dict):
             coordinates = candidate_config["heat_map_coordinates"]
             round_text = (
-                f"Round {round_index}/{planned_rounds}: scanning heat-map cell "
+                f"Round {round_index}/{planned_rounds}: scanning RYS cell "
                 f"{coordinates.get('y_label')}={coordinates.get('y_value')}, "
-                f"{coordinates.get('x_label')}={coordinates.get('x_value')}."
+                f"{coordinates.get('x_label')}={coordinates.get('x_value')}, "
+                f"block_len={coordinates.get('block_len')}."
             )
         elif candidate_config.get("mutation_target"):
             round_text = (
@@ -465,16 +592,26 @@ def main() -> None:
             round_text = f"Round {round_index}/{planned_rounds}: measuring the current baseline {candidate_config['config_id']}."
         writer.append_event({"type": "system", "name": "mutator", "text": round_text})
 
-        candidate_result = evaluate_candidate_config(
-            config_path=Path(config_path),
-            config=candidate_config,
-            suite_id=suite_id,
-            seed_offset=args.seed_start + ((round_index - 1) * 100),
-            candidate_runs_per_config=candidate_runs_per_config,
-            regression_suite=regression_suite,
-            progress_offset=completed_evals,
-            progress_target=total_evals,
-        )
+        if evolution_mode == "heat_map":
+            candidate_result = evaluate_heat_map_candidate_config(
+                config_path=Path(config_path),
+                config=candidate_config,
+                suite_id=suite_id,
+                regression_suite=regression_suite,
+                progress_offset=completed_evals,
+                progress_target=total_evals,
+            )
+        else:
+            candidate_result = evaluate_candidate_config(
+                config_path=Path(config_path),
+                config=candidate_config,
+                suite_id=suite_id,
+                seed_offset=args.seed_start + ((round_index - 1) * 100),
+                candidate_runs_per_config=candidate_runs_per_config,
+                regression_suite=regression_suite,
+                progress_offset=completed_evals,
+                progress_target=total_evals,
+            )
         completed_evals += per_round_evals
         candidate_result["round_index"] = round_index
         candidate_result["reference_config_id_before"] = current_base_config["config_id"]
@@ -495,6 +632,7 @@ def main() -> None:
             "fitness": candidate_result["fitness"],
             "regression_pass_rate": candidate_result["regression_summary"]["pass_rate"],
             "honesty_score": candidate_result["candidate_summary"]["honesty_score"],
+            "probe_summaries": candidate_result["candidate_summary"].get("probe_summaries"),
             "parameter_snapshot": candidate_result.get("parameter_snapshot", {}),
             "config_path": candidate_result["config_path"],
         }
@@ -737,6 +875,8 @@ def main() -> None:
                 "selected_config_id": selected_candidate["config"]["config_id"],
                 "best_delta_suite_score": heat_map_summary["best_cell"]["delta_suite_score"],
                 "best_delta_fitness": heat_map_summary["best_cell"]["delta_fitness"],
+                "best_probe_a_delta": heat_map_summary["best_cell"].get("probe_a", {}).get("delta_suite_score"),
+                "best_probe_b_delta": heat_map_summary["best_cell"].get("probe_b", {}).get("delta_suite_score"),
                 "artifacts": heat_map_artifacts,
                 "verification": heat_map_verification,
                 **heat_map_summary,

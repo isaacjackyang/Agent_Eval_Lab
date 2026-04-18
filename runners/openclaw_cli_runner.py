@@ -18,6 +18,7 @@ class OpenClawCliRunner(BaseRunner):
 
     def run(self, task: dict, live_writer, context: dict) -> RunnerResult:
         started = time.perf_counter()
+        task_category = str(task.get("category", "")).strip().lower()
         architecture = effective_agent_architecture(self.runner_config)
         relayer_supported_modes = relayer_supported_modes_for_runner(self.name, config=self.runner_config)
         relayer_context = resolve_relayer_runtime_context(
@@ -33,6 +34,15 @@ class OpenClawCliRunner(BaseRunner):
         )
         token_estimate = 0
         relayer_runtime_backend: dict[str, Any] | None = None
+        sandbox_metadata: dict[str, Any] = {}
+        cleanup_summary: dict[str, Any] = {}
+        stdout = ""
+        stderr = ""
+        payload: dict[str, Any] | None = None
+        last_error: str | None = None
+        final_output = ""
+        tool_trace: list[dict[str, Any]] = []
+        step_count = 0
         status_context = {
             "run_kind": context.get("run_kind"),
             "suite_id": context.get("suite_id"),
@@ -61,84 +71,102 @@ class OpenClawCliRunner(BaseRunner):
         def emit(event_type: str, text: str, **extra) -> None:
             nonlocal token_estimate
             token_estimate += max(1, len(text) // 4)
-            payload = {"type": event_type, "text": text, **extra}
-            live_writer.append_event(payload)
+            event_payload = {"type": event_type, "text": text, **extra}
+            live_writer.append_event(event_payload)
 
         emit("system", f"Preparing OpenClaw agent {runtime.agent_id}.", name="openclaw")
-        sandbox_metadata = runtime.prepare(Path(task["workspace_root"]))
-        live_writer.write_status(
-            {
-                "run_id": context["run_id"],
-                "status": "running_openclaw",
-                "task_id": task["id"],
-                "config_id": context["config_id"],
-                "runner": self.name,
-                "current_tool": "openclaw_agent",
-                "last_error": None,
-                "step_count": 0,
-                "max_steps": self.max_steps,
-                "elapsed_sec": round(time.perf_counter() - started, 3),
-                "updated_at": context["started_at"],
-                "fitness_mode": context["fitness_mode"],
-                "architecture_variant": architecture.get("variant"),
-                "relayer_mode": relayer_context["mode"],
-                "relayer_applied": relayer_context["applied"],
-                "relayer_range": relayer_context.get("range_text"),
-                **status_context,
-            }
-        )
-        if sandbox_metadata.get("sandbox_info"):
-            emit("system", "OpenClaw sandbox metadata loaded.", name="sandbox")
-
-        prompt = self._build_prompt(task=task, architecture=architecture)
-        emit(
-            "system",
-            (
-                f"Using OpenClaw architecture={architecture.get('variant')} "
-                f"prompt_style={architecture.get('prompt_style')} "
-                f"query_policy={architecture.get('query_policy')} "
-                f"recovery_policy={architecture.get('recovery_policy')} "
-                f"search_limit={architecture.get('search_result_limit')}"
-            ),
-            name="openclaw_architecture",
-        )
-        if relayer_context["enabled"]:
-            emit("system", relayer_context["message"], name="relayer")
-        if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
-            relayer_runtime_backend = invoke_external_relayer_runtime(
-                root=Path(context["root"]),
-                run_id=context["run_id"],
-                runtime_label=self.name,
-                config=self.runner_config,
-                relayer_context=relayer_context,
+        try:
+            sandbox_metadata = runtime.prepare(Path(task["workspace_root"]))
+            live_writer.write_status(
+                {
+                    "run_id": context["run_id"],
+                    "status": "running_openclaw",
+                    "task_id": task["id"],
+                    "config_id": context["config_id"],
+                    "runner": self.name,
+                    "current_tool": "openclaw_agent",
+                    "last_error": None,
+                    "step_count": 0,
+                    "max_steps": self.max_steps,
+                    "elapsed_sec": round(time.perf_counter() - started, 3),
+                    "updated_at": context["started_at"],
+                    "fitness_mode": context["fitness_mode"],
+                    "architecture_variant": architecture.get("variant"),
+                    "relayer_mode": relayer_context["mode"],
+                    "relayer_applied": relayer_context["applied"],
+                    "relayer_range": relayer_context.get("range_text"),
+                    **status_context,
+                }
             )
+
+            smoke_test = sandbox_metadata.get("smoke_test")
+            if isinstance(smoke_test, dict) and smoke_test.get("ok"):
+                emit(
+                    "system",
+                    f"OpenClaw smoke test passed via {smoke_test.get('selected_check')}.",
+                    name="openclaw_smoke",
+                )
+            if sandbox_metadata.get("sandbox_info"):
+                emit("system", "OpenClaw sandbox metadata loaded.", name="sandbox")
+
+            prompt = self._build_prompt(task=task, architecture=architecture)
             emit(
                 "system",
-                f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
-                name="relayer_runtime",
+                (
+                    f"Using OpenClaw architecture={architecture.get('variant')} "
+                    f"prompt_style={architecture.get('prompt_style')} "
+                    f"query_policy={architecture.get('query_policy')} "
+                    f"recovery_policy={architecture.get('recovery_policy')} "
+                    f"search_limit={architecture.get('search_result_limit')}"
+                ),
+                name="openclaw_architecture",
             )
-        emit("assistant", f"轉交 OpenClaw：{prompt}")
-        completed = runtime.run_agent(prompt)
-        stdout = completed.stdout.strip()
-        stderr = completed.stderr.strip()
-        payload = self._parse_payload(stdout)
+            if relayer_context["enabled"]:
+                emit("system", relayer_context["message"], name="relayer")
+            if relayer_context["applied"] and relayer_context["mode"] == "runtime_patch":
+                relayer_runtime_backend = invoke_external_relayer_runtime(
+                    root=Path(context["root"]),
+                    run_id=context["run_id"],
+                    runtime_label=self.name,
+                    config=self.runner_config,
+                    relayer_context=relayer_context,
+                )
+                emit(
+                    "system",
+                    f"External relayer runtime backend prepared via {relayer_runtime_backend['manifest_path']}.",
+                    name="relayer_runtime",
+                )
 
-        last_error = None
-        if completed.returncode != 0:
-            last_error = self._extract_error(payload) or stderr or f"openclaw exit={completed.returncode}"
+            emit("system", "Sending task prompt to OpenClaw agent.", name="openclaw")
+            completed = runtime.run_agent(prompt)
+            stdout = completed.stdout.strip()
+            stderr = completed.stderr.strip()
+            payload = self._parse_payload(stdout)
 
-        final_output = self._extract_output_text(payload) if payload else ""
-        tool_trace = self._extract_tool_trace(payload)
-        step_count = self._extract_step_count(payload, tool_trace)
-        if not final_output and last_error:
-            final_output = last_error
+            if completed.returncode != 0:
+                last_error = self._extract_error(payload) or stderr or f"openclaw exit={completed.returncode}"
 
-        self._emit_trace(payload, emit)
+            final_output = self._extract_output_text(payload) if payload else ""
+            tool_trace = self._extract_tool_trace(payload)
+            step_count = self._extract_step_count(payload, tool_trace)
+            if not final_output and last_error:
+                final_output = last_error
 
-        if stderr:
-            emit("system", stderr, name="openclaw_stderr")
-
-        runtime.cleanup()
+            self._emit_trace(payload, emit)
+            if stderr:
+                emit("system", stderr, name="openclaw_stderr")
+        except Exception as exc:
+            last_error = str(exc)
+            final_output = final_output or last_error
+            emit("system", last_error, name="openclaw_runtime_error")
+        finally:
+            cleanup_summary = runtime.cleanup()
+            if cleanup_summary and not cleanup_summary.get("success", True):
+                cleanup_error = "; ".join(cleanup_summary.get("errors", [])) or "OpenClaw cleanup failed."
+                emit("system", cleanup_error, name="openclaw_cleanup")
+                if not last_error:
+                    last_error = cleanup_error
+                    final_output = final_output or cleanup_error
 
         elapsed_sec = round(time.perf_counter() - started, 3)
         usage_tokens = self._extract_token_estimate(payload)
@@ -174,9 +202,12 @@ class OpenClawCliRunner(BaseRunner):
                 "command": runtime.command_prefix,
                 "agent_id": runtime.agent_id,
                 "architecture": architecture,
+                "task_category": task_category,
                 "relayer": relayer_context,
                 "relayer_runtime_backend": relayer_runtime_backend,
                 "sandbox": sandbox_metadata,
+                "runtime": runtime.describe_runtime(),
+                "cleanup": cleanup_summary,
                 "raw_stdout": stdout,
                 "raw_stderr": stderr,
             },
@@ -188,31 +219,47 @@ class OpenClawCliRunner(BaseRunner):
         recovery_policy = str(architecture.get("recovery_policy", "ranked"))
         search_result_limit = int(architecture.get("search_result_limit", 5))
 
+        if str(task.get("category", "")).strip().lower() == "math_reasoning":
+            answer_kind = str(task.get("metadata", {}).get("answer_kind", "integer"))
+            format_hint = (
+                'Return the final order as {"type":"final","answer":"Name1 > Name2 > Name3 > Name4"}.'
+                if answer_kind == "ranking"
+                else 'Return the final integer as {"type":"final","answer":"42"}.'
+            )
+            instructions = [
+                "You are operating through OpenClaw inside the local evaluation sandbox.",
+                "This is a math and reasoning benchmark, not a retrieval task.",
+                "Do not search for files or paths.",
+                "Solve the task directly and return only the final answer.",
+                format_hint,
+            ]
+            return "\n".join(instructions) + "\n\nTask:\n" + str(task["prompt"])
+
         style_guidance = {
-            "planner": "先列一個極短的檢索計畫，再執行。",
-            "recall": "先擴散找出多個可能位置，再快速收斂到最可信的路徑。",
-            "strict_json": "保持指令精簡、結論直接，不要展開多餘說明。",
+            "planner": "Plan briefly before searching so the final answer is deliberate and easy to verify.",
+            "recall": "Lean on retrieved evidence and keep the response grounded in the workspace contents.",
+            "strict_json": "Return a compact, machine-friendly answer and avoid unrelated prose.",
         }
         query_guidance = {
-            "focused_only": "優先使用與專案名和文件型別高度相關的精準查詢。",
-            "focused_then_broad": "先精準查詢，若沒有把握再擴大關鍵字。",
-            "broad_then_focused": "先用較寬鬆關鍵字取樣，再回到精準查詢確認。",
+            "focused_only": "Start with the most specific query you can infer from the task and avoid broad search unless needed.",
+            "focused_then_broad": "Start focused, then broaden only if the first search pass is weak or ambiguous.",
+            "broad_then_focused": "Start broad to map the space, then narrow to the strongest candidate.",
         }
         recovery_guidance = {
-            "none": "如果沒有足夠把握，不要硬猜答案。",
-            "ranked": "若多個候選接近，選擇最符合專案名、文件型別與 verified 路徑訊號的結果。",
-            "signal_boost": "優先加權 verified、canonical、release/delivery/ops 這類路徑訊號。",
+            "none": "Do not keep exploring once you have a confident answer.",
+            "ranked": "If the first candidate is weak, rank alternates and verify the strongest one before answering.",
+            "signal_boost": "Prefer canonical, verified, release, delivery, or operations artifacts when multiple matches exist.",
         }
 
         instructions = [
-            "你正在處理本機檔案檢索任務，只能輸出最終檔案位置。",
+            "You are operating through OpenClaw inside the local evaluation sandbox.",
             style_guidance.get(prompt_style, style_guidance["strict_json"]),
             query_guidance.get(query_policy, query_guidance["focused_then_broad"]),
             recovery_guidance.get(recovery_policy, recovery_guidance["ranked"]),
-            f"每次檢索最多保留約 {search_result_limit} 個候選結果做比較。",
-            "如果找到可信路徑，就只回傳完整檔案路徑，不要附加說明。",
+            f"Keep the search result shortlist at or below {search_result_limit} strong candidates.",
+            "Return the final resolved file path when you identify the canonical answer.",
         ]
-        return "\n".join(instructions) + "\n\n任務：\n" + str(task["prompt"])
+        return "\n".join(instructions) + "\n\nTask:\n" + str(task["prompt"])
 
     def _parse_payload(self, stdout: str) -> dict | None:
         if not stdout:
@@ -235,7 +282,7 @@ class OpenClawCliRunner(BaseRunner):
         if not payload:
             return ""
 
-        direct_keys = ["output_text", "final_output", "message", "text"]
+        direct_keys = ["output_text", "final_output", "answer", "message", "text"]
         for key in direct_keys:
             value = payload.get(key)
             if isinstance(value, str) and value.strip():
@@ -337,7 +384,7 @@ class OpenClawCliRunner(BaseRunner):
                     return value
             if isinstance(payload.get("step_count"), int):
                 return payload["step_count"]
-        return max(1, len(tool_trace))
+        return max(1, len(tool_trace)) if tool_trace else 0
 
     def _extract_token_estimate(self, payload: dict | None) -> int:
         if not payload:

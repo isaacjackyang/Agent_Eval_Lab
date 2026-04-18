@@ -1,4 +1,16 @@
+此專案是被 David Noel Ng 啟發，RYS 文章網址：https://dnhkng.github.io/posts/rys/?fbclid=IwY2xjawRPfNhleHRuA2FlbQIxMABicmlkETF5Ym1vR1huQ1QyOW5kRG9Ec3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHsaZ8wYBiIpUTwW7DdvBu16rYpquY_6d2kNov9zKY-D_gpJzDOFrIyLUulMl_aem_53YVwB-a2KmbAf85M3sGyA
+This project is inspired by David Noel Ng, and the RYS article is here: https://dnhkng.github.io/posts/rys/?fbclid=IwY2xjawRPfNhleHRuA2FlbQIxMABicmlkETF5Ym1vR1huQ1QyOW5kRG9Ec3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHsaZ8wYBiIpUTwW7DdvBu16rYpquY_6d2kNov9zKY-D_gpJzDOFrIyLUulMl_aem_53YVwB-a2KmbAf85M3sGyA
+
 # Agent Eval Lab
+
+## 2026-04-18 Update
+
+- `P1-4` is complete. `openclaw_cli` now has runtime hardening with prepare/run/cleanup lifecycle logs, per-command command journals, smoke-test-on-prepare, and failure-safe cleanup.
+- OpenClaw runtime artifacts are written to `runs/openclaw_runtime/<run_id>/`, including `runtime_report.json`, `runtime_lifecycle.json`, `command_history.json`, `smoke_report.json`, and per-command stdout/stderr records under `commands/`.
+- `scripts/serve_dashboard.py` remains the HTTP server entrypoint.
+- `start_serve_dashboard.cmd` now starts the dashboard in the background, opens the browser automatically, and returns immediately so the CMD window can close.
+- `stop_serve_dashboard.cmd` stops that background dashboard service.
+- Background dashboard management lives in `scripts/dashboard_service.py`, with PID/log files stored in `runs/control/`.
 
 本專案是一個本機 agent evaluation harness，現在的主線用途是：
 
@@ -6,7 +18,7 @@
 - 用本機 runner 執行 agent
 - 以 verifier 計分並寫出 artifact / history
 - 透過 dashboard 啟動單次、suite、nightly evolution
-- 在 nightly 中做逐步 hill-climb，或用 `heat_map` 模式掃描架構格點
+- 在 nightly 中做逐步 hill-climb，或用 `heat_map` 模式做 RYS 風格的 layer brain-scan
 
 目前已對齊實作的核心精神是比較接近 `karpathy/autoresearch`：
 
@@ -27,6 +39,18 @@
 - `--task-type`
   支援 `auto`、`deployment`、`handoff`、`operations`。
 
+### Benchmark matrix
+
+- `deployment`
+  file-retrieval benchmark that asks the runner to locate the canonical deployment document.
+- `handoff`
+  file-retrieval benchmark that asks the runner to locate the canonical handoff document.
+- `operations`
+  file-retrieval benchmark that asks the runner to locate the canonical operations document.
+- `math`
+  real arithmetic / reasoning benchmark that generates direct-answer tasks such as arithmetic chains, word problems, sequence reasoning, and ordering logic puzzles.
+- `math` does not use filesystem search tools. The runner is expected to return a direct answer instead of a file path.
+
 ### 2. Nightly evolution
 
 - `scripts/run_nightly.py`
@@ -36,7 +60,7 @@
 - `architecture_program`
   逐輪切換 agent retrieval policy preset。
 - `heat_map`
-  固定 baseline，掃描兩條架構軸形成的格點，輸出 matrix / top-k 候選摘要，並自動補建 heat-map 產物與 top-k verify。
+  固定 baseline，掃描 `Start Layer (i)` / `End Layer (j)` 的 duplicated-block 腦掃描矩陣，並用兩組 task probes 做 `probe_a / probe_b / combined` 評分，再自動補建 heat-map 產物與 top-k verify。
 - `model_params` 與 `architecture_program`
   若 `suite_score_c` 提升，且 regression pass rate 沒低於 gate，該輪會成為新的 baseline。
 - 每輪結果會寫入：
@@ -71,13 +95,14 @@
   - `Start Nightly Evolution`
   - `Stop Current Run`
 - 進度顯示用通用 `progress_current / progress_target / progress_text`，所以 suite 和 nightly 都會顯示 `目前/設定數`。
-- heat_map 模式可直接在 dashboard 編輯 `x/y axis`、`x/y values`、`top-k` 與 verify runs，不需要先手改 JSON。
+- heat_map 模式可直接在 dashboard 編輯 layer window、block length、repeat count、兩組 probe task/seeds、`top-k` 與 verify runs，不需要先手改 JSON。
 - dashboard 已接上 `reports/parameter_history.json`，可以看 round-by-round 參數變化。
 - task type 可選：
   - `Auto (Random)`
   - `Deployment`
   - `Handoff`
   - `Operations`
+  - `Math Calculation`
 
 ## Runner 狀態
 
@@ -172,6 +197,13 @@ python scripts/serve_dashboard.py --port 8765
 http://127.0.0.1:8765/dashboard.html
 ```
 
+Preferred local service commands on Windows:
+
+```powershell
+start_serve_dashboard.cmd
+stop_serve_dashboard.cmd
+```
+
 ## 主要輸出
 
 ### Artifact / live 狀態
@@ -194,9 +226,12 @@ http://127.0.0.1:8765/dashboard.html
 - `reports/parameter_history.json`
 - `reports/heat_maps/<suite_id>/matrix.csv`
 - `reports/heat_maps/<suite_id>/heatmap.png`
+- `reports/heat_maps/<suite_id>/combined/`, `probe_a/`, `probe_b/`（channel-specific matrices / PNGs）
+- `reports/heat_maps/<suite_id>/README.md`（先看哪裡、座標解釋、結果解讀）
 - `reports/heat_maps/<suite_id>/verification.json`
 - `reports/relayer_scans/<run_id>/aggregated.csv`
 - `reports/relayer_scans/<run_id>/heatmap.png`
+- `reports/relayer_scans/<run_id>/README.md`（精華摘要與閱讀順序）
 
 ## 目前 nightly 會動到的參數
 
@@ -254,3 +289,21 @@ Agent_Eval_Lab/
 ├─ runs/
 └─ dashboard.html
 ```
+
+## Relayer Update (2026-04-17)
+
+- `scripts/run_relayer_scan.py` 現在不是只有 synthetic ranking。流程已變成：
+  1. 用 `mock_layer_stack` 做 relayer cell 掃描與排序
+  2. 對 top-k candidate 走真實 Layer C evaluation / regression verification
+  3. 套用 baseline gate，將通過的 relayer candidate 納入 `baseline_history / rollback_events / config_history`
+- relayer scan candidate 會依 `relayer.scan.runtime_mode` 解析成真正的 runtime mode；在目前提供的 experiment config 裡，預設是 `runtime_patch`，並透過 `scripts/fixtures/relayer_runtime_stub.py` 驗證 bridge handoff。
+- 這條線已完成 P0 所需的 verifier / gate / adoption loop；但若要量到「模型能力真的因 relayering 改變」，仍需要真正的模型 forward-path backend，而不只是 stub。
+
+### New Relayer Outputs
+
+- `reports/relayer_scan_history.json`
+- `reports/relayer_scan_verification_history.json`
+- `reports/relayer_scans/<run_id>/verification.json`
+- `reports/relayer_scans/<run_id>/artifacts/heatmap.png`
+- `runs/relayer_runtime/<run_id>/manifest.json`
+- `runs/relayer_runtime/<run_id>/result.json`

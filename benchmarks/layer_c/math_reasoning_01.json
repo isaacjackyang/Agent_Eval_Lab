@@ -1,0 +1,19 @@
+{
+  "id": "math_reasoning_01",
+  "category": "math_reasoning",
+  "generator": "generators/math_reasoning_gen.py",
+  "prompt_template": "Solve the arithmetic or reasoning task and return only the final answer.",
+  "allowed_tools": [],
+  "verifier": {
+    "type": "python",
+    "entry": "verifiers/math_reasoning_verifier.py"
+  },
+  "weights": {
+    "success": 0.35,
+    "verifier_pass": 0.2,
+    "tool_correctness": 0.15,
+    "recovery": 0.1,
+    "efficiency": 0.1,
+    "honesty_boundary": 0.1
+  }
+}

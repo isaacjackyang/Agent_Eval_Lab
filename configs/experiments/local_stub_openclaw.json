@@ -36,10 +36,23 @@
     "candidate_runs_per_config": 4,
     "include_base_config": true,
     "heat_map": {
-      "x_axis": "agent_architecture.search_result_limit",
-      "x_values": [4, 5, 6, 8],
-      "y_axis": "agent_architecture.query_policy",
-      "y_values": ["focused_only", "focused_then_broad", "broad_then_focused"],
+      "scan": {
+        "start_layer_min": 0,
+        "end_layer_max": 79,
+        "min_block_len": 1,
+        "max_block_len": 8,
+        "repeat_count": 1
+      },
+      "probe_a": {
+        "label": "Deployment Probe",
+        "task_type": "deployment",
+        "seeds": [1101, 1103, 1105, 1107]
+      },
+      "probe_b": {
+        "label": "Handoff Probe",
+        "task_type": "handoff",
+        "seeds": [2101, 2103, 2105, 2107]
+      },
       "top_k": 5,
       "verify": {
         "enabled": true,
@@ -68,6 +81,12 @@
     "start_layer": 2,
     "end_layer": 4,
     "repeat_count": 1,
+    "runtime_backend": {
+      "command": [
+        "python",
+        "scripts/fixtures/relayer_runtime_stub.py"
+      ]
+    },
     "mock_probe": {
       "probe_name": "mock_relayer_probe_v1",
       "preferred_start_layer": 36,
@@ -79,7 +98,14 @@
       "end_layer_max": 79,
       "min_block_len": 1,
       "max_block_len": 8,
-      "repeat_count": 1
+      "repeat_count": 1,
+      "runtime_mode": "runtime_patch",
+      "verify": {
+        "enabled": true,
+        "candidate_runs_per_config": 2,
+        "top_k": 2,
+        "seed_start": 25000
+      }
     }
   },
   "sandbox": {

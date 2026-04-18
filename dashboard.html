@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>OpenClaw 本地評測實驗室 | OpenClaw Local Eval Lab</title>
+<title>本地AI Agent評測實驗室 | Local AI Agent Eval Lab</title>
 <style>
   :root{
     --bg:#07111f;
@@ -90,13 +90,13 @@
   .shell{
     padding:18px;
     display:grid;
-    gap:14px;
+    gap:4px;
     grid-template-columns:repeat(12, minmax(0, 1fr));
   }
   .panel{
     background:var(--panel);
     border:1px solid var(--line);
-    border-radius:20px;
+    border-radius:12px;
     padding:16px;
     box-shadow:var(--shadow);
   }
@@ -105,6 +105,16 @@
     letter-spacing:.04em;
     color:#d9e7ff;
     margin-bottom:12px;
+  }
+  .panel-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .panel-heading h2{
+    margin-bottom:0;
   }
   .panel.hero{
     background:
@@ -118,12 +128,12 @@
   .span-3{grid-column:span 3}
   .cards{
     display:grid;
-    grid-template-columns:repeat(7, minmax(0, 1fr));
+    grid-template-columns:repeat(8, minmax(0, 1fr));
     gap:10px;
   }
   .card{
     padding:12px;
-    border-radius:16px;
+    border-radius:10px;
     background:rgba(8,15,28,.58);
     border:1px solid rgba(255,255,255,.06);
   }
@@ -186,7 +196,7 @@
     height:clamp(240px, 28vw, 340px);
     background:#08101d;
     border:1px solid rgba(255,255,255,.08);
-    border-radius:16px;
+    border-radius:10px;
   }
   .toolbar{
     display:flex;
@@ -259,7 +269,7 @@
     max-height:520px;
     overflow:auto;
     padding:12px;
-    border-radius:16px;
+    border-radius:10px;
     background:#08101d;
     border:1px solid rgba(255,255,255,.08);
     font:12px/1.55 Consolas, "Cascadia Code", monospace;
@@ -280,10 +290,15 @@
     grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:10px;
   }
+  .mode-summary-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:10px;
+  }
   .mini{
     background:#08101d;
     border:1px solid rgba(255,255,255,.08);
-    border-radius:14px;
+    border-radius:8px;
     padding:12px;
   }
   .mini strong{
@@ -316,7 +331,7 @@
     align-items:flex-start;
     padding:8px 10px;
     border:1px solid rgba(255,255,255,.08);
-    border-radius:12px;
+    border-radius:7px;
     background:rgba(255,255,255,.02);
   }
   .check-item input{
@@ -331,10 +346,32 @@
     margin-top:12px;
     min-height:34px;
   }
+  .mode-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:92px;
+    padding:7px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    color:#f2f7ff;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .mode-focus{
+    border-color:rgba(120,220,202,.34) !important;
+    box-shadow:inset 0 0 0 1px rgba(120,220,202,.18);
+  }
+  .mode-hidden{
+    display:none !important;
+  }
   .dashboard-band{
     position:relative;
     padding:18px;
-    border-radius:28px;
+    border-radius:17px;
     border:1px solid rgba(255,255,255,.08);
     box-shadow:var(--shadow);
     overflow:hidden;
@@ -356,25 +393,32 @@
     opacity:.85;
   }
   .band-overview{
-    --band-bar:linear-gradient(90deg, rgba(120,220,202,.92), rgba(99,166,255,.84));
+    --band-bar:linear-gradient(90deg, rgba(72,228,182,.98), rgba(56,158,255,.92));
     background:
-      radial-gradient(circle at top left, rgba(120,220,202,.10), transparent 32%),
-      linear-gradient(180deg, rgba(17,35,58,.94), rgba(7,17,31,.94));
-    border-color:rgba(120,220,202,.18);
+      radial-gradient(circle at top left, rgba(72,228,182,.22), transparent 32%),
+      linear-gradient(180deg, rgba(12,52,58,.96), rgba(6,20,31,.98));
+    border-color:rgba(72,228,182,.34);
   }
   .band-control{
-    --band-bar:linear-gradient(90deg, rgba(247,200,115,.9), rgba(120,220,202,.7));
+    --band-bar:linear-gradient(90deg, rgba(255,186,77,.98), rgba(255,111,89,.9));
     background:
-      radial-gradient(circle at top right, rgba(247,200,115,.10), transparent 34%),
-      linear-gradient(180deg, rgba(24,34,49,.95), rgba(9,16,28,.96));
-    border-color:rgba(247,200,115,.18);
+      radial-gradient(circle at top right, rgba(255,186,77,.24), transparent 34%),
+      linear-gradient(180deg, rgba(61,33,20,.97), rgba(23,13,18,.98));
+    border-color:rgba(255,153,102,.34);
   }
   .band-other{
-    --band-bar:linear-gradient(90deg, rgba(99,166,255,.88), rgba(120,220,202,.68));
+    --band-bar:linear-gradient(90deg, rgba(84,143,255,.96), rgba(53,222,245,.86));
     background:
-      radial-gradient(circle at top center, rgba(99,166,255,.10), transparent 30%),
-      linear-gradient(180deg, rgba(14,26,45,.95), rgba(7,17,31,.96));
-    border-color:rgba(99,166,255,.16);
+      radial-gradient(circle at top center, rgba(84,143,255,.22), transparent 30%),
+      linear-gradient(180deg, rgba(18,28,66,.97), rgba(7,17,31,.98));
+    border-color:rgba(84,143,255,.3);
+  }
+  .band-diagnostics{
+    --band-bar:linear-gradient(90deg, rgba(255,105,138,.96), rgba(255,172,76,.88));
+    background:
+      radial-gradient(circle at top left, rgba(255,105,138,.2), transparent 34%),
+      linear-gradient(180deg, rgba(57,20,34,.97), rgba(19,11,20,.98));
+    border-color:rgba(255,105,138,.3);
   }
   .band-header{
     position:relative;
@@ -385,12 +429,60 @@
     margin-bottom:16px;
     padding:4px 2px 16px;
     border-bottom:1px solid rgba(255,255,255,.08);
+    cursor:pointer;
+  }
+  .band-toggle{
+    margin-left:auto;
+    min-width:108px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+  }
+  .dashboard-band.collapsed .band-grid{
+    display:none;
+  }
+  .dashboard-band.collapsed .band-copy{
+    display:none;
+  }
+  .dashboard-band.collapsed{
+    padding:10px 12px 8px;
+    border-radius:12px;
+  }
+  .dashboard-band.collapsed::before{
+    height:3px;
+  }
+  .dashboard-band.collapsed .band-header{
+    align-items:center;
+    gap:8px;
+    margin-bottom:0;
+    padding:0;
+    border-bottom:none;
+  }
+  .dashboard-band.collapsed .band-step{
+    min-width:44px;
+    padding:6px 8px;
+    border-radius:7px;
+    font-size:10px;
+    letter-spacing:.12em;
+  }
+  .dashboard-band.collapsed .band-headline{
+    gap:2px;
+  }
+  .dashboard-band.collapsed .band-headline .bi-stack{
+    gap:1px;
+    line-height:1.05;
+  }
+  .dashboard-band.collapsed .band-headline h2{
+    font-size:16px;
+  }
+  .dashboard-band.collapsed .band-toggle{
+    min-width:78px;
+    padding:6px 8px;
   }
   .band-step{
     flex:0 0 auto;
     min-width:68px;
     padding:10px 12px;
-    border-radius:16px;
+    border-radius:10px;
     border:1px solid rgba(255,255,255,.09);
     background:rgba(255,255,255,.04);
     color:var(--muted);
@@ -440,11 +532,12 @@
   @media (max-width: 1100px){
     .cards{grid-template-columns:repeat(3, minmax(0, 1fr))}
     .control-grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
+    .mode-summary-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
     .span-8,.span-6,.span-4,.span-3{grid-column:span 12}
   }
   @media (max-width: 700px){
     header{flex-direction:column}
-    .cards,.grid-2,.stat-grid,.control-grid{grid-template-columns:1fr}
+    .cards,.grid-2,.stat-grid,.control-grid,.mode-summary-grid{grid-template-columns:1fr}
     .shell{padding:12px}
     .band-header{flex-direction:column}
     .band-step{min-width:0;width:fit-content}
@@ -456,7 +549,7 @@
 <body>
 <header>
   <div>
-    <h1><span class="bi-stack"><span class="bi-line">OpenClaw 本地評測實驗室</span><span class="bi-line">OpenClaw Local Eval Lab</span></span></h1>
+    <h1><span class="bi-stack"><span class="bi-line">本地AI Agent評測實驗室</span><span class="bi-line">Local AI Agent Eval Lab</span></span></h1>
     <p class="subtitle"><span class="bi-stack"><span class="bi-line">Layer C 動態任務、驗證器軌跡、baseline 追蹤與 rollback 觀測的 MVP 儀表板。</span><span class="bi-line">MVP dashboard for Layer C dynamic tasks, verifier traces, baseline tracking, and rollback observation.</span></span></p>
   </div>
   <div class="top-meta">
@@ -471,7 +564,7 @@
       <div class="band-step">01</div>
       <div class="band-headline">
         <h2><span class="bi-stack"><span class="bi-line">執行總覽</span><span class="bi-line">Run Overview</span></span></h2>
-        <p class="band-copy"><span class="bi-stack"><span class="bi-line">先看目前 run、baseline 與 rollback 的整體狀態，快速掌握現在發生了什麼。</span><span class="bi-line">Start with the current run, baseline, and rollback state to quickly understand what is happening now.</span></span></p>
+        <p class="band-copy" id="overviewBandCopy"><span class="bi-stack"><span class="bi-line">先看目前 run、baseline 與 rollback 的整體狀態，快速掌握現在發生了什麼。</span><span class="bi-line">Start with the current run, baseline, and rollback state to quickly understand what is happening now.</span></span></p>
       </div>
     </div>
     <div class="band-grid">
@@ -479,16 +572,48 @@
     <h2><span class="bi-stack"><span class="bi-line">即時指標</span><span class="bi-line">Live Metrics</span></span></h2>
     <div class="cards">
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">狀態</span><span class="bi-line">Status</span></span></div><div class="value" id="statusText">-</div></div>
-      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">任務</span><span class="bi-line">Task</span></span></div><div class="value" id="taskText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">任務類型</span><span class="bi-line">Task Type</span></span></div><div class="value" id="taskTypeText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">Benchmark</span><span class="bi-line">Benchmark</span></span></div><div class="value" id="benchmarkText">-</div></div>
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">設定</span><span class="bi-line">Config</span></span></div><div class="value" id="configText">-</div></div>
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">分數</span><span class="bi-line">Score</span></span></div><div class="value" id="scoreText">-</div></div>
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">適應度</span><span class="bi-line">Fitness</span></span></div><div class="value" id="fitnessText">-</div></div>
       <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">適應度模式</span><span class="bi-line">Fitness Mode</span></span></div><div class="value" id="fitnessModeText">-</div></div>
-      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">耗時</span><span class="bi-line">Elapsed</span></span></div><div class="value" id="elapsedText">-</div></div>
+      <div class="card"><div class="label"><span class="bi-stack"><span class="bi-line">目前 Case 耗時</span><span class="bi-line">Current Case Elapsed</span></span></div><div class="value" id="elapsedText">-</div></div>
+    </div>
+    <p class="small" style="margin-top:10px"><span class="bi-stack"><span class="bi-line">即時指標顯示的是目前或最近一次執行結果；這裡的「目前 Case 耗時」是單一 case / run 的耗時，不是整個實驗。</span><span class="bi-line">Live metrics show the current or most recent run result; “Current Case Elapsed” is the time for one case/run, not the whole experiment.</span></span></p>
+  </section>
+
+  <section class="panel span-12" id="overviewModePanel">
+    <div class="panel-heading">
+      <h2><span class="bi-stack"><span class="bi-line">模式摘要</span><span class="bi-line">Mode Snapshot</span></span></h2>
+      <div class="mode-badge" id="overviewModeBadge"><span class="bi-stack"><span class="bi-line">閒置</span><span class="bi-line">Idle</span></span></div>
+    </div>
+    <div class="mode-summary-grid">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">目前模式</span><span class="bi-line">Current mode</span></span></div>
+        <strong id="overviewModeTitleText">-</strong>
+        <div class="small" id="overviewModeSourceText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">來源: -</span><span class="bi-line">Source: -</span></span></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">目前設定</span><span class="bi-line">Active settings</span></span></div>
+        <strong id="overviewSettingsText">-</strong>
+        <div class="small" id="overviewSettingsDetailText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">細節: -</span><span class="bi-line">Details: -</span></span></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">整體進度 / 目標</span><span class="bi-line">Overall Progress / Target</span></span></div>
+        <strong id="overviewProgressText">-</strong>
+        <div class="small" id="overviewProgressDetailText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">追蹤: -</span><span class="bi-line">Tracking: -</span></span></div>
+        <div class="small" id="overviewProgressScopeText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">說明：這裡的 ETA 是整個實驗的預估剩餘時間。</span><span class="bi-line">Note: ETA here is the estimated remaining time for the whole experiment.</span></span></div>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">最近結果</span><span class="bi-line">Latest result</span></span></div>
+        <strong id="overviewResultText">-</strong>
+        <div class="small" id="overviewResultDetailText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">摘要: -</span><span class="bi-line">Summary: -</span></span></div>
+      </div>
     </div>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="overviewAgentPanel">
     <h2><span class="bi-stack"><span class="bi-line">代理狀態</span><span class="bi-line">Agent Status</span></span></h2>
     <div class="status-line">
       <div><span class="small"><span class="bi-stack"><span class="bi-line">執行器</span><span class="bi-line">Runner</span></span></span><br><strong id="runnerText">-</strong></div>
@@ -499,7 +624,7 @@
     <p class="small" style="margin-top:10px"><span class="bi-stack"><span class="bi-line">目前先以 `step_count / max_steps` 做即時進度估算。</span><span class="bi-line">The current live progress estimate uses `step_count / max_steps`.</span></span></p>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="overviewRollbackPanel">
     <h2><span class="bi-stack"><span class="bi-line">Rollback 快照</span><span class="bi-line">Rollback Snapshot</span></span></h2>
     <div class="stat-grid">
       <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">最近 rollback</span><span class="bi-line">Last rollback</span></span></div><strong id="rollbackTimeText">-</strong></div>
@@ -511,7 +636,7 @@
     </div>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="overviewBaselinePanel">
     <h2><span class="bi-stack"><span class="bi-line">Baseline 狀態</span><span class="bi-line">Baseline State</span></span></h2>
     <div class="stat-grid">
       <div class="mini"><div class="label"><span class="bi-stack"><span class="bi-line">目前設定</span><span class="bi-line">Current config</span></span></div><strong id="baselineConfigText">-</strong></div>
@@ -528,47 +653,47 @@
       <div class="band-step">02</div>
       <div class="band-headline">
         <h2><span class="bi-stack"><span class="bi-line">其他觀測</span><span class="bi-line">Other Views</span></span></h2>
-        <p class="band-copy"><span class="bi-stack"><span class="bi-line">歷史、圖表、heat map 與即時串流集中在這一區，方便回顧、比較與追查問題。</span><span class="bi-line">History, charts, heat-map summaries, and live stream diagnostics are grouped here for review, comparison, and debugging.</span></span></p>
+        <p class="band-copy" id="otherBandCopy"><span class="bi-stack"><span class="bi-line">歷史、圖表、heat map 與即時串流集中在這一區，方便回顧、比較與追查問題。</span><span class="bi-line">History, charts, heat-map summaries, and live stream diagnostics are grouped here for review, comparison, and debugging.</span></span></p>
       </div>
     </div>
     <div class="band-grid">
-  <section class="panel span-4">
+  <section class="panel span-4" id="archPanel">
     <h2><span class="bi-stack"><span class="bi-line">架構歷史</span><span class="bi-line">Architecture History</span></span></h2>
     <ul id="archList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="testPanel">
     <h2><span class="bi-stack"><span class="bi-line">測試方法歷史</span><span class="bi-line">Test Method History</span></span></h2>
     <ul id="testList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="baselinePanel">
     <h2><span class="bi-stack"><span class="bi-line">Baseline 歷史</span><span class="bi-line">Baseline History</span></span></h2>
     <ul id="baselineList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="configPanel">
     <h2><span class="bi-stack"><span class="bi-line">設定歷史</span><span class="bi-line">Config History</span></span></h2>
     <ul id="configList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="parameterPanel">
     <h2><span class="bi-stack"><span class="bi-line">參數歷史</span><span class="bi-line">Parameter History</span></span></h2>
     <ul id="parameterList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-8">
+  <section class="panel span-8" id="scorePanel">
     <h2><span class="bi-stack"><span class="bi-line">分數歷史</span><span class="bi-line">Score History</span></span></h2>
     <canvas id="scoreCanvas"></canvas>
     <p class="small" style="margin-top:10px"><span class="bi-stack"><span class="bi-line">圖表顯示本輪所有實驗的 `fitness / overall score` 折線圖，並會依容器寬度自動縮放。</span><span class="bi-line">The chart shows line trends for all `fitness / overall score` entries in the current round and auto-scales to the container width.</span></span></p>
   </section>
 
-  <section class="panel span-4">
+  <section class="panel span-4" id="rollbackPanel">
     <h2><span class="bi-stack"><span class="bi-line">Rollback 事件</span><span class="bi-line">Rollback Events</span></span></h2>
     <ul id="rollbackList"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-12">
+  <section class="panel span-12" id="nightlyPanel">
     <h2><span class="bi-stack"><span class="bi-line">Nightly 歷史</span><span class="bi-line">Nightly History</span></span></h2>
     <div class="grid-2">
       <div class="mini">
@@ -585,7 +710,7 @@
     <ul id="nightlyList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無資料</span><span class="bi-line">No data yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-12">
+  <section class="panel span-12" id="heatMapPanel">
     <h2><span class="bi-stack"><span class="bi-line">Heat Map 歷史</span><span class="bi-line">Heat Map History</span></span></h2>
     <div class="grid-2">
       <div class="mini">
@@ -597,12 +722,13 @@
         <div class="label"><span class="bi-stack"><span class="bi-line">最佳格點</span><span class="bi-line">Best cell</span></span></div>
         <strong id="heatMapBestText">-</strong>
         <div class="small" id="heatMapDeltaText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">最佳增益：-</span><span class="bi-line">Best delta: -</span></span></div>
+        <div class="small" id="heatMapFormulaText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">估算式：-</span><span class="bi-line">Formula: -</span></span></div>
       </div>
     </div>
     <ul id="heatMapList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 heat_map 紀錄</span><span class="bi-line">No heat-map history yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-12">
+  <section class="panel span-12" id="relayerScanPanel">
     <h2><span class="bi-stack"><span class="bi-line">Relayer Scan 歷史</span><span class="bi-line">Relayer Scan History</span></span></h2>
     <div class="grid-2">
       <div class="mini">
@@ -618,7 +744,7 @@
     <ul id="relayerScanList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 relayer scan 紀錄</span><span class="bi-line">No relayer scan history yet</span></span></li></ul>
   </section>
 
-  <section class="panel span-12">
+  <section class="panel span-12" id="streamPanel">
     <h2><span class="bi-stack"><span class="bi-line">即時串流</span><span class="bi-line">Live Stream</span></span></h2>
     <div class="toolbar">
       <button id="toggleScroll"><span class="bi-stack"><span class="bi-line">暫停自動捲動</span><span class="bi-line">Pause auto-scroll</span></span></button>
@@ -653,7 +779,7 @@
       </label>
       <label for="singleSeed">
         <span class="small"><span class="bi-stack"><span class="bi-line">單次 seed</span><span class="bi-line">Single seed</span></span></span>
-        <input id="singleSeed" type="number" placeholder="auto" />
+        <input id="singleSeed" type="number" placeholder="自動 / auto" />
       </label>
       <label for="suiteRuns">
         <span class="small"><span class="bi-stack"><span class="bi-line">Suite 次數</span><span class="bi-line">Suite runs</span></span></span>
@@ -661,7 +787,7 @@
       </label>
       <label for="suiteSeedStart">
         <span class="small"><span class="bi-stack"><span class="bi-line">批次起始 seed</span><span class="bi-line">Batch seed start</span></span></span>
-        <input id="suiteSeedStart" type="number" placeholder="auto" />
+        <input id="suiteSeedStart" type="number" placeholder="自動 / auto" />
       </label>
       <label for="evolutionMode">
         <span class="small"><span class="bi-stack"><span class="bi-line">進化模式</span><span class="bi-line">Evolution mode</span></span></span>
@@ -669,13 +795,31 @@
       </label>
     </div>
     <div class="toolbar control-actions">
-      <button id="startSingleBtn" class="primary"><span class="bi-stack"><span class="bi-line">開始單次 Run</span><span class="bi-line">Start Single Run</span></span></button>
-      <button id="startSuiteBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Suite</span><span class="bi-line">Start Suite</span></span></button>
-      <button id="startNightlyBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Nightly Evolution</span><span class="bi-line">Start Nightly Evolution</span></span></button>
-      <button id="startRelayerScanBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Relayer Scan</span><span class="bi-line">Start Relayer Scan</span></span></button>
+      <button id="startSingleBtn" class="primary"><span class="bi-stack"><span class="bi-line">開始單次測試</span><span class="bi-line">Start Single Run</span></span></button>
+      <button id="startSuiteBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始批次測試</span><span class="bi-line">Start Suite</span></span></button>
+      <button id="startNightlyBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Nightly 演化</span><span class="bi-line">Start Nightly Evolution</span></span></button>
+      <button id="startRelayerScanBtn" class="secondary"><span class="bi-stack"><span class="bi-line">開始 Relayer 掃描</span><span class="bi-line">Start Relayer Scan</span></span></button>
       <button id="stopRunBtn" class="danger"><span class="bi-stack"><span class="bi-line">停止目前執行</span><span class="bi-line">Stop Current Run</span></span></button>
     </div>
-    <div class="grid-2" style="margin-bottom:12px">
+    <div class="control-grid" style="margin-bottom:12px">
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">批次測試 / Suite</span><span class="bi-line">Batch Test / Suite</span></span></div>
+        <strong><span class="bi-stack"><span class="bi-line">同一組設定連跑多輪，量測平均分數、通過率與穩定度。</span><span class="bi-line">Runs the same config across multiple cases to measure mean score, pass rate, and stability.</span></span></strong>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Nightly 演化</span><span class="bi-line">Nightly Evolution</span></span></div>
+        <strong><span class="bi-stack"><span class="bi-line">逐輪調參找更好的 baseline；若分數提升才採用，並沿用新 baseline 繼續下一輪。</span><span class="bi-line">Tunes one parameter at a time to find a better baseline; only improved runs are adopted for the next round.</span></span></strong>
+      </div>
+      <div class="mini">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Relayer 掃描</span><span class="bi-line">Relayer Scan</span></span></div>
+        <strong><span class="bi-stack"><span class="bi-line">掃描 relayer layer window 與重複次數，先做 synthetic ranking，再把 top-k 候選送去真實驗證。</span><span class="bi-line">Scans relayer layer windows and repeat counts, ranks them synthetically first, then verifies the top-k candidates with real evaluation.</span></span></strong>
+      </div>
+    </div>
+    <div id="evolutionModeHint" class="mini" style="margin-bottom:12px; display:none">
+      <div class="label"><span class="bi-stack"><span class="bi-line">模式提示</span><span class="bi-line">Mode hint</span></span></div>
+      <strong id="evolutionModeHintText">-</strong>
+    </div>
+    <div id="samplingParamSection" class="grid-2" style="margin-bottom:12px">
       <div class="mini">
         <div class="label"><span class="bi-stack"><span class="bi-line">模型採樣參數</span><span class="bi-line">Sampling Parameters</span></span></div>
         <div id="samplingParamList" class="checklist"><div class="small"><span class="bi-stack"><span class="bi-line">請先選擇設定檔</span><span class="bi-line">Select a config first</span></span></div></div>
@@ -686,39 +830,9 @@
       </div>
     </div>
     <div id="heatMapEditor" class="grid-2" style="margin-bottom:12px; display:none">
-      <div class="mini">
-        <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 編輯器</span><span class="bi-line">Heat-map Editor</span></span></div>
-        <div class="control-grid">
-          <label for="heatMapXAxis">
-            <span class="small"><span class="bi-stack"><span class="bi-line">X 軸</span><span class="bi-line">X axis</span></span></span>
-            <select id="heatMapXAxis"></select>
-          </label>
-          <label for="heatMapYAxis">
-            <span class="small"><span class="bi-stack"><span class="bi-line">Y 軸</span><span class="bi-line">Y axis</span></span></span>
-            <select id="heatMapYAxis"></select>
-          </label>
-          <label for="heatMapXValues">
-            <span class="small"><span class="bi-stack"><span class="bi-line">X 值</span><span class="bi-line">X values</span></span></span>
-            <input id="heatMapXValues" placeholder="4,5,6,8" />
-          </label>
-          <label for="heatMapYValues">
-            <span class="small"><span class="bi-stack"><span class="bi-line">Y 值</span><span class="bi-line">Y values</span></span></span>
-            <input id="heatMapYValues" placeholder="focused_only,focused_then_broad" />
-          </label>
-          <label for="heatMapTopK">
-            <span class="small"><span class="bi-stack"><span class="bi-line">Top-k</span><span class="bi-line">Top-k</span></span></span>
-            <input id="heatMapTopK" type="number" min="1" placeholder="5" />
-          </label>
-          <label for="heatMapVerifyRuns">
-            <span class="small"><span class="bi-stack"><span class="bi-line">Verify runs/config</span><span class="bi-line">Verify runs/config</span></span></span>
-            <input id="heatMapVerifyRuns" type="number" min="1" placeholder="6" />
-          </label>
-        </div>
-        <label class="toolbar-check" style="margin-top:10px"><input type="checkbox" id="heatMapVerifyEnabled" checked /><span class="small"><span class="bi-stack"><span class="bi-line">Nightly 結束後自動驗證 top-k</span><span class="bi-line">Auto-verify top-k after nightly</span></span></span></label>
-      </div>
-      <div class="mini">
-        <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 設定摘要</span><span class="bi-line">Heat-map Summary</span></span></div>
-        <strong id="heatMapEditorSummaryText">-</strong>
+      <div class="mini span-2">
+        <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 腦掃描設定</span><span class="bi-line">Heat-map Brain-Scan Editor</span></span></div>
+        <div class="small"><span class="bi-stack"><span class="bi-line">這個區塊會依目前設定檔與模式動態載入 RYS 腦掃描控制項。</span><span class="bi-line">This panel dynamically loads the RYS brain-scan controls for the current config and mode.</span></span></div>
       </div>
     </div>
     <div id="relayerEditor" class="grid-2" style="margin-bottom:12px; display:none">
@@ -727,7 +841,7 @@
         <div class="control-grid">
           <label for="relayerScanMaxCandidates">
             <span class="small"><span class="bi-stack"><span class="bi-line">Max candidates</span><span class="bi-line">Max candidates</span></span></span>
-            <input id="relayerScanMaxCandidates" type="number" min="1" placeholder="留空代表全部" />
+            <input id="relayerScanMaxCandidates" type="number" min="1" placeholder="留空=全部 / all" />
           </label>
         </div>
         <p class="small" id="relayerCapabilityText"><span class="bi-stack"><span class="bi-line">Relayer 能力摘要載入中</span><span class="bi-line">Loading relayer capability summary</span></span></p>
@@ -768,6 +882,58 @@
   </section>
     </div>
   </section>
+  <section class="dashboard-band band-diagnostics span-12">
+    <div class="band-header">
+      <div class="band-step">04</div>
+      <div class="band-headline">
+        <h2><span class="bi-stack"><span class="bi-line">診斷與回放</span><span class="bi-line">Diagnostics And Replay</span></span></h2>
+        <p class="band-copy" id="diagnosticsBandCopy"><span class="bi-stack"><span class="bi-line">把 relayer 驗證、candidate lineage、failure cluster 與 trace replay 摘要集中在一起，方便追查是哪個參數或哪種失敗型態在拖分。</span><span class="bi-line">Keep relayer verification, candidate lineage, failure clusters, and trace replay summaries together so score regressions are easy to trace.</span></span></p>
+      </div>
+    </div>
+    <div class="band-grid">
+      <section class="panel span-12" id="diagnosticsSummaryPanel">
+        <h2 id="diagnosticsSummaryTitle"><span class="bi-stack"><span class="bi-line">Relayer 驗證與落盤</span><span class="bi-line">Relayer Verification And Artifacts</span></span></h2>
+        <div class="grid-2">
+          <div class="mini">
+            <div class="label" id="diagnosticsPrimaryLabel"><span class="bi-stack"><span class="bi-line">驗證結果</span><span class="bi-line">Verification result</span></span></div>
+            <strong id="relayerVerifyStatusText">-</strong>
+            <div class="small" id="relayerVerifyWinnerText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">勝出：-</span><span class="bi-line">Winner: -</span></span></div>
+          </div>
+          <div class="mini">
+            <div class="label" id="diagnosticsSecondaryLabel"><span class="bi-stack"><span class="bi-line">Artifact 路徑</span><span class="bi-line">Artifact paths</span></span></div>
+            <strong id="relayerVerifyPathText">-</strong>
+            <div class="small" id="relayerCellsText" style="margin-top:8px"><span class="bi-stack"><span class="bi-line">格點：-</span><span class="bi-line">Cells: -</span></span></div>
+          </div>
+        </div>
+        <ul id="relayerArtifactList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 relayer artifact</span><span class="bi-line">No relayer artifact details yet</span></span></li></ul>
+      </section>
+
+      <section class="panel span-6" id="lineagePanel">
+        <h2><span class="bi-stack"><span class="bi-line">候選演化脈絡</span><span class="bi-line">Candidate Lineage</span></span></h2>
+        <ul id="lineageList"><li><span class="bi-stack"><span class="bi-line">尚無 lineage</span><span class="bi-line">No lineage yet</span></span></li></ul>
+      </section>
+
+      <section class="panel span-6" id="failurePanel">
+        <h2><span class="bi-stack"><span class="bi-line">失敗診斷</span><span class="bi-line">Failure Diagnostics</span></span></h2>
+        <ul id="failureClusterList"><li><span class="bi-stack"><span class="bi-line">尚無 failure cluster</span><span class="bi-line">No failure clusters yet</span></span></li></ul>
+      </section>
+
+      <section class="panel span-12" id="tracePanel">
+        <h2><span class="bi-stack"><span class="bi-line">Trace / Replay 快照</span><span class="bi-line">Trace And Replay Snapshot</span></span></h2>
+        <div class="grid-2">
+          <div class="mini">
+            <div class="label"><span class="bi-stack"><span class="bi-line">即時串流摘要</span><span class="bi-line">Live stream summary</span></span></div>
+            <strong id="liveTraceText">-</strong>
+          </div>
+          <div class="mini">
+            <div class="label"><span class="bi-stack"><span class="bi-line">最近 trace</span><span class="bi-line">Recent traces</span></span></div>
+            <strong id="traceReplayHintText">-</strong>
+          </div>
+        </div>
+        <ul id="traceDiagList" style="margin-top:12px"><li><span class="bi-stack"><span class="bi-line">尚無 trace 記錄</span><span class="bi-line">No trace diagnostics yet</span></span></li></ul>
+      </section>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -803,6 +969,11 @@ let taskTypeSignature = '';
 let evolutionModeSignature = '';
 let heatMapEditorSignature = '';
 let latestControlState = null;
+let relayerAdvancedControlsReady = false;
+let samplingParamRenderSignature = '';
+let samplingSelectionOverride = null;
+let samplingSelectionContextKey = '';
+const BAND_COLLAPSE_KEY = 'ael_dashboard_collapsed_bands_v1';
 
 async function fetchJSON(url){
   const res = await fetch(url + '?t=' + Date.now());
@@ -837,6 +1008,67 @@ async function postJSON(url, payload){
   return data;
 }
 
+function loadCollapsedBands(){
+  try{
+    return JSON.parse(localStorage.getItem(BAND_COLLAPSE_KEY) || '{}');
+  }catch{
+    return {};
+  }
+}
+
+function saveCollapsedBands(state){
+  localStorage.setItem(BAND_COLLAPSE_KEY, JSON.stringify(state || {}));
+}
+
+function applyBandCollapseState(){
+  const state = loadCollapsedBands();
+  document.querySelectorAll('.dashboard-band').forEach((band, index) => {
+    const key = band.dataset.bandId || `band-${index + 1}`;
+    band.dataset.bandId = key;
+    const collapsed = Boolean(state[key]);
+    band.classList.toggle('collapsed', collapsed);
+    const button = band.querySelector('.band-toggle');
+    if(button){
+      button.innerHTML = collapsed ? biHTML('展開', 'Expand') : biHTML('收起', 'Collapse');
+    }
+  });
+}
+
+function setupBandCollapsibles(){
+  document.querySelectorAll('.dashboard-band').forEach((band, index) => {
+    const key = band.dataset.bandId || `band-${index + 1}`;
+    band.dataset.bandId = key;
+    const header = band.querySelector('.band-header');
+    if(!header || header.querySelector('.band-toggle')){
+      return;
+    }
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'band-toggle secondary';
+    button.innerHTML = biHTML('收起', 'Collapse');
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      const state = loadCollapsedBands();
+      const nextCollapsed = !band.classList.contains('collapsed');
+      state[key] = nextCollapsed;
+      saveCollapsedBands(state);
+      applyBandCollapseState();
+    });
+    header.appendChild(button);
+    header.addEventListener('click', event => {
+      if(event.target.closest('.band-toggle')){
+        return;
+      }
+      const state = loadCollapsedBands();
+      const nextCollapsed = !band.classList.contains('collapsed');
+      state[key] = nextCollapsed;
+      saveCollapsedBands(state);
+      applyBandCollapseState();
+    });
+  });
+  applyBandCollapseState();
+}
+
 function setText(id, value, cls=''){
   const el = document.getElementById(id);
   el.textContent = value ?? '-';
@@ -855,6 +1087,79 @@ function setBiHTML(id, zh, en, cls=null){
   }
 }
 
+function sameBi(value){
+  const text = value === null || value === undefined || value === '' ? '-' : String(value);
+  return { zh:text, en:text };
+}
+
+function kindCopy(kind, evolutionMode=''){
+  if(kind === 'suite') return { zh:'批次測試', en:'Suite' };
+  if(kind === 'nightly' && evolutionMode === 'heat_map') return { zh:'Nightly 熱區掃描', en:'Nightly Heat Map' };
+  if(kind === 'nightly') return { zh:'Nightly 演化', en:'Nightly Evolution' };
+  if(kind === 'relayer_scan') return { zh:'Relayer 掃描', en:'Relayer Scan' };
+  if(kind === 'single') return { zh:'單次測試', en:'Single Run' };
+  if(kind === 'default' || !kind) return { zh:'閒置', en:'Idle' };
+  return sameBi(kind);
+}
+
+function taskTypeCopy(value, fallbackLabel=null){
+  const normalized = String(value || fallbackLabel || '').trim().toLowerCase();
+  if(normalized === 'auto' || normalized === 'random') return { zh:'自動隨機', en:'Auto / Random' };
+  if(normalized === 'deployment') return { zh:'部署任務', en:'Deployment' };
+  if(normalized === 'handoff') return { zh:'交接任務', en:'Handoff' };
+  if(normalized === 'operations') return { zh:'營運任務', en:'Operations' };
+  if(normalized === 'math') return { zh:'數學計算', en:'Math Calculation' };
+  if(fallbackLabel) return { zh:`${fallbackLabel}`, en:`${fallbackLabel}` };
+  return sameBi(value || '-');
+}
+
+function evolutionModeCopy(value, fallbackLabel=null){
+  const normalized = String(value || fallbackLabel || '').trim().toLowerCase();
+  if(normalized === 'model_params') return { zh:'模型參數', en:'Model Params' };
+  if(normalized === 'heat_map') return { zh:'熱區掃描', en:'Heat Map' };
+  if(normalized === 'architecture_program') return { zh:'架構策略', en:'Architecture Program' };
+  if(fallbackLabel) return { zh:`${fallbackLabel}`, en:`${fallbackLabel}` };
+  return sameBi(value || '-');
+}
+
+function statusCopy(value){
+  const text = value === null || value === undefined || value === '' ? '-' : String(value);
+  const lower = text.toLowerCase();
+  if(text === '-') return sameBi('-');
+  if(lower === 'idle') return { zh:'閒置', en:'Idle' };
+  if(lower === 'completed') return { zh:'已完成', en:'Completed' };
+  if(lower === 'stopped') return { zh:'已停止', en:'Stopped' };
+  if(lower === 'rejected') return { zh:'已拒絕', en:'Rejected' };
+  if(lower === 'accepted') return { zh:'已採用', en:'Accepted' };
+  if(lower === 'launching') return { zh:'啟動中', en:'Launching' };
+  if(lower === 'running') return { zh:'執行中', en:'Running' };
+  if(lower === 'candidate') return { zh:'候選中', en:'Candidate' };
+  if(lower === 'passed') return { zh:'通過', en:'Passed' };
+  if(lower === 'failed') return { zh:'失敗', en:'Failed' };
+  if(lower === 'running_relayer_scan') return { zh:'執行中：Relayer 掃描', en:'Running: Relayer Scan' };
+  if(lower === 'running_nightly') return { zh:'執行中：Nightly 演化', en:'Running: Nightly Evolution' };
+  if(lower === 'stopped_by_user') return { zh:'使用者停止', en:'Stopped by user' };
+  if(lower.startsWith('exit ')) return { zh:`結束碼 ${text.slice(5)}`, en:text };
+  if(lower.startsWith('stopped (')) return { zh:`已停止 ${text.slice(8)}`, en:text };
+  if(lower.startsWith('running ')){
+    const kind = kindCopy(lower.slice(8).trim());
+    return { zh:`執行中：${kind.zh}`, en:`Running: ${kind.en}` };
+  }
+  return { zh:text, en:text };
+}
+
+function boolCopy(value){
+  if(value === true) return { zh:'是', en:'True' };
+  if(value === false) return { zh:'否', en:'False' };
+  return sameBi(stringifyBool(value));
+}
+
+function setModeBadge(zh, en, cls=''){
+  const el = document.getElementById('overviewModeBadge');
+  el.innerHTML = biHTML(zh, en);
+  el.className = `mode-badge ${cls}`.trim();
+}
+
 function tone(value){
   const text = String(value || '').toLowerCase();
   if(['passed','completed','ok','true'].some(x => text.includes(x))) return 'ok';
@@ -863,14 +1168,617 @@ function tone(value){
   return '';
 }
 
+function latestHistoryItem(hist){
+  const items = hist?.history || [];
+  return items.length ? items[items.length - 1] : null;
+}
+
+function firstPresent(...values){
+  for(const value of values){
+    if(value !== null && value !== undefined && value !== ''){
+      return value;
+    }
+  }
+  return null;
+}
+
+function formatMetric(value, digits=4){
+  const numeric = Number(value);
+  if(Number.isFinite(numeric)){
+    return numeric.toFixed(digits);
+  }
+  if(value === null || value === undefined || value === ''){
+    return '-';
+  }
+  return String(value);
+}
+
+function summarizeList(values, fallback='-'){
+  if(Array.isArray(values)){
+    const cleaned = values
+      .map(value => String(value ?? '').trim())
+      .filter(Boolean);
+    return cleaned.length ? cleaned.join(', ') : fallback;
+  }
+  if(values === null || values === undefined || values === ''){
+    return fallback;
+  }
+  return String(values);
+}
+
+function describeControlResult(lastResult){
+  if(!lastResult){
+    return { label:'-', tone:'' };
+  }
+  if(lastResult.stopped_by_user){
+    return { label:'stopped', tone:'warn' };
+  }
+  if(typeof lastResult.returncode === 'number'){
+    return {
+      label: lastResult.returncode === 0 ? 'completed' : `exit ${lastResult.returncode}`,
+      tone: lastResult.returncode === 0 ? 'ok' : 'bad'
+    };
+  }
+  return { label:lastResult.status || '-', tone:tone(lastResult.status) };
+}
+
+function finiteNumber(value){
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function formatCount(value){
+  const numeric = finiteNumber(value);
+  if(numeric === null){
+    return '-';
+  }
+  return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2);
+}
+
+function formatPercentValue(ratio){
+  const numeric = finiteNumber(ratio);
+  if(numeric === null){
+    return '-';
+  }
+  if(numeric <= 0){
+    return '0.00%';
+  }
+  if(numeric < 0.01){
+    return `${(numeric * 100).toFixed(2)}%`;
+  }
+  return `${(numeric * 100).toFixed(1)}%`;
+}
+
+function formatDurationCompact(totalSeconds){
+  const numeric = finiteNumber(totalSeconds);
+  if(numeric === null || numeric < 0){
+    return '-';
+  }
+  const rounded = Math.round(numeric);
+  const days = Math.floor(rounded / 86400);
+  const hours = Math.floor((rounded % 86400) / 3600);
+  const minutes = Math.floor((rounded % 3600) / 60);
+  const seconds = rounded % 60;
+  const parts = [];
+  if(days){
+    parts.push(`${days}d`);
+  }
+  if(hours || days){
+    parts.push(`${hours}h`);
+  }
+  if(minutes || hours || days){
+    parts.push(`${minutes}m`);
+  }
+  if(!parts.length){
+    parts.push(`${seconds}s`);
+  }
+  return parts.slice(0, 3).join(' ');
+}
+
+function parseIsoMs(value){
+  if(!value){
+    return null;
+  }
+  const timestamp = Date.parse(String(value));
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function computeElapsedSecFromTimestamps(startValue, endValue=null){
+  const startMs = parseIsoMs(startValue);
+  if(startMs === null){
+    return null;
+  }
+  const endMs = endValue ? parseIsoMs(endValue) : Date.now();
+  if(endMs === null){
+    return null;
+  }
+  return Math.max(0, (endMs - startMs) / 1000);
+}
+
+function getProgressSnapshot(kind, current, lastResult, status){
+  const resolvedKind = kind || firstPresent(current?.kind, lastResult?.kind, status?.run_kind) || '';
+  let progressCurrent = null;
+  let progressTarget = null;
+
+  if(resolvedKind === 'suite'){
+    progressCurrent = finiteNumber(firstPresent(status?.suite_progress_current, lastResult?.suite_progress_current, 0));
+    progressTarget = finiteNumber(firstPresent(status?.suite_progress_target, lastResult?.suite_progress_target, current?.runs, lastResult?.runs, 0));
+  } else if(resolvedKind === 'nightly' || resolvedKind === 'relayer_scan'){
+    progressCurrent = finiteNumber(firstPresent(status?.progress_current, lastResult?.progress_current, 0));
+    progressTarget = finiteNumber(firstPresent(status?.progress_target, lastResult?.progress_target, current?.estimated_total_evals, lastResult?.estimated_total_evals, current?.candidate_count, lastResult?.candidate_count, 0));
+  } else if(resolvedKind === 'single'){
+    progressCurrent = 1;
+    progressTarget = 1;
+  }
+
+  const activeElapsedSec = computeElapsedSecFromTimestamps(current?.started_at);
+  const completedElapsedSec = computeElapsedSecFromTimestamps(lastResult?.started_at, lastResult?.finished_at);
+  const elapsedSec = finiteNumber(
+    firstPresent(
+      activeElapsedSec,
+      completedElapsedSec,
+      status?.elapsed_sec,
+      lastResult?.elapsed_sec,
+      0
+    )
+  );
+  const ratio = progressTarget && progressTarget > 0 && progressCurrent !== null
+    ? Math.max(0, Math.min(progressCurrent / progressTarget, 1))
+    : null;
+  const etaSec = elapsedSec && elapsedSec > 0 && progressCurrent && progressTarget && progressTarget > progressCurrent
+    ? (elapsedSec / progressCurrent) * (progressTarget - progressCurrent)
+    : (progressTarget !== null && progressCurrent !== null && progressTarget <= progressCurrent ? 0 : null);
+
+  return {
+    current: progressCurrent,
+    target: progressTarget,
+    elapsedSec,
+    ratio,
+    etaSec
+  };
+}
+
+function getProgressSummaryText(snapshot, fallback='-'){
+  if(!snapshot || snapshot.current === null || snapshot.target === null || snapshot.target <= 0){
+    return fallback;
+  }
+  const percentText = formatPercentValue(snapshot.ratio);
+  return `${formatCount(snapshot.current)}/${formatCount(snapshot.target)} (${percentText})`;
+}
+
+function getProgressEtaText(snapshot){
+  if(!snapshot || snapshot.current === null || snapshot.target === null || snapshot.target <= 0){
+    return '-';
+  }
+  if(snapshot.current <= 0){
+    return '~';
+  }
+  if(snapshot.etaSec === null){
+    return '-';
+  }
+  return formatDurationCompact(snapshot.etaSec);
+}
+
+function getCommandArgValue(command, flag){
+  if(!Array.isArray(command)){
+    return null;
+  }
+  const index = command.indexOf(flag);
+  if(index === -1 || index + 1 >= command.length){
+    return null;
+  }
+  return command[index + 1];
+}
+
+function getConfigSummaryForRun(control, run){
+  const configs = control?.configs || [];
+  if(!run){
+    return getSelectedConfigSummary(control);
+  }
+  return configs.find(item => (
+    (run.config_id && item.config_id === run.config_id) ||
+    (run.config_relative && item.relative_path === run.config_relative) ||
+    (run.config_name && item.name === run.config_name)
+  )) || getSelectedConfigSummary(control);
+}
+
+function getHeatMapEstimateBreakdown(control, context){
+  const run = context?.current || context?.lastResult || null;
+  const configSummary = getConfigSummaryForRun(control, run);
+  const plan = run?.heat_map_plan || configSummary?.heat_map_plan || null;
+  if(!plan){
+    return null;
+  }
+
+  const caseCount = finiteNumber(configSummary?.regression_case_count);
+  const cellCount = finiteNumber(plan.cell_count);
+  const probeEvalCount = finiteNumber(plan.probe_eval_count);
+  const topK = finiteNumber(getCommandArgValue(run?.command, '--heat-map-top-k')) ?? finiteNumber(plan.top_k);
+  if(caseCount === null || cellCount === null || probeEvalCount === null || topK === null){
+    return null;
+  }
+
+  const variantCount = cellCount + 1;
+  const verifySettings = configSummary?.heat_map_settings?.verify || {};
+  const verifyRuns = finiteNumber(getCommandArgValue(run?.command, '--heat-map-verify-runs')) ?? finiteNumber(verifySettings.candidate_runs_per_config);
+  const verifyTopK = finiteNumber(verifySettings.top_k) ?? topK;
+  const verifyDisabledByCommand = Array.isArray(run?.command) && run.command.includes('--disable-heat-map-verify');
+  const verifyEnabled = !verifyDisabledByCommand && verifySettings.enabled !== false;
+
+  const basePerVariant = probeEvalCount + caseCount;
+  const baseTotal = variantCount * basePerVariant;
+  const verifyTargetCount = verifyEnabled && verifyRuns !== null
+    ? Math.min(verifyTopK, topK) + 1
+    : 0;
+  const verifyPerTarget = verifyEnabled && verifyRuns !== null
+    ? verifyRuns + caseCount
+    : 0;
+  const verifyTotal = verifyEnabled && verifyRuns !== null
+    ? verifyTargetCount * verifyPerTarget
+    : 0;
+  const computedTotal = baseTotal + verifyTotal;
+  const actualTotal = finiteNumber(firstPresent(context?.progressSnapshot?.target, run?.estimated_total_evals));
+  const displayTotal = actualTotal ?? computedTotal;
+  const formulaZh = verifyEnabled && verifyRuns !== null
+    ? `${formatCount(displayTotal)} = ${formatCount(variantCount)} × (${formatCount(probeEvalCount)} + ${formatCount(caseCount)}) + ${formatCount(verifyTargetCount)} × (${formatCount(verifyRuns)} + ${formatCount(caseCount)})`
+    : `${formatCount(displayTotal)} = ${formatCount(variantCount)} × (${formatCount(probeEvalCount)} + ${formatCount(caseCount)})`;
+  const formulaEn = formulaZh;
+  const detailZh = verifyEnabled && verifyRuns !== null
+    ? `變體=${formatCount(variantCount)} (${formatCount(cellCount)} 格 + baseline) | probes=${formatCount(probeEvalCount)} | regression=${formatCount(caseCount)} | verify=${formatCount(verifyTargetCount)} × (${formatCount(verifyRuns)} + ${formatCount(caseCount)})`
+    : `變體=${formatCount(variantCount)} (${formatCount(cellCount)} 格 + baseline) | probes=${formatCount(probeEvalCount)} | regression=${formatCount(caseCount)} | verify=關`;
+  const detailEn = verifyEnabled && verifyRuns !== null
+    ? `variants=${formatCount(variantCount)} (${formatCount(cellCount)} cells + baseline) | probes=${formatCount(probeEvalCount)} | regression=${formatCount(caseCount)} | verify=${formatCount(verifyTargetCount)} × (${formatCount(verifyRuns)} + ${formatCount(caseCount)})`
+    : `variants=${formatCount(variantCount)} (${formatCount(cellCount)} cells + baseline) | probes=${formatCount(probeEvalCount)} | regression=${formatCount(caseCount)} | verify=off`;
+
+  return {
+    displayTotal,
+    cellCount,
+    variantCount,
+    probeEvalCount,
+    caseCount,
+    verifyEnabled,
+    verifyRuns,
+    verifyTargetCount,
+    formulaZh,
+    formulaEn,
+    detailZh,
+    detailEn
+  };
+}
+
+function getModeProgressText(kind, current, lastResult, status){
+  const snapshot = getProgressSnapshot(kind, current, lastResult, status);
+  const summaryText = getProgressSummaryText(snapshot);
+  if(summaryText !== '-'){
+    return summaryText;
+  }
+  if(status?.progress_text){
+    return status.progress_text;
+  }
+  if(status?.suite_progress_text){
+    return status.suite_progress_text;
+  }
+  if(lastResult?.progress_text){
+    return lastResult.progress_text;
+  }
+  if(lastResult?.suite_progress_text){
+    return lastResult.suite_progress_text;
+  }
+  return kind === 'single' ? '1/1 (100.0%)' : '-';
+}
+
+function resolveDashboardContext(control, status, nightly, heatMap, relayerScanHistory){
+  const current = control?.current || null;
+  const lastResult = control?.last_result || null;
+  const latestNightly = latestHistoryItem(nightly);
+  const latestHeatMap = latestHistoryItem(heatMap);
+  const latestRelayer = latestHistoryItem(relayerScanHistory);
+
+  let kind = firstPresent(current?.kind, lastResult?.kind, status?.run_kind);
+  if(!kind){
+    if(latestRelayer){
+      kind = 'relayer_scan';
+    } else if(latestNightly || latestHeatMap){
+      kind = 'nightly';
+    }
+  }
+
+  let evolutionMode = firstPresent(current?.evolution_mode, lastResult?.evolution_mode, status?.evolution_mode, latestNightly?.evolution_mode);
+  if(kind === 'nightly' && !evolutionMode && latestHeatMap){
+    evolutionMode = 'heat_map';
+  }
+
+  let source = 'default';
+  if(current){
+    source = 'active';
+  } else if(lastResult){
+    source = 'last_result';
+  } else if(status?.run_kind){
+    source = 'live_status';
+  } else if(latestRelayer){
+    source = 'relayer_history';
+  } else if(latestNightly || latestHeatMap){
+    source = 'nightly_history';
+  }
+
+  return {
+    active: Boolean(control?.active && current),
+    current,
+    lastResult,
+    status: status || {},
+    latestNightly,
+    latestHeatMap,
+    latestRelayer,
+    kind: kind || '',
+    evolutionMode: evolutionMode || '',
+    view: kind === 'nightly' && evolutionMode === 'heat_map' ? 'nightly_heat_map' : (kind || 'default'),
+    source,
+    progressSnapshot: getProgressSnapshot(kind || '', current, lastResult, status || {}),
+    progressText: getModeProgressText(kind || '', current, lastResult, status || {}),
+    heatMapEstimate: getHeatMapEstimateBreakdown(control, { current, lastResult, progressSnapshot: getProgressSnapshot(kind || '', current, lastResult, status || {}) })
+  };
+}
+
+function setPanelVisibility(id, visible){
+  const el = document.getElementById(id);
+  if(el){
+    el.classList.toggle('mode-hidden', !visible);
+  }
+}
+
+function setPanelFocus(id, focused){
+  const el = document.getElementById(id);
+  if(el){
+    el.classList.toggle('mode-focus', Boolean(focused));
+  }
+}
+
+function renderModeOverview(context){
+  const sourceLabels = {
+    active: { zh:'來源: 目前執行', en:'Source: active run' },
+    last_result: { zh:'來源: 最近結果', en:'Source: last result' },
+    live_status: { zh:'來源: 即時狀態', en:'Source: live status' },
+    nightly_history: { zh:'來源: nightly 歷史', en:'Source: nightly history' },
+    relayer_history: { zh:'來源: relayer 歷史', en:'Source: relayer history' },
+    default: { zh:'來源: 等待資料', en:'Source: waiting for data' }
+  };
+  const sourceCopy = sourceLabels[context.source] || sourceLabels.default;
+  const statusResult = describeControlResult(context.lastResult);
+  const status = context.status || {};
+  let badgeCopy = { zh:'閒置', en:'Idle' };
+  let badgeTone = '';
+  let modeTitle = sameBi('-');
+  let settingsText = sameBi('-');
+  let settingsDetail = 'Details: -';
+  let progressText = context.progressText || '-';
+  let progressDetailZh = '等待進一步進度資料';
+  let progressDetailEn = 'Waiting for progress details';
+  let resultText = statusCopy(statusResult.label);
+  let resultTone = statusResult.tone;
+  let resultDetail = 'Summary: -';
+  const progressSnapshot = context.progressSnapshot || getProgressSnapshot(context.kind || '', context.current, context.lastResult, status);
+  const elapsedText = formatDurationCompact(progressSnapshot?.elapsedSec);
+  const etaText = getProgressEtaText(progressSnapshot);
+  const heatMapEstimate = context.heatMapEstimate || null;
+  const progressSummaryText = getProgressSummaryText(progressSnapshot, context.progressText || '-');
+  const activeProgressZh = `目前評估=${progressSummaryText}`;
+  const activeProgressEn = `active evals=${progressSummaryText}`;
+  const historicalRoundsZh = `歷史 rounds=${firstPresent(context.latestNightly?.completed_rounds, '-')} / planned=${firstPresent(context.latestNightly?.planned_rounds, context.current?.estimated_total_evals, '-')}`;
+  const historicalRoundsEn = `history rounds=${firstPresent(context.latestNightly?.completed_rounds, '-')} / planned=${firstPresent(context.latestNightly?.planned_rounds, context.current?.estimated_total_evals, '-')}`;
+
+  if(context.view === 'suite'){
+    badgeCopy = { zh:'批次測試', en:'Suite' };
+    badgeTone = 'accent-2';
+    modeTitle = kindCopy('suite');
+    const runCount = firstPresent(context.current?.runs, context.lastResult?.runs, status?.suite_progress_target, '-');
+    settingsText = { zh:`${runCount} 輪`, en:`${runCount} runs` };
+    settingsDetail = `task_type=${firstPresent(context.current?.task_type, context.lastResult?.task_type, status?.task_type, 'auto')} | benchmark=${firstPresent(status?.task_id, context.lastResult?.task_id, '-')} | seed_start=${firstPresent(context.current?.seed_start, context.lastResult?.seed_start, 'auto')} | config=${firstPresent(context.current?.config_name, context.lastResult?.config_name, status?.config_id, '-')}`;
+    progressDetailZh = `整體已過時間=${elapsedText} | 整體預估剩餘=${etaText} | 控制=${context.active ? 'active' : 'idle'}`;
+    progressDetailEn = `experiment elapsed=${elapsedText} | experiment ETA=${etaText} | control=${context.active ? 'active' : 'idle'}`;
+    resultDetail = `status=${firstPresent(status?.status, statusResult.label)} | score=${formatMetric(firstPresent(status?.score, context.lastResult?.score))} | fitness=${formatMetric(firstPresent(status?.fitness, context.lastResult?.fitness))}`;
+  } else if(context.view === 'nightly_heat_map'){
+    badgeCopy = { zh:'熱區掃描', en:'Heat Map' };
+    badgeTone = 'warn';
+    modeTitle = kindCopy('nightly', 'heat_map');
+    settingsText = { zh:`模式：${context.evolutionMode || 'heat_map'}`, en:`Mode: ${context.evolutionMode || 'heat_map'}` };
+    settingsDetail = `axes=${firstPresent(context.current?.heat_map_plan?.y_axis, context.latestHeatMap?.y_axis, '-')} x ${firstPresent(context.current?.heat_map_plan?.x_axis, context.latestHeatMap?.x_axis, '-')} | top-k=${firstPresent(context.current?.heat_map_plan?.top_k, context.latestHeatMap?.verification?.top_k, '-')}`;
+    progressDetailZh = `整體已過時間=${elapsedText} | 整體預估剩餘=${etaText} | ${progressSnapshot?.target ? activeProgressZh : historicalRoundsZh}${heatMapEstimate ? ` | 算式=${heatMapEstimate.formulaZh}` : ''}`;
+    progressDetailEn = `experiment elapsed=${elapsedText} | experiment ETA=${etaText} | ${progressSnapshot?.target ? activeProgressEn : historicalRoundsEn}${heatMapEstimate ? ` | formula=${heatMapEstimate.formulaEn}` : ''}`;
+    if(context.active){
+      const liveStatus = firstPresent(status?.status, 'running');
+      resultTone = tone(liveStatus) || 'warn';
+      resultText = statusCopy(liveStatus);
+      resultDetail = `live=${context.progressText || '-'} | suite=${firstPresent(status?.suite_id, '-')} | task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')}`;
+    } else {
+      const rawStatus = firstPresent(context.latestNightly?.status, context.latestHeatMap ? 'completed' : null, statusResult.label, '-');
+      resultTone = tone(rawStatus);
+      resultText = statusCopy(rawStatus);
+      resultDetail = `best=${firstPresent(context.latestHeatMap?.best_cell?.config_id, context.latestHeatMap?.selected_config_id, '-')} | verify=${firstPresent(context.latestHeatMap?.verification?.winner?.config_id, '-')} | delta=${formatMetric(firstPresent(context.latestHeatMap?.best_delta_suite_score, context.latestHeatMap?.best_cell?.delta_suite_score))}`;
+    }
+  } else if(context.view === 'nightly'){
+    badgeCopy = { zh:'Nightly 演化', en:'Nightly Evolution' };
+    badgeTone = 'warn';
+    modeTitle = kindCopy('nightly', context.evolutionMode);
+    settingsText = { zh:`模式：${context.evolutionMode || 'model_params'}`, en:`Mode: ${context.evolutionMode || 'model_params'}` };
+    settingsDetail = `sampling=${summarizeList(firstPresent(context.current?.sampling_parameters, context.lastResult?.sampling_parameters), '-')}`;
+    progressDetailZh = `整體已過時間=${elapsedText} | 整體預估剩餘=${etaText} | ${progressSnapshot?.target ? activeProgressZh : historicalRoundsZh}`;
+    progressDetailEn = `experiment elapsed=${elapsedText} | experiment ETA=${etaText} | ${progressSnapshot?.target ? activeProgressEn : historicalRoundsEn}`;
+    if(context.active){
+      const liveStatus = firstPresent(status?.status, 'running');
+      resultTone = tone(liveStatus) || 'warn';
+      resultText = statusCopy(liveStatus);
+      resultDetail = `live=${context.progressText || '-'} | suite=${firstPresent(status?.suite_id, '-')} | task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')}`;
+    } else {
+      const rawStatus = firstPresent(context.latestNightly?.status, statusResult.label, '-');
+      resultTone = tone(rawStatus);
+      resultText = statusCopy(rawStatus);
+      resultDetail = `fitness=${formatMetric(context.latestNightly?.fitness)} | C=${formatMetric(context.latestNightly?.suite_score_c)} | regression=${formatMetric(context.latestNightly?.regression_pass_rate)}`;
+    }
+  } else if(context.view === 'relayer_scan'){
+    badgeCopy = { zh:'Relayer 掃描', en:'Relayer Scan' };
+    badgeTone = 'accent';
+    modeTitle = kindCopy('relayer_scan');
+    const candidateCount = firstPresent(context.current?.max_candidates, context.current?.candidate_count, context.lastResult?.max_candidates, context.lastResult?.candidate_count, context.latestRelayer?.candidate_count, '-');
+    settingsText = { zh:`${candidateCount} 個候選`, en:`${candidateCount} candidates` };
+    settingsDetail = `workers=${firstPresent(context.current?.max_workers, context.lastResult?.max_workers, context.latestRelayer?.max_workers, '-')} | runtime=${firstPresent(context.current?.relayer_scan_runtime_mode, context.lastResult?.relayer_scan_runtime_mode, context.current?.relayer_mode, context.lastResult?.relayer_mode, '-')}`;
+    progressDetailZh = `整體已過時間=${elapsedText} | 整體預估剩餘=${etaText} | seed_start=${firstPresent(context.current?.seed_start, context.lastResult?.seed_start, '-')} | resume=${stringifyBool(firstPresent(context.current?.resume, context.lastResult?.resume))} | skip_completed=${stringifyBool(firstPresent(context.current?.skip_completed, context.lastResult?.skip_completed))}`;
+    progressDetailEn = `experiment elapsed=${elapsedText} | experiment ETA=${etaText} | seed_start=${firstPresent(context.current?.seed_start, context.lastResult?.seed_start, '-')} | resume=${stringifyBool(firstPresent(context.current?.resume, context.lastResult?.resume))} | skip_completed=${stringifyBool(firstPresent(context.current?.skip_completed, context.lastResult?.skip_completed))}`;
+    if(context.active){
+      const liveStatus = firstPresent(status?.status, 'running');
+      resultTone = tone(liveStatus) || 'warn';
+      resultText = statusCopy(liveStatus);
+      resultDetail = `live=${context.progressText || '-'} | runtime=${firstPresent(context.current?.relayer_scan_runtime_mode, context.current?.relayer_mode, '-')} | candidates=${firstPresent(context.current?.candidate_count, context.current?.max_candidates, '-')}`;
+    } else {
+      const rawStatus = firstPresent(context.latestRelayer?.baseline_status, statusResult.label, '-');
+      resultTone = tone(rawStatus);
+      resultText = statusCopy(rawStatus);
+      resultDetail = `best=${firstPresent(context.latestRelayer?.best_config_id, '-')} | verified=${firstPresent(context.latestRelayer?.verified_winner_config_id, '-')} | delta=${formatMetric(context.latestRelayer?.best_delta_suite_score)}`;
+    }
+  } else if(context.kind === 'single'){
+    badgeCopy = { zh:'單次測試', en:'Single Run' };
+    badgeTone = 'accent-2';
+    modeTitle = kindCopy('single');
+    settingsText = { zh:`任務類型：${firstPresent(context.current?.task_type, context.lastResult?.task_type, status?.task_type, 'auto')}`, en:`Task type: ${firstPresent(context.current?.task_type, context.lastResult?.task_type, status?.task_type, 'auto')}` };
+    settingsDetail = `benchmark=${firstPresent(status?.task_id, context.lastResult?.task_id, '-')} | seed=${firstPresent(context.current?.seed, context.lastResult?.seed, 'auto')} | config=${firstPresent(context.current?.config_name, context.lastResult?.config_name, status?.config_id, '-')}`;
+    progressDetailZh = `整體已過時間=${elapsedText} | 整體預估剩餘=${etaText} | 指令=${formatControlCommand(firstPresent(context.current?.command, context.lastResult?.command))}`;
+    progressDetailEn = `experiment elapsed=${elapsedText} | experiment ETA=${etaText} | command=${formatControlCommand(firstPresent(context.current?.command, context.lastResult?.command))}`;
+    resultDetail = `status=${firstPresent(status?.status, statusResult.label)} | score=${formatMetric(firstPresent(status?.score, context.lastResult?.score))} | fitness=${formatMetric(firstPresent(status?.fitness, context.lastResult?.fitness))}`;
+  } else {
+    badgeCopy = { zh:'閒置', en:'Idle' };
+    badgeTone = '';
+    modeTitle = { zh:'等待實驗資料', en:'Waiting for run data' };
+    settingsText = sameBi(firstPresent(status?.config_id, '-') || '-');
+    settingsDetail = `task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')}`;
+    progressText = '-';
+    progressDetailZh = '等待目前或最近一次執行的進度資料';
+    progressDetailEn = 'Waiting for current or last run progress metadata';
+    resultText = firstPresent(status?.status, '-');
+    resultTone = tone(resultText);
+    resultText = statusCopy(resultText);
+    resultDetail = `score=${formatMetric(status?.score)} | fitness=${formatMetric(status?.fitness)}`;
+  }
+
+  setModeBadge(badgeCopy.zh, badgeCopy.en, badgeTone);
+  setBiHTML('overviewModeTitleText', modeTitle.zh, modeTitle.en);
+  setBiHTML('overviewModeSourceText', sourceCopy.zh, sourceCopy.en, 'small');
+  setBiHTML('overviewSettingsText', settingsText.zh, settingsText.en);
+  setBiHTML('overviewSettingsDetailText', `細節: ${settingsDetail}`, `Details: ${settingsDetail}`, 'small');
+  setBiHTML('overviewProgressText', progressText || '-', progressText || '-');
+  setBiHTML('overviewProgressDetailText', `追蹤: ${progressDetailZh}`, `Tracking: ${progressDetailEn}`, 'small');
+  setBiHTML('overviewResultText', resultText?.zh || '-', resultText?.en || '-', resultTone || '');
+  setBiHTML('overviewResultDetailText', `摘要: ${resultDetail}`, `Summary: ${resultDetail}`, 'small');
+}
+
+function applyDashboardMode(context){
+  const otherPanels = ['archPanel', 'testPanel', 'baselinePanel', 'configPanel', 'parameterPanel', 'scorePanel', 'rollbackPanel', 'nightlyPanel', 'heatMapPanel', 'relayerScanPanel', 'streamPanel'];
+  const diagnosticsPanels = ['diagnosticsSummaryPanel', 'lineagePanel', 'failurePanel', 'tracePanel'];
+  otherPanels.forEach(id => {
+    setPanelVisibility(id, true);
+    setPanelFocus(id, false);
+  });
+  diagnosticsPanels.forEach(id => {
+    setPanelVisibility(id, true);
+    setPanelFocus(id, false);
+  });
+
+  let overviewCopy = {
+    zh:'先看目前模式的設定、進度與最近結果，再往下追 baseline 與 rollback。',
+    en:'Start with the current mode settings, progress, and latest result, then use baseline and rollback to understand what changed.'
+  };
+  let otherCopy = {
+    zh:'歷史、圖表、heat map 與即時串流集中在這一區，方便回顧、比較與追查問題。',
+    en:'History, charts, heat-map summaries, and live stream diagnostics are grouped here for review, comparison, and debugging.'
+  };
+  let diagnosticsCopy = {
+    zh:'把 relayer 驗證、candidate lineage、failure cluster 與 trace replay 摘要集中在一起，方便追查是哪個參數或哪種失敗型態在拖分。',
+    en:'Keep relayer verification, candidate lineage, failure clusters, and trace replay summaries together so score regressions are easy to trace.'
+  };
+
+  if(context.view === 'suite'){
+    ['nightlyPanel', 'heatMapPanel', 'relayerScanPanel', 'parameterPanel'].forEach(id => setPanelVisibility(id, false));
+    ['scorePanel', 'rollbackPanel', 'baselinePanel', 'streamPanel', 'archPanel', 'testPanel'].forEach(id => setPanelFocus(id, true));
+    setPanelVisibility('lineagePanel', false);
+    ['diagnosticsSummaryPanel', 'failurePanel', 'tracePanel'].forEach(id => setPanelFocus(id, true));
+    overviewCopy = {
+      zh:'Suite 模式下，01 區塊會先顯示 runs、task type、seed 與目前進度，方便直接對照這輪 batch 在做什麼。',
+      en:'In suite mode, section 01 focuses on runs, task type, seed, and current batch progress so you can see exactly what this batch is doing.'
+    };
+    otherCopy = {
+      zh:'Suite 模式只保留跟批次執行直接相關的歷史與趨勢，像是 score、baseline、rollback 與 live stream；nightly / relayer 專屬卡片會先收起來。',
+      en:'Suite mode keeps only the history and trend panels tied to batch execution, such as score, baseline, rollback, and live stream; nightly and relayer panels are hidden.'
+    };
+    diagnosticsCopy = {
+      zh:'Suite 診斷會集中在最近結果、失敗叢集與 trace replay，讓你看目前這批 case 是怎麼失分的。',
+      en:'Suite diagnostics focus on the latest result, failure clusters, and trace replay so you can see how the current batch is losing points.'
+    };
+  } else if(context.view === 'nightly_heat_map'){
+    ['archPanel', 'testPanel', 'relayerScanPanel'].forEach(id => setPanelVisibility(id, false));
+    ['nightlyPanel', 'heatMapPanel', 'parameterPanel', 'configPanel', 'scorePanel'].forEach(id => setPanelFocus(id, true));
+    ['diagnosticsSummaryPanel', 'lineagePanel', 'failurePanel', 'tracePanel'].forEach(id => setPanelFocus(id, true));
+    overviewCopy = {
+      zh:'Nightly heat map 會先顯示 heat-map 軸向、progress 與最新最佳 cell，讓你一眼知道這次掃描在調哪兩個維度。',
+      en:'Nightly heat map first shows the scan axes, progress, and latest best cell so you can immediately see which two dimensions are being explored.'
+    };
+    otherCopy = {
+      zh:'Nightly heat map 模式會突出 nightly、heat map、parameter 與 config 歷史；suite-only 的結構歷史先隱藏，避免畫面混雜。',
+      en:'Nightly heat map highlights nightly, heat map, parameter, and config history; suite-only structure history is hidden to keep the view focused.'
+    };
+    diagnosticsCopy = {
+      zh:'這裡會把最佳 cell、verify 結果、候選演化脈絡與 trace 摘要放在一起，方便追蹤哪個 heat-map 組合真的有提升。',
+      en:'This area keeps the best cell, verification result, candidate lineage, and trace summary together so you can trace which heat-map combination actually helped.'
+    };
+  } else if(context.view === 'nightly'){
+    ['archPanel', 'testPanel', 'heatMapPanel', 'relayerScanPanel'].forEach(id => setPanelVisibility(id, false));
+    ['nightlyPanel', 'parameterPanel', 'configPanel', 'scorePanel', 'baselinePanel'].forEach(id => setPanelFocus(id, true));
+    ['diagnosticsSummaryPanel', 'lineagePanel', 'failurePanel', 'tracePanel'].forEach(id => setPanelFocus(id, true));
+    overviewCopy = {
+      zh:'Nightly 模式會先顯示目前演化模式、抽樣參數、進度與最近 gate 結果，方便看這輪 hill-climb 是怎麼走的。',
+      en:'Nightly mode surfaces the current evolution mode, sampling parameters, progress, and latest gate result so you can see how this hill-climb round is behaving.'
+    };
+    otherCopy = {
+      zh:'Nightly 模式會突出 nightly、parameter、config 與 score 相關結果；heat map 與 relayer 不相關時會先收起來。',
+      en:'Nightly mode emphasizes nightly, parameter, config, and score results; heat map and relayer panels stay hidden when they are not part of the current run.'
+    };
+    diagnosticsCopy = {
+      zh:'Nightly 診斷會把最新 gate、參數試驗、candidate lineage 與 trace 摘要放一起，方便判斷下一輪要不要繼續沿用這個 baseline。',
+      en:'Nightly diagnostics keep the latest gate, parameter trial, candidate lineage, and trace summary together so you can judge whether the next round should keep this baseline.'
+    };
+  } else if(context.view === 'relayer_scan'){
+    ['archPanel', 'testPanel', 'nightlyPanel', 'heatMapPanel', 'parameterPanel'].forEach(id => setPanelVisibility(id, false));
+    ['relayerScanPanel', 'configPanel', 'scorePanel', 'baselinePanel', 'streamPanel'].forEach(id => setPanelFocus(id, true));
+    ['diagnosticsSummaryPanel', 'lineagePanel', 'failurePanel', 'tracePanel'].forEach(id => setPanelFocus(id, true));
+    overviewCopy = {
+      zh:'Relayer scan 會先顯示 candidate 數量、workers、runtime mode、進度與最新 verified winner，方便確認這次掃描在比什麼。',
+      en:'Relayer scan first shows candidate count, workers, runtime mode, progress, and the latest verified winner so you can confirm what this scan is comparing.'
+    };
+    otherCopy = {
+      zh:'Relayer scan 模式會突出 relayer scan 歷史、score 趨勢、baseline 與 live stream；nightly / heat map 先收起來，避免誤把兩者當成同一流程。',
+      en:'Relayer scan mode emphasizes relayer scan history, score trend, baseline, and live stream; nightly and heat-map panels are hidden to avoid mixing the two pipelines.'
+    };
+    diagnosticsCopy = {
+      zh:'Relayer 診斷會集中顯示 verification、artifact、candidate lineage、failure 與 trace，方便回頭查 synthetic ranking 跟真實驗證是否一致。',
+      en:'Relayer diagnostics focus on verification, artifacts, candidate lineage, failure, and trace so you can compare synthetic ranking against real verification.'
+    };
+  }
+
+  setBiHTML('overviewBandCopy', overviewCopy.zh, overviewCopy.en, 'band-copy');
+  setBiHTML('otherBandCopy', otherCopy.zh, otherCopy.en, 'band-copy');
+  setBiHTML('diagnosticsBandCopy', diagnosticsCopy.zh, diagnosticsCopy.en, 'band-copy');
+}
+
 function renderStatus(data){
-  setText('statusText', data.status || '-', tone(data.status));
-  setText('taskText', data.task_id || '-');
+  const statusLabel = statusCopy(data.status || '-');
+  const regressionLabel = statusCopy(data.regression_status || '-');
+  const baselineRestoreLabel = boolCopy(data.baseline_restored);
+  const taskTypeLabel = taskTypeCopy(data.task_type, data.task_type || '-');
+  setBiHTML('statusText', statusLabel.zh, statusLabel.en, tone(data.status));
+  setBiHTML('taskTypeText', taskTypeLabel.zh, taskTypeLabel.en);
+  setText('benchmarkText', data.task_id || '-');
   setText('configText', data.config_id || '-');
   setText('scoreText', data.score ?? '-', 'accent');
   setText('fitnessText', data.fitness ?? '-', 'accent-2');
   setText('fitnessModeText', data.fitness_mode || '-');
-  setText('elapsedText', data.elapsed_sec ?? '-');
+  setText('elapsedText', formatDurationCompact(data.elapsed_sec));
   setText('runnerText', data.runner || '-');
   setText('toolText', data.current_tool || '-');
   setText('errorText', data.last_error || '-');
@@ -878,8 +1786,8 @@ function renderStatus(data){
   setText('rollbackReasonText', data.rollback_reason || '-');
   setText('rollbackBeforeText', data.rollback_before_config_id || '-');
   setText('rollbackAfterText', data.rollback_after_config_id || '-');
-  setText('regressionText', data.regression_status || '-');
-  setText('baselineRestoreText', stringifyBool(data.baseline_restored), tone(String(data.baseline_restored)));
+  setBiHTML('regressionText', regressionLabel.zh, regressionLabel.en, tone(data.regression_status));
+  setBiHTML('baselineRestoreText', baselineRestoreLabel.zh, baselineRestoreLabel.en, tone(String(data.baseline_restored)));
 
   const steps = Math.max(1, Number(data.max_steps || 1));
   const pct = Math.min(100, (Number(data.step_count || 0) / steps) * 100);
@@ -1060,9 +1968,10 @@ function renderBaseline(hist){
   const items = hist?.history || [];
   const latest = items[items.length - 1];
   if(latest){
+    const baselineStatus = statusCopy(latest.status || '-');
     setText('baselineConfigText', latest.config_id || '-');
     setText('baselineFitnessText', latest.fitness ?? '-', 'accent');
-    setText('baselineStatusText', latest.status || '-', tone(latest.status));
+    setBiHTML('baselineStatusText', baselineStatus.zh, baselineStatus.en, tone(latest.status));
     setText('baselineTimeText', latest.ts || '-');
   }
   renderList(
@@ -1087,7 +1996,8 @@ function renderNightly(hist){
   const items = hist?.history || [];
   const latest = items[items.length - 1];
   if(latest){
-    setText('nightlyStatusText', latest.status || '-', tone(latest.status));
+    const statusLabel = statusCopy(latest.status || '-');
+    setBiHTML('nightlyStatusText', statusLabel.zh, statusLabel.en, tone(latest.status));
     setBiHTML('nightlyFitnessText', `適應度：${latest.fitness ?? '-'}`, `Fitness: ${latest.fitness ?? '-'}`);
     setText('nightlySuiteText', latest.suite_id || '-');
     setBiHTML(
@@ -1153,23 +2063,93 @@ function renderRelayerScanHistory(hist){
   const items = hist?.history || [];
   const latest = items[items.length - 1];
   if(latest){
+    const verifiedWinner = latest.verified_winner_config_id || '-';
+    const baselineStatus = latest.baseline_status || 'synthetic_only';
     setText('relayerScanRunText', latest.run_id || '-', 'accent');
     setBiHTML(
       'relayerScanBestText',
       `最佳候選：${latest.best_config_id || '-'} | Δscore=${latest.best_delta_suite_score ?? '-'}`,
-      `Best candidate: ${latest.best_config_id || '-'} | delta score=${latest.best_delta_suite_score ?? '-'}`,
+      `Best candidate: ${latest.best_config_id || '-'} | verified winner: ${verifiedWinner} | baseline: ${baselineStatus}`,
     );
-    setText('relayerScanNoteText', 'synthetic mock_layer_stack scan', 'warn');
+    const noteText = latest.notes || `synthetic=${latest.best_config_id || '-'} | verify=${verifiedWinner}`;
+    setBiHTML(
+      'relayerScanNoteText',
+      `備註：${noteText}`,
+      `Notes: ${noteText}`,
+      latest.verified_winner_config_id ? 'accent' : 'warn'
+    );
   } else {
     setText('relayerScanRunText', '-');
     setBiHTML('relayerScanBestText', '最佳候選：-', 'Best candidate: -');
-    setText('relayerScanNoteText', '-');
+    setBiHTML('relayerScanNoteText', '備註：-', 'Notes: -');
   }
   renderList(
     'relayerScanList',
     items.slice(-6).reverse(),
     item => `${item.ts || '-'} | ${item.run_id || '-'} | best=${item.best_config_id || '-'} | ΔC=${item.best_delta_suite_score ?? '-'} | synthetic`,
     { zh:'尚未有 relayer scan 紀錄', en:'No relayer scan history yet' }
+  );
+}
+
+function renderDiagnosticsLegacy(diagnostics){
+  const relayer = diagnostics?.latest_relayer_scan || null;
+  if(relayer){
+    const verification = relayer.verification || {};
+    const baselineDecision = relayer.baseline_decision || {};
+    setText('relayerVerifyStatusText', baselineDecision.status || relayer.resume_phase || '-', baselineDecision.promoted ? 'ok' : 'warn');
+    setBiHTML(
+      'relayerVerifyWinnerText',
+      `winner=${verification.winner?.config_id || baselineDecision.winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || '-'}`,
+      `winner=${verification.winner?.config_id || baselineDecision.winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || '-'}`,
+      verification.winner?.config_id ? 'accent' : null
+    );
+    setText('relayerVerifyPathText', relayer.output_dir || '-', 'accent-2');
+    setBiHTML(
+      'relayerCellsText',
+      `cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`,
+      `cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`
+    );
+    renderList(
+      'relayerArtifactList',
+      relayer.top_candidates || [],
+      item => `${item.config_id || '-'} | score=${item.suite_score_c ?? '-'} | ?C=${item.delta_suite_score ?? '-'} | layers=${item.x_value ?? '-'}-${item.y_value ?? '-'} | repeat=${item.repeat_count ?? '-'}`,
+      { zh:'撠??relayer artifact', en:'No relayer artifact details yet' }
+    );
+  } else {
+    setText('relayerVerifyStatusText', '-');
+    setBiHTML('relayerVerifyWinnerText', 'Winner: -', 'Winner: -');
+    setText('relayerVerifyPathText', '-');
+    setBiHTML('relayerCellsText', 'Cells: -', 'Cells: -');
+    renderList('relayerArtifactList', [], item => item, { zh:'撠??relayer artifact', en:'No relayer artifact details yet' });
+  }
+
+  renderList(
+    'lineageList',
+    diagnostics?.lineage || [],
+    item => `${item.ts || '-'} | ${item.event || '-'} | ${item.reference_config_id || '-'} -> ${item.config_id || '-'} | ${item.mutation_target || item.mutation_profile || '-'} | fitness=${item.fitness ?? '-'} | baseline=${item.baseline_status || '-'}`,
+    { zh:'撠??lineage', en:'No lineage yet' }
+  );
+  renderList(
+    'failureClusterList',
+    diagnostics?.failure?.clusters || [],
+    item => `${item.cluster_id || '-'} | failed=${item.failed_count ?? 0}/${item.count ?? 0} | next=${(item.counterfactuals || [])[0] || '-'}`,
+    { zh:'撠??failure cluster', en:'No failure clusters yet' }
+  );
+
+  const liveTrace = diagnostics?.trace?.live || {};
+  const topNames = (liveTrace.top_names || []).map(item => `${item.name}:${item.count}`).join(', ') || '-';
+  setBiHTML(
+    'liveTraceText',
+    `events=${liveTrace.event_count ?? 0} | seq=${liveTrace.latest_event_seq ?? '-'} | replay=${liveTrace.latest_replay_key || '-'}`,
+    `events=${liveTrace.event_count ?? 0} | seq=${liveTrace.latest_event_seq ?? '-'} | replay=${liveTrace.latest_replay_key || '-'}`,
+    liveTrace.event_count ? 'accent' : null
+  );
+  setBiHTML('traceReplayHintText', `熱門=${topNames}`, `top=${topNames}`);
+  renderList(
+    'traceDiagList',
+    diagnostics?.trace?.entries || [],
+    item => `${item.ts || '-'} | ${item.run_id || '-'} | ${(item.tool_sequence || []).join(' -> ') || '-'} | relayer=${item.relayer_mode || '-'} | err=${item.last_error || '-'}`,
+    { zh:'撠??trace 閮?', en:'No trace diagnostics yet' }
   );
 }
 
@@ -1193,7 +2173,14 @@ function renderStream(lines){
 
   box.innerHTML = rows.slice(-220).map(row => {
     const cls = 't-' + (row.type || 'system');
-    return `<div class="row ${cls}">[${escapeHtml(row.ts || '-')}] <b>${escapeHtml(row.type || 'event')}</b> ${escapeHtml(row.text || row.name || JSON.stringify(row))}</div>`;
+    const prefixParts = [
+      row.event_seq ? `#${row.event_seq}` : null,
+      row.ts || '-',
+      row.replay_key || null,
+      row.phase || null
+    ].filter(Boolean);
+    const title = row.name ? `${row.name}: ` : '';
+    return `<div class="row ${cls}">[${escapeHtml(prefixParts.join(' | '))}] <b>${escapeHtml(row.type || 'event')}</b> ${escapeHtml(title + (row.text || row.name || JSON.stringify(row)))}</div>`;
   }).join('');
 
   if(autoScroll){
@@ -1228,6 +2215,224 @@ function formatControlCommand(command){
     return command.join(' ');
   }
   return '-';
+}
+
+function renderDiagnostics(diagnostics, context, parameterHistory){
+  const latestParameter = latestHistoryItem(parameterHistory);
+  const latestNightly = context?.latestNightly || null;
+  const latestHeatMap = context?.latestHeatMap || null;
+  const latestRelayerHistory = context?.latestRelayer || null;
+  const relayer = diagnostics?.latest_relayer_scan || latestRelayerHistory || null;
+  const status = context?.status || {};
+  const current = context?.current || null;
+  const activeStatus = firstPresent(status?.status, context?.active ? 'running' : null, '-');
+  const activeProgress = context?.progressText || '-';
+
+  let title = { zh:'模式診斷摘要', en:'Mode Diagnostics Summary' };
+  let primaryLabel = { zh:'最新結果', en:'Latest result' };
+  let secondaryLabel = { zh:'主要設定', en:'Key settings' };
+  let statusText = statusCopy('-');
+  let statusTone = '';
+  let detailPrimary = { zh:'摘要：-', en:'Summary: -' };
+  let detailSecondary = { zh:'細節：-', en:'Details: -' };
+  let pathText = '-';
+  let artifactItems = [];
+  let artifactFormatter = item => item;
+  let artifactEmpty = { zh:'尚無模式診斷摘要', en:'No mode diagnostics summary yet' };
+
+  if(context?.view === 'relayer_scan'){
+    title = { zh:'Relayer 驗證與落盤', en:'Relayer Verification And Artifacts' };
+    primaryLabel = { zh:'驗證結果', en:'Verification result' };
+    secondaryLabel = { zh:'Artifact 路徑', en:'Artifact paths' };
+    if(context?.active){
+      statusText = statusCopy(activeStatus);
+      statusTone = tone(activeStatus) || 'warn';
+      detailPrimary = {
+        zh:`目前進度=${activeProgress} | runtime=${firstPresent(current?.relayer_scan_runtime_mode, current?.relayer_mode, status?.relayer_mode, '-')}`,
+        en:`live progress=${activeProgress} | runtime=${firstPresent(current?.relayer_scan_runtime_mode, current?.relayer_mode, status?.relayer_mode, '-')}`
+      };
+      pathText = firstPresent(current?.output_dir, current?.resume_output_dir, '-');
+      detailSecondary = {
+        zh:`候選數=${firstPresent(current?.candidate_count, current?.max_candidates, '-')} | workers=${firstPresent(current?.max_workers, '-')} | seed_start=${firstPresent(current?.seed_start, '-')}`,
+        en:`candidates=${firstPresent(current?.candidate_count, current?.max_candidates, '-')} | workers=${firstPresent(current?.max_workers, '-')} | seed_start=${firstPresent(current?.seed_start, '-')}`
+      };
+      artifactItems = [
+        `status=${activeStatus}`,
+        `progress=${activeProgress}`,
+        `resume=${stringifyBool(firstPresent(current?.resume, false))}`,
+        `skip_completed=${stringifyBool(firstPresent(current?.skip_completed, false))}`
+      ];
+    } else if(relayer){
+      const verification = relayer.verification || {};
+      const baselineDecision = relayer.baseline_decision || {};
+      const rawStatus = baselineDecision.status || relayer.baseline_status || relayer.resume_phase || '-';
+      statusText = statusCopy(rawStatus);
+      statusTone = baselineDecision.promoted ? 'ok' : tone(rawStatus);
+      detailPrimary = {
+        zh:`勝出=${verification.winner?.config_id || baselineDecision.winner_config_id || relayer.verified_winner_config_id || '-'} | 倖存=${verification.survivor_count ?? baselineDecision.survivor_count ?? relayer.verified_survivor_count ?? '-'} | 最佳=${relayer.best_cell?.config_id || relayer.best_config_id || '-'}`,
+        en:`winner=${verification.winner?.config_id || baselineDecision.winner_config_id || relayer.verified_winner_config_id || '-'} | survivors=${verification.survivor_count ?? baselineDecision.survivor_count ?? relayer.verified_survivor_count ?? '-'} | best=${relayer.best_cell?.config_id || relayer.best_config_id || '-'}`
+      };
+      pathText = relayer.output_dir || relayer.verification_report_path || '-';
+      detailSecondary = {
+        zh:`格點=${relayer.cells_dir || '-'} | 完成=${relayer.completed_candidates ?? relayer.candidate_count ?? '-'} | 待跑=${relayer.pending_candidates ?? '-'} | 重用=${relayer.reused_cells ?? 0}`,
+        en:`cells=${relayer.cells_dir || '-'} | completed=${relayer.completed_candidates ?? relayer.candidate_count ?? '-'} | pending=${relayer.pending_candidates ?? '-'} | reused=${relayer.reused_cells ?? 0}`
+      };
+      artifactItems = relayer.top_candidates || [
+        `baseline=${relayer.baseline_status || '-'}`,
+        `verify_backend=${relayer.verification_backend || '-'}`,
+        `gate_reasons=${summarizeList(relayer.gate_reasons, 'none')}`
+      ];
+      artifactFormatter = Array.isArray(relayer.top_candidates) && relayer.top_candidates.length
+        ? (item => `${item.config_id || '-'} | score=${item.suite_score_c ?? '-'} | delta=${item.delta_suite_score ?? '-'} | layers=${item.x_value ?? '-'}-${item.y_value ?? '-'} | repeat=${item.repeat_count ?? '-'}`)
+        : (item => item);
+      artifactEmpty = { zh:'尚無 relayer artifact', en:'No relayer artifact details yet' };
+    }
+  } else if(context?.view === 'nightly_heat_map'){
+    title = { zh:'Nightly Heat Map 摘要', en:'Nightly Heat Map Summary' };
+    primaryLabel = { zh:'最新熱區結果', en:'Latest heat-map result' };
+    secondaryLabel = { zh:'最佳 cell / 驗證', en:'Best cell / verification' };
+    if(context?.active){
+      statusText = statusCopy(activeStatus);
+      statusTone = tone(activeStatus) || 'warn';
+      detailPrimary = {
+        zh:`目前進度=${activeProgress} | suite=${firstPresent(status?.suite_id, '-')}` ,
+        en:`live progress=${activeProgress} | suite=${firstPresent(status?.suite_id, '-')}`
+      };
+      pathText = firstPresent(status?.suite_id, '-');
+      detailSecondary = {
+        zh:`目前案例 task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')} | 軸向=${firstPresent(current?.heat_map_plan?.y_label, current?.heat_map_plan?.y_axis, '-')} x ${firstPresent(current?.heat_map_plan?.x_label, current?.heat_map_plan?.x_axis, '-')}`,
+        en:`current case task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')} | axes=${firstPresent(current?.heat_map_plan?.y_label, current?.heat_map_plan?.y_axis, '-')} x ${firstPresent(current?.heat_map_plan?.x_label, current?.heat_map_plan?.x_axis, '-')}`
+      };
+      artifactItems = [
+        `status=${activeStatus}`,
+        `progress=${activeProgress}`,
+        `probe_a=${firstPresent(current?.heat_map_plan?.probe_a?.task_type, '-')}`,
+        `probe_b=${firstPresent(current?.heat_map_plan?.probe_b?.task_type, '-')}`
+      ];
+    } else {
+      const rawStatus = firstPresent(latestNightly?.status, latestHeatMap ? 'completed' : null, '-');
+      statusText = statusCopy(rawStatus);
+      statusTone = tone(rawStatus);
+      detailPrimary = {
+        zh:`最佳=${firstPresent(latestHeatMap?.best_cell?.config_id, latestHeatMap?.selected_config_id, '-')} | 驗證=${firstPresent(latestHeatMap?.verification?.winner?.config_id, '-')} | 差值=${formatMetric(firstPresent(latestHeatMap?.best_delta_suite_score, latestHeatMap?.best_cell?.delta_suite_score))}`,
+        en:`best=${firstPresent(latestHeatMap?.best_cell?.config_id, latestHeatMap?.selected_config_id, '-')} | verify=${firstPresent(latestHeatMap?.verification?.winner?.config_id, '-')} | delta=${formatMetric(firstPresent(latestHeatMap?.best_delta_suite_score, latestHeatMap?.best_cell?.delta_suite_score))}`
+      };
+      pathText = firstPresent(latestNightly?.suite_id, latestHeatMap?.suite_id, '-');
+      detailSecondary = {
+        zh:`軸向=${firstPresent(latestHeatMap?.y_label, latestHeatMap?.y_axis, '-')} x ${firstPresent(latestHeatMap?.x_label, latestHeatMap?.x_axis, '-')} | 改善=${firstPresent(latestHeatMap?.improved_cell_count, '-')}`,
+        en:`axes=${firstPresent(latestHeatMap?.y_label, latestHeatMap?.y_axis, '-')} x ${firstPresent(latestHeatMap?.x_label, latestHeatMap?.x_axis, '-')} | improved=${firstPresent(latestHeatMap?.improved_cell_count, '-')}`
+      };
+      artifactItems = [
+        `suite=${firstPresent(latestNightly?.suite_id, latestHeatMap?.suite_id, '-')}`,
+        `gate_reasons=${summarizeList(latestNightly?.gate_reasons, 'none')}`,
+        `verify_winner=${firstPresent(latestHeatMap?.verification?.winner?.config_id, '-')}`
+      ];
+    }
+    artifactEmpty = { zh:'尚無 heat-map 診斷摘要', en:'No heat-map diagnostics summary yet' };
+  } else if(context?.view === 'nightly'){
+    title = { zh:'Nightly Evolution 摘要', en:'Nightly Evolution Summary' };
+    primaryLabel = { zh:'最新 nightly gate', en:'Latest nightly gate' };
+    secondaryLabel = { zh:'參數試驗', en:'Parameter trial' };
+    if(context?.active){
+      statusText = statusCopy(activeStatus);
+      statusTone = tone(activeStatus) || 'warn';
+      detailPrimary = {
+        zh:`目前進度=${activeProgress} | suite=${firstPresent(status?.suite_id, '-')}`,
+        en:`live progress=${activeProgress} | suite=${firstPresent(status?.suite_id, '-')}`
+      };
+      pathText = firstPresent(current?.evolution_mode, latestParameter?.parameter_name, 'baseline');
+      detailSecondary = {
+        zh:`目前案例 task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')} | config=${firstPresent(status?.config_id, current?.config_id, '-')}`,
+        en:`current case task_type=${firstPresent(status?.task_type, '-')} | benchmark=${firstPresent(status?.task_id, '-')} | config=${firstPresent(status?.config_id, current?.config_id, '-')}`
+      };
+      artifactItems = [
+        `status=${activeStatus}`,
+        `progress=${activeProgress}`,
+        `evolution_mode=${firstPresent(current?.evolution_mode, '-')}`,
+        `suite=${firstPresent(status?.suite_id, '-')}`
+      ];
+    } else {
+      const rawStatus = firstPresent(latestNightly?.status, '-');
+      statusText = statusCopy(rawStatus);
+      statusTone = tone(rawStatus);
+      detailPrimary = {
+        zh:`適應度=${formatMetric(latestNightly?.fitness)} | C=${formatMetric(latestNightly?.suite_score_c)} | 回歸=${formatMetric(latestNightly?.regression_pass_rate)}`,
+        en:`fitness=${formatMetric(latestNightly?.fitness)} | C=${formatMetric(latestNightly?.suite_score_c)} | regression=${formatMetric(latestNightly?.regression_pass_rate)}`
+      };
+      pathText = firstPresent(latestParameter?.parameter_name, latestNightly?.mutation_profile, 'baseline');
+      detailSecondary = {
+        zh:`${firstPresent(latestParameter?.parameter_before, '-')} -> ${firstPresent(latestParameter?.parameter_after, '-')} | 改善=${stringifyBool(latestParameter?.improved)}`,
+        en:`${firstPresent(latestParameter?.parameter_before, '-')} -> ${firstPresent(latestParameter?.parameter_after, '-')} | improved=${stringifyBool(latestParameter?.improved)}`
+      };
+      artifactItems = [
+        `suite=${firstPresent(latestNightly?.suite_id, '-')}`,
+        `reference=${firstPresent(latestParameter?.reference_config_id_before, '-')}`,
+        `reasons=${summarizeList(firstPresent(latestParameter?.decision_reasons, latestNightly?.gate_reasons), 'none')}`
+      ];
+    }
+    artifactEmpty = { zh:'尚無 nightly 診斷摘要', en:'No nightly diagnostics summary yet' };
+  } else if(context?.view === 'suite'){
+    const statusResult = describeControlResult(context.lastResult);
+    title = { zh:'Suite 摘要', en:'Suite Summary' };
+    primaryLabel = { zh:'最近 suite 結果', en:'Latest suite result' };
+    secondaryLabel = { zh:'Suite 設定', en:'Suite settings' };
+    const rawStatus = firstPresent(context?.status?.status, statusResult.label, '-');
+    statusText = statusCopy(rawStatus);
+    statusTone = tone(rawStatus) || statusResult.tone;
+    detailPrimary = {
+      zh:`分數=${formatMetric(firstPresent(context?.status?.score, context?.lastResult?.score))} | 適應度=${formatMetric(firstPresent(context?.status?.fitness, context?.lastResult?.fitness))} | 任務類型=${firstPresent(context?.status?.task_type, context?.lastResult?.task_type, '-')} | Benchmark=${firstPresent(context?.status?.task_id, context?.lastResult?.task_id, '-')}`,
+      en:`score=${formatMetric(firstPresent(context?.status?.score, context?.lastResult?.score))} | fitness=${formatMetric(firstPresent(context?.status?.fitness, context?.lastResult?.fitness))} | task_type=${firstPresent(context?.status?.task_type, context?.lastResult?.task_type, '-')} | benchmark=${firstPresent(context?.status?.task_id, context?.lastResult?.task_id, '-')}`
+    };
+    pathText = `${firstPresent(context?.current?.runs, context?.lastResult?.runs, context?.status?.suite_progress_target, '-')} runs`;
+    detailSecondary = {
+      zh:`任務類型=${firstPresent(context?.current?.task_type, context?.lastResult?.task_type, context?.status?.task_type, 'auto')} | 起始種子=${firstPresent(context?.current?.seed_start, context?.lastResult?.seed_start, 'auto')} | 進度=${context?.progressText || '-'}`,
+      en:`task_type=${firstPresent(context?.current?.task_type, context?.lastResult?.task_type, context?.status?.task_type, 'auto')} | seed_start=${firstPresent(context?.current?.seed_start, context?.lastResult?.seed_start, 'auto')} | progress=${context?.progressText || '-'}`
+    };
+    artifactItems = [
+      `config=${firstPresent(context?.current?.config_name, context?.lastResult?.config_name, context?.status?.config_id, '-')}`,
+      `command=${formatControlCommand(firstPresent(context?.current?.command, context?.lastResult?.command))}`,
+      `status=${firstPresent(context?.status?.status, '-')}`
+    ];
+    artifactEmpty = { zh:'尚無 suite 診斷摘要', en:'No suite diagnostics summary yet' };
+  }
+
+  setBiHTML('diagnosticsSummaryTitle', title.zh, title.en, '');
+  setBiHTML('diagnosticsPrimaryLabel', primaryLabel.zh, primaryLabel.en, 'label');
+  setBiHTML('diagnosticsSecondaryLabel', secondaryLabel.zh, secondaryLabel.en, 'label');
+  setBiHTML('relayerVerifyStatusText', statusText.zh, statusText.en, statusTone || '');
+  setBiHTML('relayerVerifyWinnerText', detailPrimary.zh, detailPrimary.en, statusTone === 'ok' ? 'small accent' : 'small');
+  setText('relayerVerifyPathText', pathText, pathText !== '-' ? 'accent-2' : '');
+  setBiHTML('relayerCellsText', detailSecondary.zh, detailSecondary.en, 'small');
+  renderList('relayerArtifactList', artifactItems, artifactFormatter, artifactEmpty);
+
+  renderList(
+    'lineageList',
+    diagnostics?.lineage || [],
+    item => `${item.ts || '-'} | ${item.event || '-'} | ${item.reference_config_id || '-'} -> ${item.config_id || '-'} | ${item.mutation_target || item.mutation_profile || '-'} | fitness=${item.fitness ?? '-'} | baseline=${item.baseline_status || '-'}`,
+    { zh:'尚無 lineage', en:'No lineage yet' }
+  );
+  renderList(
+    'failureClusterList',
+    diagnostics?.failure?.clusters || [],
+    item => `${item.cluster_id || '-'} | failed=${item.failed_count ?? 0}/${item.count ?? 0} | next=${(item.counterfactuals || [])[0] || '-'}`,
+    { zh:'尚無 failure cluster', en:'No failure clusters yet' }
+  );
+
+  const liveTrace = diagnostics?.trace?.live || {};
+  const topNames = (liveTrace.top_names || []).map(item => `${item.name}:${item.count}`).join(', ') || '-';
+  setBiHTML(
+    'liveTraceText',
+    `events=${liveTrace.event_count ?? 0} | seq=${liveTrace.latest_event_seq ?? '-'} | replay=${liveTrace.latest_replay_key || '-'}`,
+    `events=${liveTrace.event_count ?? 0} | seq=${liveTrace.latest_event_seq ?? '-'} | replay=${liveTrace.latest_replay_key || '-'}`,
+    liveTrace.event_count ? 'accent' : ''
+  );
+  setBiHTML('traceReplayHintText', `top=${topNames}`, `top=${topNames}`);
+  renderList(
+    'traceDiagList',
+    diagnostics?.trace?.entries || [],
+    item => `${item.ts || '-'} | ${item.run_id || '-'} | ${(item.tool_sequence || []).join(' -> ') || '-'} | relayer=${item.relayer_mode || '-'} | err=${item.last_error || '-'}`,
+    { zh:'尚無 trace 記錄', en:'No trace diagnostics yet' }
+  );
 }
 
 function syncControlConfigOptions(configs, defaultConfig){
@@ -1268,7 +2473,8 @@ function syncTaskTypeOptions(taskTypes, defaultTaskType){
   (taskTypes || []).forEach(item => {
     const option = document.createElement('option');
     option.value = item.value;
-    option.textContent = item.label || item.value;
+    const copy = taskTypeCopy(item.value, item.label || item.value);
+    option.textContent = `${copy.zh} / ${copy.en}`;
     select.appendChild(option);
   });
 
@@ -1286,6 +2492,42 @@ function getSelectedConfigSummary(control){
   return (control?.configs || []).find(item => (item.relative_path || item.name) === selectedValue) || null;
 }
 
+function ensureRelayerAdvancedControls(){
+  if(relayerAdvancedControlsReady){
+    return;
+  }
+  const relayerEditor = document.getElementById('relayerEditor');
+  const controlGrid = relayerEditor?.querySelector('.control-grid');
+  if(controlGrid && !document.getElementById('relayerScanMaxWorkers')){
+    controlGrid.insertAdjacentHTML(
+      'beforeend',
+      `
+        <label for="relayerScanMaxWorkers">
+          <span class="small"><span class="bi-stack"><span class="bi-line">最大工作數</span><span class="bi-line">Max workers</span></span></span>
+          <input id="relayerScanMaxWorkers" type="number" min="1" value="1" />
+        </label>
+        <label for="relayerScanOutputDir">
+          <span class="small"><span class="bi-stack"><span class="bi-line">續跑輸出資料夾</span><span class="bi-line">Resume output dir</span></span></span>
+          <input id="relayerScanOutputDir" placeholder="續跑目錄 / resume dir" />
+        </label>
+      `
+    );
+  }
+  const capabilityText = document.getElementById('relayerCapabilityText');
+  if(capabilityText && !document.getElementById('relayerScanResume')){
+    capabilityText.insertAdjacentHTML(
+      'beforebegin',
+      `
+        <div class="toolbar" style="margin-top:10px">
+          <label class="toolbar-check"><input type="checkbox" id="relayerScanResume" /><span class="small"><span class="bi-stack"><span class="bi-line">續跑既有掃描</span><span class="bi-line">Resume</span></span></span></label>
+          <label class="toolbar-check"><input type="checkbox" id="relayerScanSkipCompleted" checked /><span class="small"><span class="bi-stack"><span class="bi-line">跳過已完成格點</span><span class="bi-line">Skip completed</span></span></span></label>
+        </div>
+      `
+    );
+  }
+  relayerAdvancedControlsReady = true;
+}
+
 function syncSelectOptions(selectId, options, selectedValue){
   const select = document.getElementById(selectId);
   const currentValue = selectedValue || select.value;
@@ -1301,55 +2543,8 @@ function syncSelectOptions(selectId, options, selectedValue){
   }
 }
 
-function updateHeatMapEditorSummary(){
-  const xAxis = document.getElementById('heatMapXAxis').value || '-';
-  const yAxis = document.getElementById('heatMapYAxis').value || '-';
-  const xValues = document.getElementById('heatMapXValues').value || '-';
-  const yValues = document.getElementById('heatMapYValues').value || '-';
-  const topK = document.getElementById('heatMapTopK').value || '-';
-  const verifyRuns = document.getElementById('heatMapVerifyRuns').value || '-';
-  const verifyEnabled = document.getElementById('heatMapVerifyEnabled').checked;
-  setBiHTML(
-    'heatMapEditorSummaryText',
-    `Y=${yAxis} | X=${xAxis} | y值=${yValues} | x值=${xValues} | top-k=${topK} | verify=${verifyEnabled ? 'on' : 'off'} | runs=${verifyRuns}`,
-    `Y=${yAxis} | X=${xAxis} | y values=${yValues} | x values=${xValues} | top-k=${topK} | verify=${verifyEnabled ? 'on' : 'off'} | runs=${verifyRuns}`,
-    'accent'
-  );
-}
-
-function renderHeatMapEditor(control){
-  const container = document.getElementById('heatMapEditor');
-  const config = getSelectedConfigSummary(control);
-  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
-  const visible = evolutionMode === 'heat_map';
-  container.style.display = visible ? '' : 'none';
-  if(!visible){
-    return;
-  }
-
-  if(!config){
-    setBiHTML('heatMapEditorSummaryText', '請先選擇設定檔', 'Select a config first');
-    return;
-  }
-
-  const dimensions = config.heat_map_dimensions || control?.heat_map_dimensions || [];
-  const settings = config.heat_map_settings || {};
-  const verifySettings = settings.verify || {};
-  const signature = JSON.stringify([config.relative_path || config.name, dimensions, settings]);
-  if(signature !== heatMapEditorSignature){
-    syncSelectOptions('heatMapXAxis', dimensions, settings.x_axis || config.heat_map_plan?.x_axis);
-    syncSelectOptions('heatMapYAxis', dimensions, settings.y_axis || config.heat_map_plan?.y_axis);
-    document.getElementById('heatMapXValues').value = (settings.x_values || config.heat_map_plan?.x_values || []).join(',');
-    document.getElementById('heatMapYValues').value = (settings.y_values || config.heat_map_plan?.y_values || []).join(',');
-    document.getElementById('heatMapTopK').value = settings.top_k ?? config.heat_map_plan?.top_k ?? '';
-    document.getElementById('heatMapVerifyRuns').value = verifySettings.candidate_runs_per_config ?? '';
-    document.getElementById('heatMapVerifyEnabled').checked = verifySettings.enabled !== false;
-    heatMapEditorSignature = signature;
-  }
-  updateHeatMapEditorSummary();
-}
-
 function renderRelayerEditor(control){
+  ensureRelayerAdvancedControls();
   const container = document.getElementById('relayerEditor');
   const config = getSelectedConfigSummary(control);
   if(!config){
@@ -1364,20 +2559,28 @@ function renderRelayerEditor(control){
     return;
   }
 
+  updateRelayerEditorSummary(control);
+  return;
+
   const requestedMaxCandidates = document.getElementById('relayerScanMaxCandidates').value || '-';
+  const requestedMaxWorkers = document.getElementById('relayerScanMaxWorkers')?.value || '1';
+  const requestedOutputDir = document.getElementById('relayerScanOutputDir')?.value || '-';
+  const resumeRequested = Boolean(document.getElementById('relayerScanResume')?.checked);
+  const skipCompleted = Boolean(document.getElementById('relayerScanSkipCompleted')?.checked);
   const runtimeModes = (relayer.runtime_supported_modes || []).join(', ') || '-';
+  const latestRelayer = control?.diagnostics?.latest_relayer_scan || null;
   if(relayer.scan_supported){
     setBiHTML(
       'relayerEditorSummaryText',
-      `mode=${relayer.mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates}`,
-      `mode=${relayer.mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates}`,
+      `模式=${relayer.mode || '-'} | 驗證=${relayer.scan_runtime_mode || '-'} | 層數=${relayer.num_layers ?? '-'} | 候選=${relayer.scan_candidate_count ?? '-'} | 上限=${requestedMaxCandidates} | 工作者=${requestedMaxWorkers} | 續跑=${resumeRequested ? '開' : '關'} | 跳過=${skipCompleted ? '開' : '關'}`,
+      `mode=${relayer.mode || '-'} | verify=${relayer.scan_runtime_mode || '-'} | layers=${relayer.num_layers ?? '-'} | candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates} | workers=${requestedMaxWorkers} | resume=${resumeRequested ? 'on' : 'off'} | skip=${skipCompleted ? 'on' : 'off'} | output=${requestedOutputDir}`,
       'accent'
     );
     setBiHTML(
       'relayerCapabilityText',
-      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | synthetic`,
-      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | synthetic`,
-      relayer.runtime_patch_supported ? 'accent' : 'warn'
+      `執行器=${relayer.runner || '-'} | runtime 模式=${runtimeModes} | 掃描後端=${relayer.scan_backend || '-'} | 可驗證=${relayer.verification_capable ? '是' : '否'} | 最近輸出=${latestRelayer?.output_dir || '-'}`,
+      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | verify capable=${relayer.verification_capable ? 'yes' : 'no'} | latest=${latestRelayer?.output_dir || '-'}`,
+      relayer.verification_capable ? 'accent' : 'warn'
     );
     return;
   }
@@ -1390,7 +2593,7 @@ function renderRelayerEditor(control){
   );
   setBiHTML(
     'relayerCapabilityText',
-    `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
+    `執行器=${relayer.runner || '-'} | runtime 模式=${runtimeModes}`,
     `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
     'warn'
   );
@@ -1408,7 +2611,8 @@ function syncEvolutionModeOptions(modes, defaultMode){
   (modes || []).forEach(item => {
     const option = document.createElement('option');
     option.value = item.value;
-    option.textContent = item.label || item.value;
+    const copy = evolutionModeCopy(item.value, item.label || item.value);
+    option.textContent = `${copy.zh} / ${copy.en}`;
     select.appendChild(option);
   });
 
@@ -1541,6 +2745,64 @@ function renderLocalAi(localAi){
   );
 }
 
+function updateEvolutionModeControlVisibility(control){
+  const evolutionMode = document.getElementById('evolutionMode')?.value || 'model_params';
+  const samplingSection = document.getElementById('samplingParamSection');
+  const heatMapSection = document.getElementById('heatMapEditor');
+  const relayerSection = document.getElementById('relayerEditor');
+  const hintBox = document.getElementById('evolutionModeHint');
+  const selectedConfig = getSelectedConfigSummary(control);
+  const relayerReady = Boolean(selectedConfig?.relayer?.scan_supported);
+
+  if(samplingSection){
+    samplingSection.style.display = evolutionMode === 'model_params' ? '' : 'none';
+  }
+  if(heatMapSection && evolutionMode !== 'heat_map'){
+    heatMapSection.style.display = 'none';
+  }
+  if(relayerSection && evolutionMode === 'heat_map'){
+    relayerSection.style.display = 'none';
+  }
+
+  if(!hintBox){
+    return;
+  }
+
+  hintBox.style.display = '';
+  if(evolutionMode === 'model_params'){
+    setBiHTML(
+      'evolutionModeHintText',
+      '目前只顯示模型採樣參數；Heat-map 專用欄位已隱藏。',
+      'Showing model-parameter controls only; heat-map-specific fields are hidden.',
+      'accent'
+    );
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    setBiHTML(
+      'evolutionModeHintText',
+      '目前只顯示 Heat-map 腦掃描參數；模型採樣與 Relayer 參數都已隱藏。',
+      'Showing heat-map brain-scan controls only; model sampling and relayer controls are hidden.',
+      'accent'
+    );
+    return;
+  }
+
+  const relayerMessageZh = relayerReady
+    ? '此模式目前沒有額外 Nightly 表單參數；若要調整 relayer，請使用下方 Relayer Scan 區塊。'
+    : '此模式目前沒有額外 Nightly 表單參數。';
+  const relayerMessageEn = relayerReady
+    ? 'This mode currently has no extra nightly form fields; use the Relayer Scan section below if you want relayer controls.'
+    : 'This mode currently has no extra nightly form fields.';
+  setBiHTML(
+    'evolutionModeHintText',
+    relayerMessageZh,
+    relayerMessageEn,
+    'warn'
+  );
+}
+
 function renderControlPanel(control, status){
   latestControlState = control;
   syncControlConfigOptions(control?.configs, control?.default_config);
@@ -1551,69 +2813,64 @@ function renderControlPanel(control, status){
   renderSamplingParameters(control);
   renderHeatMapEditor(control);
   renderRelayerEditor(control);
+  updateEvolutionModeControlVisibility(control);
 
   const active = Boolean(control?.active);
   const current = control?.current || null;
   const lastResult = control?.last_result || null;
   const activeKind = current?.kind || '';
 
-  let lastText = '-';
+  let lastText = sameBi('-');
   let lastTone = '';
   if(lastResult){
     if(lastResult.stopped_by_user){
-      lastText = `stopped (${lastResult.kind || 'run'})`;
+      const lastKind = kindCopy(lastResult.kind, lastResult.evolution_mode);
+      lastText = { zh:`已停止（${lastKind.zh}）`, en:`Stopped (${lastKind.en})` };
       lastTone = 'warn';
     } else if(typeof lastResult.returncode === 'number'){
-      lastText = `exit ${lastResult.returncode} (${lastResult.kind || 'run'})`;
+      const lastKind = kindCopy(lastResult.kind, lastResult.evolution_mode);
+      lastText = { zh:`結束碼 ${lastResult.returncode}（${lastKind.zh}）`, en:`Exit ${lastResult.returncode} (${lastKind.en})` };
       lastTone = lastResult.returncode === 0 ? 'ok' : 'bad';
     }
   }
 
-  setText('controlStateText', active ? `running ${current?.kind || ''}`.trim() : 'idle', active ? 'warn' : '');
+  const currentKindCopy = kindCopy(current?.kind, current?.evolution_mode);
+  const controlStateCopy = active
+    ? { zh:`執行中：${currentKindCopy.zh}`, en:`Running: ${currentKindCopy.en}` }
+    : { zh:'閒置', en:'Idle' };
+  setBiHTML('controlStateText', controlStateCopy.zh, controlStateCopy.en, active ? 'warn' : '');
   setText('controlPidText', active ? current?.pid ?? '-' : '-');
   setText('controlConfigActiveText', current?.config_name || lastResult?.config_name || '-');
-  setText('controlLastText', lastText, lastTone);
+  setBiHTML('controlLastText', lastText.zh, lastText.en, lastTone || '');
   setText('controlCommandText', current ? formatControlCommand(current.command) : (lastResult ? formatControlCommand(lastResult.command) : '-'));
   setText('controlLogText', current?.log_path || lastResult?.log_path || '-');
 
-  let progressText = '-';
-  if(active && status?.progress_text){
+  const controlProgressSnapshot = getProgressSnapshot(active ? activeKind : (lastResult?.kind || ''), current, lastResult, status || {});
+  let progressText = getProgressSummaryText(controlProgressSnapshot);
+  if(progressText !== '-'){
+    const controlEtaText = getProgressEtaText(controlProgressSnapshot);
+    progressText = `${progressText} | ETA ${controlEtaText}`;
+  } else if(active && status?.progress_text){
     progressText = status.progress_text;
   } else if(active && status?.suite_progress_text){
     progressText = status.suite_progress_text;
-  } else if(active && activeKind === 'suite'){
-    const progressCurrent = Number(status?.suite_progress_current ?? 0);
-    const progressTarget = Number(status?.suite_progress_target ?? current?.runs ?? 0);
-    progressText = progressTarget > 0 ? `${progressCurrent}/${progressTarget}` : '-';
-  } else if(active && activeKind === 'nightly'){
-    const progressCurrent = Number(status?.progress_current ?? 0);
-    const progressTarget = Number(status?.progress_target ?? current?.estimated_total_evals ?? 0);
-    progressText = progressTarget > 0 ? `${progressCurrent}/${progressTarget}` : '-';
-  } else if(active && activeKind === 'single'){
-    progressText = '1/1';
   } else if(lastResult?.progress_text){
     progressText = lastResult.progress_text;
   } else if(lastResult?.suite_progress_text){
     progressText = lastResult.suite_progress_text;
   } else if(lastResult?.kind === 'single'){
-    progressText = '1/1';
+    progressText = '1/1 (100.0%) | ETA 0s';
   }
   setText('controlProgressText', progressText, active && activeKind !== 'single' ? 'accent-2' : '');
 
-  let noticeZh = '可從這裡啟動單次 run、suite、nightly evolution 或 relayer scan，停止按鈕會終止目前背景程序。';
+  let noticeZh = '可從這裡啟動單次測試、批次測試、Nightly 演化或 Relayer 掃描，停止按鈕會終止目前背景程序。';
   let noticeEn = 'Launch a single run, suite, nightly evolution, or relayer scan here; stop terminates the active background process.';
   let noticeTone = '';
 
   if(active && current){
-    const runLabel = activeKind === 'suite'
-      ? 'suite'
-      : activeKind === 'nightly'
-        ? (current?.evolution_mode === 'heat_map' ? 'nightly heat map' : 'nightly evolution')
-        : activeKind === 'relayer_scan'
-          ? 'relayer scan'
-        : 'single run';
-    noticeZh = `目前正在執行 ${runLabel}，PID ${current.pid}。`;
-    noticeEn = `Currently running a ${runLabel}, PID ${current.pid}.`;
+    const runLabel = kindCopy(activeKind, current?.evolution_mode);
+    noticeZh = `目前正在執行 ${runLabel.zh}，PID ${current.pid}。`;
+    noticeEn = `Currently running ${runLabel.en}, PID ${current.pid}.`;
     noticeTone = 'warn';
   } else if(controlBusy){
     noticeZh = '控制命令送出中...';
@@ -1652,8 +2909,12 @@ async function refreshAll(){
       fetchJSON(CONTROL.state).catch(() => null)
     ]);
 
+    const dashboardContext = resolveDashboardContext(control, status, nightly, heatMap, relayerScanHistory);
     if(status) renderStatus(status);
     if(control) renderControlPanel(control, status);
+    renderModeOverview(dashboardContext);
+    applyDashboardMode(dashboardContext);
+    renderDiagnostics(control?.diagnostics || null, dashboardContext, parameterHistory);
 
     renderList(
       'archList',
@@ -1668,7 +2929,7 @@ async function refreshAll(){
     renderBaseline(baseline);
     renderRollback(rollback);
     renderNightly(nightly);
-    renderHeatMap(heatMap);
+    renderHeatMap(heatMap, dashboardContext, control);
     renderRelayerScanHistory(relayerScanHistory);
     renderConfigHistory(configHistory);
     renderParameterHistory(parameterHistory);
@@ -1734,6 +2995,478 @@ async function startSuiteRun(){
   await triggerControl(CONTROL.startSuite, payload);
 }
 
+function ensureHeatMapEditorControls(container){
+  if(container.dataset.editorReady === 'true'){
+    return;
+  }
+  container.innerHTML = `
+    <div class="mini">
+      <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 腦掃描設定</span><span class="bi-line">Heat-map Brain-Scan Editor</span></span></div>
+      <div class="control-grid">
+        <label for="heatMapStartLayerMin">
+          <span class="small"><span class="bi-stack"><span class="bi-line">起始層最小值 (i min)</span><span class="bi-line">Start layer min (i min)</span></span></span>
+          <input id="heatMapStartLayerMin" type="number" min="0" />
+        </label>
+        <label for="heatMapEndLayerMax">
+          <span class="small"><span class="bi-stack"><span class="bi-line">結束層最大值 (j max)</span><span class="bi-line">End layer max (j max)</span></span></span>
+          <input id="heatMapEndLayerMax" type="number" min="0" />
+        </label>
+        <label for="heatMapMinBlockLen">
+          <span class="small"><span class="bi-stack"><span class="bi-line">最小區塊長度</span><span class="bi-line">Min block length</span></span></span>
+          <input id="heatMapMinBlockLen" type="number" min="1" />
+        </label>
+        <label for="heatMapMaxBlockLen">
+          <span class="small"><span class="bi-stack"><span class="bi-line">最大區塊長度</span><span class="bi-line">Max block length</span></span></span>
+          <input id="heatMapMaxBlockLen" type="number" min="1" />
+        </label>
+        <label for="heatMapRepeatCount">
+          <span class="small"><span class="bi-stack"><span class="bi-line">重複次數</span><span class="bi-line">Repeat count</span></span></span>
+          <input id="heatMapRepeatCount" type="number" min="1" />
+        </label>
+        <label for="heatMapProbeATaskType">
+          <span class="small"><span class="bi-stack"><span class="bi-line">Probe A 任務類型</span><span class="bi-line">Probe A task type</span></span></span>
+          <select id="heatMapProbeATaskType"></select>
+        </label>
+        <label for="heatMapProbeASeeds">
+          <span class="small"><span class="bi-stack"><span class="bi-line">Probe A Seeds</span><span class="bi-line">Probe A seeds</span></span></span>
+          <input id="heatMapProbeASeeds" placeholder="1101,1103,1105,1107" />
+        </label>
+        <label for="heatMapProbeBTaskType">
+          <span class="small"><span class="bi-stack"><span class="bi-line">Probe B 任務類型</span><span class="bi-line">Probe B task type</span></span></span>
+          <select id="heatMapProbeBTaskType"></select>
+        </label>
+        <label for="heatMapProbeBSeeds">
+          <span class="small"><span class="bi-stack"><span class="bi-line">Probe B Seeds</span><span class="bi-line">Probe B seeds</span></span></span>
+          <input id="heatMapProbeBSeeds" placeholder="2101,2103,2105,2107" />
+        </label>
+        <label for="heatMapTopK">
+          <span class="small"><span class="bi-stack"><span class="bi-line">Top-k</span><span class="bi-line">Top-k</span></span></span>
+          <input id="heatMapTopK" type="number" min="1" placeholder="5" />
+        </label>
+        <label for="heatMapVerifyRuns">
+          <span class="small"><span class="bi-stack"><span class="bi-line">每組驗證次數</span><span class="bi-line">Verify runs/config</span></span></span>
+          <input id="heatMapVerifyRuns" type="number" min="1" placeholder="6" />
+        </label>
+      </div>
+      <label class="toolbar-check" style="margin-top:10px"><input type="checkbox" id="heatMapVerifyEnabled" checked /><span class="small"><span class="bi-stack"><span class="bi-line">Nightly 後自動驗證 top-k</span><span class="bi-line">Auto-verify top-k after nightly</span></span></span></label>
+    </div>
+    <div class="mini">
+      <div class="label"><span class="bi-stack"><span class="bi-line">Heat Map 摘要</span><span class="bi-line">Heat-map Summary</span></span></div>
+      <strong id="heatMapEditorSummaryText">-</strong>
+    </div>
+  `;
+  [
+    'heatMapStartLayerMin',
+    'heatMapEndLayerMax',
+    'heatMapMinBlockLen',
+    'heatMapMaxBlockLen',
+    'heatMapRepeatCount',
+    'heatMapProbeATaskType',
+    'heatMapProbeASeeds',
+    'heatMapProbeBTaskType',
+    'heatMapProbeBSeeds',
+    'heatMapTopK',
+    'heatMapVerifyRuns',
+    'heatMapVerifyEnabled'
+  ].forEach(id => {
+    const node = document.getElementById(id);
+    if(node){
+      node.addEventListener('change', updateHeatMapEditorSummary);
+      node.addEventListener('input', updateHeatMapEditorSummary);
+    }
+  });
+  container.dataset.editorReady = 'true';
+}
+
+function updateHeatMapEditorSummary(){
+  const startLayerMin = document.getElementById('heatMapStartLayerMin')?.value || '-';
+  const endLayerMax = document.getElementById('heatMapEndLayerMax')?.value || '-';
+  const minBlockLen = document.getElementById('heatMapMinBlockLen')?.value || '-';
+  const maxBlockLen = document.getElementById('heatMapMaxBlockLen')?.value || '-';
+  const repeatCount = document.getElementById('heatMapRepeatCount')?.value || '-';
+  const probeATaskType = document.getElementById('heatMapProbeATaskType')?.value || '-';
+  const probeASeeds = document.getElementById('heatMapProbeASeeds')?.value || '-';
+  const probeBTaskType = document.getElementById('heatMapProbeBTaskType')?.value || '-';
+  const probeBSeeds = document.getElementById('heatMapProbeBSeeds')?.value || '-';
+  const topK = document.getElementById('heatMapTopK')?.value || '-';
+  const verifyRuns = document.getElementById('heatMapVerifyRuns')?.value || '-';
+  const verifyEnabled = Boolean(document.getElementById('heatMapVerifyEnabled')?.checked);
+  setBiHTML(
+    'heatMapEditorSummaryText',
+    `層範圍 i=${startLayerMin}..${endLayerMax} | 區塊=${minBlockLen}-${maxBlockLen} | repeat=${repeatCount} | A=${probeATaskType} [${probeASeeds}] | B=${probeBTaskType} [${probeBSeeds}] | top-k=${topK} | 驗證=${verifyEnabled ? '開' : '關'} | 次數=${verifyRuns}`,
+    `Layer window i=${startLayerMin}..${endLayerMax} | block=${minBlockLen}-${maxBlockLen} | repeat=${repeatCount} | A=${probeATaskType} [${probeASeeds}] | B=${probeBTaskType} [${probeBSeeds}] | top-k=${topK} | verify=${verifyEnabled ? 'on' : 'off'} | runs=${verifyRuns}`,
+    'accent'
+  );
+}
+
+function renderHeatMapEditor(control){
+  const container = document.getElementById('heatMapEditor');
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  const visible = evolutionMode === 'heat_map';
+  container.style.display = visible ? '' : 'none';
+  if(!visible){
+    return;
+  }
+
+  ensureHeatMapEditorControls(container);
+
+  if(!config){
+    setBiHTML('heatMapEditorSummaryText', '請先選擇設定檔', 'Select a config first');
+    return;
+  }
+
+  const taskTypes = config.heat_map_task_types || control?.heat_map_task_types || [];
+  const settings = config.heat_map_settings || {};
+  const scan = settings.scan || {};
+  const probeA = settings.probe_a || {};
+  const probeB = settings.probe_b || {};
+  const verifySettings = settings.verify || {};
+  const signature = JSON.stringify([config.relative_path || config.name, taskTypes, settings]);
+  if(signature !== heatMapEditorSignature){
+    document.getElementById('heatMapStartLayerMin').value = scan.start_layer_min ?? config.heat_map_plan?.scan?.start_layer_min ?? '';
+    document.getElementById('heatMapEndLayerMax').value = scan.end_layer_max ?? config.heat_map_plan?.scan?.end_layer_max ?? '';
+    document.getElementById('heatMapMinBlockLen').value = scan.min_block_len ?? config.heat_map_plan?.scan?.min_block_len ?? '';
+    document.getElementById('heatMapMaxBlockLen').value = scan.max_block_len ?? config.heat_map_plan?.scan?.max_block_len ?? '';
+    document.getElementById('heatMapRepeatCount').value = scan.repeat_count ?? config.heat_map_plan?.repeat_count ?? '';
+    syncSelectOptions('heatMapProbeATaskType', taskTypes, probeA.task_type || config.heat_map_plan?.probe_a?.task_type);
+    syncSelectOptions('heatMapProbeBTaskType', taskTypes, probeB.task_type || config.heat_map_plan?.probe_b?.task_type);
+    document.getElementById('heatMapProbeASeeds').value = (probeA.seeds || config.heat_map_plan?.probe_a?.seeds || []).join(',');
+    document.getElementById('heatMapProbeBSeeds').value = (probeB.seeds || config.heat_map_plan?.probe_b?.seeds || []).join(',');
+    document.getElementById('heatMapTopK').value = settings.top_k ?? config.heat_map_plan?.top_k ?? '';
+    document.getElementById('heatMapVerifyRuns').value = verifySettings.candidate_runs_per_config ?? '';
+    document.getElementById('heatMapVerifyEnabled').checked = verifySettings.enabled !== false;
+    heatMapEditorSignature = signature;
+  }
+  updateHeatMapEditorSummary();
+}
+
+function getSamplingSelectionContextKey(config, evolutionMode){
+  return JSON.stringify([
+    config?.relative_path || config?.name || null,
+    evolutionMode || 'model_params'
+  ]);
+}
+
+function getPreferredSamplingSelection(config, evolutionMode){
+  const contextKey = getSamplingSelectionContextKey(config, evolutionMode);
+  if(contextKey !== samplingSelectionContextKey){
+    samplingSelectionContextKey = contextKey;
+    samplingSelectionOverride = null;
+  }
+
+  if(Array.isArray(samplingSelectionOverride)){
+    return samplingSelectionOverride.map(item => String(item));
+  }
+
+  const existingSelected = getSelectedSamplingParameters().map(item => String(item));
+  const hasRenderedOptions = Boolean(document.querySelector('#samplingParamList input[type="checkbox"]'));
+  if(existingSelected.length || hasRenderedOptions){
+    return existingSelected;
+  }
+
+  return (config?.selected_sampling_parameters || []).map(item => String(item));
+}
+
+function updateSamplingParameterSummary(control){
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  if(!config){
+    setBiHTML('samplingParamSummaryText', '請先選擇設定', 'Select a config first');
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    const plan = config.heat_map_plan;
+    if(plan){
+      setBiHTML(
+        'samplingParamSummaryText',
+        `RYS 熱圖：${plan.cell_count || 0} 格 | probes=${plan.probe_a?.task_type || '-'} + ${plan.probe_b?.task_type || '-'}`,
+        `RYS heat map: ${plan.cell_count || 0} cells | probes=${plan.probe_a?.task_type || '-'} + ${plan.probe_b?.task_type || '-'}`,
+        'accent'
+      );
+    } else {
+      setBiHTML('samplingParamSummaryText', 'Heat-map 規劃尚未就緒', 'Heat-map plan not ready');
+    }
+    return;
+  }
+
+  if(evolutionMode !== 'model_params'){
+    setBiHTML('samplingParamSummaryText', `模式：${evolutionMode}`, `Mode: ${evolutionMode}`);
+    return;
+  }
+
+  const provider = config.sampling_provider;
+  const available = config.sampling_parameters || [];
+  if(!provider || !available.length){
+    setBiHTML('samplingParamSummaryText', '沒有可調整的採樣參數', 'No sampling parameters available');
+    return;
+  }
+
+  const selected = getSelectedSamplingParameters().map(item => String(item));
+  const selectedTextZh = selected.length ? selected.join(', ') : '無';
+  const selectedTextEn = selected.length ? selected.join(', ') : 'none';
+  setBiHTML(
+    'samplingParamSummaryText',
+    `提供者=${provider} | 已選 ${selected.length}/${available.length} | 參數=${selectedTextZh}`,
+    `Provider: ${provider} | selected ${selected.length}/${available.length} | params=${selectedTextEn}`,
+    selected.length ? 'accent' : null
+  );
+}
+
+function updateRelayerEditorSummary(control){
+  const config = getSelectedConfigSummary(control);
+  if(!config){
+    setBiHTML('relayerEditorSummaryText', '請先選擇設定', 'Select a config first');
+    setBiHTML('relayerCapabilityText', '請先選擇設定', 'Select a config first');
+    return;
+  }
+
+  const relayer = config.relayer || {};
+  const runtimeModes = (relayer.runtime_supported_modes || []).join(', ') || '-';
+  const latestRelayer = control?.diagnostics?.latest_relayer_scan || null;
+  const requestedMaxCandidates = document.getElementById('relayerScanMaxCandidates')?.value || '-';
+  const requestedMaxWorkers = document.getElementById('relayerScanMaxWorkers')?.value || '1';
+  const requestedOutputDir = document.getElementById('relayerScanOutputDir')?.value || '-';
+  const resumeRequested = Boolean(document.getElementById('relayerScanResume')?.checked);
+  const skipCompleted = Boolean(document.getElementById('relayerScanSkipCompleted')?.checked);
+
+  if(relayer.scan_supported){
+    setBiHTML(
+      'relayerEditorSummaryText',
+      `模式=${relayer.mode || '-'} | 驗證=${relayer.scan_runtime_mode || '-'} | 層數=${relayer.num_layers ?? '-'} | 內建候選=${relayer.scan_candidate_count ?? '-'} | 請求上限=${requestedMaxCandidates} | workers=${requestedMaxWorkers} | resume=${resumeRequested ? '開' : '關'} | skip=${skipCompleted ? '開' : '關'} | output=${requestedOutputDir}`,
+      `mode=${relayer.mode || '-'} | verify=${relayer.scan_runtime_mode || '-'} | layers=${relayer.num_layers ?? '-'} | built-in candidates=${relayer.scan_candidate_count ?? '-'} | max=${requestedMaxCandidates} | workers=${requestedMaxWorkers} | resume=${resumeRequested ? 'on' : 'off'} | skip=${skipCompleted ? 'on' : 'off'} | output=${requestedOutputDir}`,
+      'accent'
+    );
+    setBiHTML(
+      'relayerCapabilityText',
+      `runner=${relayer.runner || '-'} | runtime=${runtimeModes} | backend=${relayer.scan_backend || '-'} | 可驗證=${relayer.verification_capable ? '是' : '否'} | 最新輸出=${latestRelayer?.output_dir || '-'}`,
+      `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes} | scan backend=${relayer.scan_backend || '-'} | verify capable=${relayer.verification_capable ? 'yes' : 'no'} | latest=${latestRelayer?.output_dir || '-'}`,
+      relayer.verification_capable ? 'accent' : 'warn'
+    );
+    return;
+  }
+
+  setBiHTML(
+    'relayerEditorSummaryText',
+    `Relayer scan 尚未就緒：${relayer.scan_error || relayer.num_layers_error || 'unknown error'}`,
+    `Relayer scan not ready: ${relayer.scan_error || relayer.num_layers_error || 'unknown error'}`,
+    'bad'
+  );
+  setBiHTML(
+    'relayerCapabilityText',
+    `runner=${relayer.runner || '-'} | runtime=${runtimeModes}`,
+    `runner=${relayer.runner || '-'} | runtime modes=${runtimeModes}`,
+    'warn'
+  );
+}
+
+function renderSamplingParameters(control){
+  const list = document.getElementById('samplingParamList');
+  const config = getSelectedConfigSummary(control);
+  const evolutionMode = document.getElementById('evolutionMode').value || 'model_params';
+  const renderSignature = JSON.stringify([
+    config?.relative_path || config?.name || null,
+    evolutionMode,
+    config?.sampling_provider || null,
+    config?.sampling_parameters || [],
+    config?.selected_sampling_parameters || [],
+    config?.heat_map_plan || null
+  ]);
+  const preferredSelected = config ? getPreferredSamplingSelection(config, evolutionMode) : [];
+  const shouldRebuild = renderSignature !== samplingParamRenderSignature;
+
+  if(!config){
+    samplingParamRenderSignature = '';
+    samplingSelectionContextKey = '';
+    samplingSelectionOverride = null;
+    list.innerHTML = `<div class="small">${biHTML('請先選擇設定', 'Select a config first')}</div>`;
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    if(shouldRebuild){
+      const plan = config.heat_map_plan;
+      if(plan){
+        list.innerHTML = `<div class="small">${biHTML(
+          `RYS 熱圖會固定 baseline，掃描 Start Layer (i) / End Layer (j)，並用 ${plan.probe_a?.label || 'Probe A'} + ${plan.probe_b?.label || 'Probe B'} probes 評分`,
+          `RYS heat_map keeps a fixed baseline, scans Start Layer (i) / End Layer (j), and scores each cell with ${plan.probe_a?.label || 'Probe A'} + ${plan.probe_b?.label || 'Probe B'} probes`
+        )}</div>`;
+      } else {
+        list.innerHTML = `<div class="small">${biHTML('這個設定尚未提供 heat-map 腦掃描規劃', 'This config does not expose a heat-map brain-scan plan yet')}</div>`;
+      }
+      samplingParamRenderSignature = renderSignature;
+    }
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  if(evolutionMode !== 'model_params'){
+    if(shouldRebuild){
+      list.innerHTML = `<div class="small">${biHTML('Architecture 模式不使用採樣參數勾選', 'Architecture mode does not use sampling parameter checkboxes')}</div>`;
+      samplingParamRenderSignature = renderSignature;
+    }
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  const samplingProvider = config.sampling_provider;
+  const availableSamplingParams = config.sampling_parameters || [];
+  if(!samplingProvider || !availableSamplingParams.length){
+    if(shouldRebuild){
+      list.innerHTML = `<div class="small">${biHTML('這個設定沒有可編輯的採樣參數', 'This config has no editable sampling parameters')}</div>`;
+      samplingParamRenderSignature = renderSignature;
+    }
+    updateSamplingParameterSummary(control);
+    return;
+  }
+
+  if(shouldRebuild){
+    list.innerHTML = '';
+    const selectedSet = new Set(preferredSelected);
+    availableSamplingParams.forEach(item => {
+      const value = String(item.value || item.id);
+      const id = `samplingParam__${value}`;
+      const wrapper = document.createElement('label');
+      wrapper.className = 'check-item';
+      wrapper.innerHTML = `
+        <input type="checkbox" value="${escapeHtml(value)}" id="${escapeHtml(id)}" />
+        <div>
+          <strong>${escapeHtml(item.label || value)}</strong>
+          <div class="small">${escapeHtml(item.description || '')}</div>
+        </div>
+      `;
+      const input = wrapper.querySelector('input');
+      input.checked = selectedSet.has(value);
+      list.appendChild(wrapper);
+    });
+    samplingParamRenderSignature = renderSignature;
+  }
+  updateSamplingParameterSummary(control);
+  return;
+
+  if(!config){
+    list.innerHTML = `<div class="small">${biHTML('請先選擇設定檔', 'Select a config first')}</div>`;
+    setBiHTML('samplingParamSummaryText', '尚未選擇設定檔', 'No config selected');
+    return;
+  }
+
+  if(evolutionMode === 'heat_map'){
+    const plan = config.heat_map_plan;
+    if(plan){
+      list.innerHTML = `<div class="small">${biHTML(
+        `RYS heat_map 會固定 baseline，掃描 Start Layer (i) / End Layer (j)，並用 ${plan.probe_a?.label || 'Probe A'} + ${plan.probe_b?.label || 'Probe B'} 兩組 probes 評分`,
+        `RYS heat_map keeps a fixed baseline, scans Start Layer (i) / End Layer (j), and scores each cell with ${plan.probe_a?.label || 'Probe A'} + ${plan.probe_b?.label || 'Probe B'} probes`
+      )}</div>`;
+      setBiHTML(
+        'samplingParamSummaryText',
+        `RYS 熱圖：${plan.cell_count || 0} 格 | probes=${plan.probe_a?.task_type || '-'} + ${plan.probe_b?.task_type || '-'}`,
+        `RYS heat map: ${plan.cell_count || 0} cells | probes=${plan.probe_a?.task_type || '-'} + ${plan.probe_b?.task_type || '-'}`,
+        'accent'
+      );
+    } else {
+      list.innerHTML = `<div class="small">${biHTML('這個設定檔尚未準備好 heat_map 腦掃描計畫', 'This config does not expose a heat-map brain-scan plan yet')}</div>`;
+      setBiHTML('samplingParamSummaryText', 'Heat-map 計畫尚未就緒', 'Heat-map plan not ready');
+    }
+    return;
+  }
+
+  if(evolutionMode !== 'model_params'){
+    list.innerHTML = `<div class="small">${biHTML('Architecture 模式不使用 sampling 參數勾選', 'Architecture mode does not use sampling parameter checkboxes')}</div>`;
+    setBiHTML('samplingParamSummaryText', `模式：${evolutionMode}`, `Mode: ${evolutionMode}`);
+    return;
+  }
+
+  const provider = config.sampling_provider;
+  const available = config.sampling_parameters || [];
+  if(!provider || !available.length){
+    list.innerHTML = `<div class="small">${biHTML('此設定檔沒有可調的 sampling 參數', 'This config has no editable sampling parameters')}</div>`;
+    setBiHTML('samplingParamSummaryText', '目前沒有 sampling 參數可選', 'No sampling parameters available');
+    return;
+  }
+
+  available.forEach(item => {
+    const value = item.value || item.id;
+    const id = `samplingParam__${value}`;
+    const wrapper = document.createElement('label');
+    wrapper.className = 'check-item';
+    wrapper.innerHTML = `
+      <input type="checkbox" value="${escapeHtml(value)}" id="${escapeHtml(id)}" />
+      <div>
+        <strong>${escapeHtml(item.label || value)}</strong>
+        <div class="small">${escapeHtml(item.description || '')}</div>
+      </div>
+    `;
+    const input = wrapper.querySelector('input');
+    input.checked = existingSelected.includes(value) || (existingSelected.length === 0 && (config.selected_sampling_parameters || []).includes(value));
+    list.appendChild(wrapper);
+  });
+  const selectedAfterRender = getSelectedSamplingParameters();
+  setBiHTML(
+    'samplingParamSummaryText',
+    `Provider：${provider} | 已選 ${selectedAfterRender.join(', ') || '無'}`,
+    `Provider: ${provider} | selected ${selectedAfterRender.join(', ') || 'none'}`,
+    'accent'
+  );
+}
+
+function renderHeatMap(hist, context=null, control=null){
+  const items = hist?.history || [];
+  const latest = items[items.length - 1];
+  const liveHeatMap = context?.active && context?.view === 'nightly_heat_map' ? context.current : null;
+  const liveEstimate = context?.heatMapEstimate || getHeatMapEstimateBreakdown(control, context);
+  if(liveHeatMap){
+    setText('heatMapSuiteText', firstPresent(context?.status?.suite_id, liveHeatMap.suite_id, '-'));
+    setBiHTML(
+      'heatMapAxesText',
+      `RYS 腦掃描 | x=${liveHeatMap.heat_map_plan?.x_label || liveHeatMap.heat_map_plan?.x_axis || '-'} | y=${liveHeatMap.heat_map_plan?.y_label || liveHeatMap.heat_map_plan?.y_axis || '-'} | A=${liveHeatMap.heat_map_plan?.probe_a?.task_type || '-'} | B=${liveHeatMap.heat_map_plan?.probe_b?.task_type || '-'}`,
+      `RYS brain scan | x=${liveHeatMap.heat_map_plan?.x_label || liveHeatMap.heat_map_plan?.x_axis || '-'} | y=${liveHeatMap.heat_map_plan?.y_label || liveHeatMap.heat_map_plan?.y_axis || '-'} | A=${liveHeatMap.heat_map_plan?.probe_a?.task_type || '-'} | B=${liveHeatMap.heat_map_plan?.probe_b?.task_type || '-'}`
+    );
+    setText('heatMapBestText', context?.progressText || 'running', 'accent');
+    setBiHTML(
+      'heatMapDeltaText',
+      `目前執行中 | task_type=${firstPresent(context?.status?.task_type, '-')} | benchmark=${firstPresent(context?.status?.task_id, '-')}`,
+      `Running now | task_type=${firstPresent(context?.status?.task_type, '-')} | benchmark=${firstPresent(context?.status?.task_id, '-')}`
+    );
+    if(liveEstimate){
+      setBiHTML(
+        'heatMapFormulaText',
+        `估算式：${liveEstimate.formulaZh} | ${liveEstimate.detailZh}`,
+        `Formula: ${liveEstimate.formulaEn} | ${liveEstimate.detailEn}`
+      );
+    } else {
+      setBiHTML('heatMapFormulaText', '估算式：-', 'Formula: -');
+    }
+  } else if(latest){
+    setText('heatMapSuiteText', latest.suite_id || '-');
+    setBiHTML(
+      'heatMapAxesText',
+      `RYS 腦掃描 | x=${latest.x_label || latest.x_axis || '-'} | y=${latest.y_label || latest.y_axis || '-'} | A=${latest.probe_a?.task_type || '-'} | B=${latest.probe_b?.task_type || '-'}`,
+      `RYS brain scan | x=${latest.x_label || latest.x_axis || '-'} | y=${latest.y_label || latest.y_axis || '-'} | A=${latest.probe_a?.task_type || '-'} | B=${latest.probe_b?.task_type || '-'}` 
+    );
+    setText('heatMapBestText', latest.best_cell?.config_id || latest.selected_config_id || '-', 'accent');
+    setBiHTML(
+      'heatMapDeltaText',
+      `最佳組合 Δ=${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | 改善格數=${latest.improved_cell_count ?? '-'} | verify=${latest.verification?.winner?.config_id || '-'}`,
+      `Best combined delta=${latest.best_delta_suite_score ?? latest.best_cell?.delta_suite_score ?? '-'} | improved cells=${latest.improved_cell_count ?? '-'} | verify=${latest.verification?.winner?.config_id || '-'}` 
+    );
+    setBiHTML('heatMapFormulaText', '估算式：啟動 heat-map 後會顯示目前算式', 'Formula: start a heat-map run to show the live formula');
+  } else {
+    setText('heatMapSuiteText', '-');
+    setBiHTML('heatMapAxesText', 'RYS 腦掃描：-', 'RYS brain scan: -');
+    setText('heatMapBestText', '-');
+    setBiHTML('heatMapDeltaText', '最佳增益：-', 'Best delta: -');
+    setBiHTML('heatMapFormulaText', '估算式：-', 'Formula: -');
+  }
+  renderList(
+    'heatMapList',
+    items.slice(-6).reverse(),
+    item => `${item.ts || '-'} | ${item.suite_id || '-'} | best=${item.best_cell?.config_id || item.selected_config_id || '-'} | Δcombined=${item.best_delta_suite_score ?? item.best_cell?.delta_suite_score ?? '-'} | A=${item.probe_a?.task_type || '-'} | B=${item.probe_b?.task_type || '-'} | verify=${item.verification?.winner?.config_id || '-'}`,
+    { zh:'尚未有 heat_map 紀錄', en:'No heat-map history yet' }
+  );
+}
+
 async function startNightlyRun(){
   const payload = {
     config: document.getElementById('controlConfig').value,
@@ -1741,13 +3474,18 @@ async function startNightlyRun(){
     sampling_parameters: getSelectedSamplingParameters()
   };
   if(payload.evolution_mode === 'heat_map'){
-    payload.heat_map_x_axis = document.getElementById('heatMapXAxis').value;
-    payload.heat_map_y_axis = document.getElementById('heatMapYAxis').value;
-    payload.heat_map_x_values = document.getElementById('heatMapXValues').value;
-    payload.heat_map_y_values = document.getElementById('heatMapYValues').value;
-    payload.heat_map_verify_enabled = document.getElementById('heatMapVerifyEnabled').checked;
-    const topK = parseOptionalInt('heatMapTopK');
-    const verifyRuns = parseOptionalInt('heatMapVerifyRuns');
+    payload.heat_map_start_layer_min = document.getElementById('heatMapStartLayerMin')?.value;
+    payload.heat_map_end_layer_max = document.getElementById('heatMapEndLayerMax')?.value;
+    payload.heat_map_min_block_len = document.getElementById('heatMapMinBlockLen')?.value;
+    payload.heat_map_max_block_len = document.getElementById('heatMapMaxBlockLen')?.value;
+    payload.heat_map_repeat_count = document.getElementById('heatMapRepeatCount')?.value;
+    payload.heat_map_probe_a_task_type = document.getElementById('heatMapProbeATaskType')?.value;
+    payload.heat_map_probe_a_seeds = document.getElementById('heatMapProbeASeeds')?.value;
+    payload.heat_map_probe_b_task_type = document.getElementById('heatMapProbeBTaskType')?.value;
+    payload.heat_map_probe_b_seeds = document.getElementById('heatMapProbeBSeeds')?.value;
+    payload.heat_map_verify_enabled = Boolean(document.getElementById('heatMapVerifyEnabled')?.checked);
+    const topK = document.getElementById('heatMapTopK') ? parseOptionalInt('heatMapTopK') : null;
+    const verifyRuns = document.getElementById('heatMapVerifyRuns') ? parseOptionalInt('heatMapVerifyRuns') : null;
     if(topK !== null){
       payload.heat_map_top_k = topK;
     }
@@ -1767,9 +3505,19 @@ async function startRelayerScan(){
     config: document.getElementById('controlConfig').value
   };
   const maxCandidates = parseOptionalInt('relayerScanMaxCandidates');
+  const maxWorkers = parseOptionalInt('relayerScanMaxWorkers');
+  const outputDir = document.getElementById('relayerScanOutputDir')?.value?.trim();
   if(maxCandidates !== null){
     payload.max_candidates = maxCandidates;
   }
+  if(maxWorkers !== null){
+    payload.max_workers = maxWorkers;
+  }
+  if(outputDir){
+    payload.output_dir = outputDir;
+  }
+  payload.resume = Boolean(document.getElementById('relayerScanResume')?.checked);
+  payload.skip_completed = Boolean(document.getElementById('relayerScanSkipCompleted')?.checked);
   await triggerControl(CONTROL.startRelayerScan, payload);
 }
 
@@ -1821,32 +3569,48 @@ document.getElementById('stopRunBtn').addEventListener('click', () => {
 });
 document.getElementById('controlConfig').addEventListener('change', () => {
   heatMapEditorSignature = '';
+  samplingParamRenderSignature = '';
+  samplingSelectionContextKey = '';
+  samplingSelectionOverride = null;
   renderSamplingParameters(latestControlState);
   renderHeatMapEditor(latestControlState);
   renderRelayerEditor(latestControlState);
+  updateEvolutionModeControlVisibility(latestControlState);
 });
 document.getElementById('evolutionMode').addEventListener('change', () => {
   heatMapEditorSignature = '';
+  samplingParamRenderSignature = '';
+  samplingSelectionContextKey = '';
+  samplingSelectionOverride = null;
   renderSamplingParameters(latestControlState);
   renderHeatMapEditor(latestControlState);
+  updateEvolutionModeControlVisibility(latestControlState);
 });
 document.getElementById('relayerScanMaxCandidates').addEventListener('change', () => {
-  renderRelayerEditor(latestControlState);
+  updateRelayerEditorSummary(latestControlState);
 });
 document.getElementById('relayerScanMaxCandidates').addEventListener('input', () => {
-  renderRelayerEditor(latestControlState);
+  updateRelayerEditorSummary(latestControlState);
 });
 document.getElementById('samplingParamList').addEventListener('change', () => {
-  renderSamplingParameters(latestControlState);
-});
-['heatMapXAxis','heatMapYAxis','heatMapXValues','heatMapYValues','heatMapTopK','heatMapVerifyRuns','heatMapVerifyEnabled'].forEach(id => {
-  document.getElementById(id).addEventListener('change', updateHeatMapEditorSummary);
-  document.getElementById(id).addEventListener('input', updateHeatMapEditorSummary);
+  samplingSelectionOverride = getSelectedSamplingParameters().map(item => String(item));
+  updateSamplingParameterSummary(latestControlState);
 });
 document.getElementById('refreshNow').addEventListener('click', refreshAll);
 document.getElementById('keyword').addEventListener('input', refreshAll);
 document.getElementById('onlyTools').addEventListener('change', refreshAll);
 window.addEventListener('resize', () => drawLineChart(document.getElementById('scoreCanvas'), scoreChartState));
+
+ensureRelayerAdvancedControls();
+setupBandCollapsibles();
+['relayerScanMaxWorkers','relayerScanOutputDir','relayerScanResume','relayerScanSkipCompleted'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    updateRelayerEditorSummary(latestControlState);
+  });
+  document.getElementById(id).addEventListener('input', () => {
+    updateRelayerEditorSummary(latestControlState);
+  });
+});
 
 syncScrollButton();
 refreshAll();

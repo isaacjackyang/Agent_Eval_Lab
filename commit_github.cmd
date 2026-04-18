@@ -17,7 +17,7 @@ if /I "%~1"=="-h" goto :usage
 if /I "%~1"=="--help" goto :usage
 
 set "TARGET_REPO=%DEFAULT_REPO%"
-set "COMMIT_MESSAGE=%DEFAULT_COMMIT_MESSAGE%"
+set "COMMIT_MESSAGE="
 set "PUSH_MODE=normal"
 
 if not "%~1"=="" (
@@ -59,7 +59,7 @@ goto collect_message
 
 :args_done
 if not defined TARGET_REPO set "TARGET_REPO=%CD%"
-if not defined COMMIT_MESSAGE set "COMMIT_MESSAGE=Auto sync project files"
+if not defined COMMIT_MESSAGE set "COMMIT_MESSAGE=%DEFAULT_COMMIT_MESSAGE%"
 
 pushd "%TARGET_REPO%" >nul 2>&1 || (
     echo Failed to enter repository folder:
@@ -110,9 +110,9 @@ if errorlevel 1 goto :fail
 :push_changes
 echo.
 if /I "%PUSH_MODE%"=="force" (
-    echo Force pushing local branch to GitHub...
-    echo Remote changes on origin/%CURRENT_BRANCH% will be overwritten.
-    git push --force -u origin HEAD:%CURRENT_BRANCH%
+    echo Force pushing local branch to GitHub with lease protection...
+    echo Push will stop if origin/%CURRENT_BRANCH% has moved unexpectedly.
+    git push --force-with-lease -u origin HEAD:%CURRENT_BRANCH%
 ) else (
     echo Pushing local branch to GitHub...
     git push -u origin HEAD:%CURRENT_BRANCH%
@@ -135,9 +135,11 @@ exit /b 1
 set "CANDIDATE=%~1"
 if "%CANDIDATE%"=="." exit /b 0
 if "%CANDIDATE%"==".." exit /b 0
-echo(%CANDIDATE%| findstr /r "[\\/:]" >nul
-if errorlevel 1 exit /b 1
-exit /b 0
+if not "%CANDIDATE:\=%"=="%CANDIDATE%" exit /b 0
+if not "%CANDIDATE:/=%"=="%CANDIDATE%" exit /b 0
+echo(%CANDIDATE%| findstr /r "^[A-Za-z]:$" >nul
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :usage
 echo Usage:

@@ -69,6 +69,7 @@ class RelayerScanTests(unittest.TestCase):
             events: list[dict] = []
 
             result = run_relayer_scan(
+                base_config_path=None,
                 base_config=_config(),
                 output_dir=output_dir,
                 reports_dir=reports_dir,
@@ -79,8 +80,9 @@ class RelayerScanTests(unittest.TestCase):
 
             self.assertEqual(len(result["candidate_results"]), 5)
             self.assertTrue((output_dir / "aggregated.csv").exists())
-            self.assertTrue((output_dir / "heatmap.png").exists())
+            self.assertTrue((output_dir / "artifacts" / "heatmap.png").exists())
             self.assertTrue((output_dir / "manifest.json").exists())
+            self.assertTrue((output_dir / "README.md").exists())
             self.assertEqual(progress_updates[0]["status"], "starting_relayer_scan")
             self.assertEqual(progress_updates[-1]["status"], "completed")
             self.assertEqual(progress_updates[-1]["progress_current"], 5)
@@ -89,6 +91,13 @@ class RelayerScanTests(unittest.TestCase):
             manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["candidate_count"], 5)
             self.assertIn("mock_layer_stack", manifest["notes"])
+            self.assertTrue(str(manifest["readme_path"]).endswith("README.md"))
+
+            readme_text = (output_dir / "README.md").read_text(encoding="utf-8")
+            self.assertIn("## TL;DR / 快速摘要", readme_text)
+            self.assertIn("Quick Start / 先看哪裡", readme_text)
+            self.assertIn("Interpretation / 怎麼解讀", readme_text)
+            self.assertIn("先看 `artifacts/heatmap.png`", readme_text)
 
             history = json.loads((reports_dir / "relayer_scan_history.json").read_text(encoding="utf-8"))
             self.assertEqual(history["history"][-1]["candidate_count"], 5)
